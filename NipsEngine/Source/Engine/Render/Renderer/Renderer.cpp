@@ -43,12 +43,16 @@ void FRenderer::Create(HWND hWindow)
 	Resources.StaticMeshShader.Create(Device.GetDevice(), L"Shaders/ShaderStaticMesh.hlsl",
 		"mainVS", "mainPS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
+	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
+    Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
+
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
 	Resources.GizmoPerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FGizmoConstants));
 	Resources.EditorConstantBuffer.Create(Device.GetDevice(), sizeof(FEditorConstants));
 	Resources.OutlineConstantBuffer.Create(Device.GetDevice(), sizeof(FOutlineConstants));
 	Resources.StaticMeshConstantBuffer.Create(Device.GetDevice(), sizeof(FStaticMeshConstants));
+	Resources.FxaaConstantBuffer.Create(Device.GetDevice(), sizeof(FFxaaConstantBuffer));
 
 	// TODO : SamplerState 관리
 	D3D11_SAMPLER_DESC SampDesc = {};
@@ -58,6 +62,18 @@ void FRenderer::Create(HWND hWindow)
 	SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.MeshSamplerState.ReleaseAndGetAddressOf());
 
+	// FXAA Linear Sampler State
+	D3D11_SAMPLER_DESC FxaaSampDesc = {};
+    FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+    FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.MipLODBias = 0.0f;
+    FxaaSampDesc.MaxAnisotropy = 1;
+    FxaaSampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    FxaaSampDesc.MinLOD = 0.0f;
+    FxaaSampDesc.MaxLOD = 0.0f;
+    Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 
 	//	MeshManager init
 	FMeshManager::Initialize();
@@ -71,7 +87,7 @@ void FRenderer::Create(HWND hWindow)
 
 	InitializePassRenderStates();
 	InitializePassBatchers();
-	UseBackBufferRenderTargets();
+	// UseBackBufferRenderTargets(); // ??
 
 	// GPU Profiler 초기화
 	FGPUProfiler::Get().Initialize(Device.GetDevice(), Device.GetDeviceContext());
@@ -79,20 +95,27 @@ void FRenderer::Create(HWND hWindow)
 
 void FRenderer::Release()
 {
+	// Release Shader
 	Resources.PrimitiveShader.Release();
 	Resources.GizmoShader.Release();
 	Resources.EditorShader.Release();
 	Resources.SelectionMaskShader.Release();
 	Resources.OutlineShader.Release();
 	Resources.StaticMeshShader.Release();
+	Resources.FxaaShader.Release();
 
+	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
 	Resources.FrameBuffer.Release();
 	Resources.GizmoPerObjectConstantBuffer.Release();
 	Resources.EditorConstantBuffer.Release();
 	Resources.OutlineConstantBuffer.Release();
 	Resources.StaticMeshConstantBuffer.Release();
+	Resources.FxaaConstantBuffer.Release();
+
+	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
+    Resources.LinearSamplerState.Reset();
 
 	FGPUProfiler::Get().Shutdown();
 
@@ -383,6 +406,7 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 		}
 		DrawCommand(Context, Cmd);
 	}
+	// FXAA
 }
 
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)

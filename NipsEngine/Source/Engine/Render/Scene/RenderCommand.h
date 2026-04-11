@@ -143,6 +143,16 @@ struct FStaticMeshConstants
 	ID3D11ShaderResourceView* BumpSRV     = { nullptr };
 };
 
+struct FFxaaConstantBuffer
+{
+    FVector2 InvScreenSize;    // (1/width, 1/height)
+    float  EdgeThreshold;    // ex: 1.0 / 8.0
+    float  EdgeThresholdMin; // ex: 1.0 / 16.0
+    float  Subpix;           // ex: 0.75
+
+    float padding[3];
+};
+
 struct FRenderCommand
 {
 	//	VB, IB 모두 담고 있는 MB

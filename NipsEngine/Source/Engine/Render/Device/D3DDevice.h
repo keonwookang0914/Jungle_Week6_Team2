@@ -43,6 +43,8 @@ struct FRenderTargetSet
 	ID3D11RenderTargetView* SelectionMaskRTV = nullptr;
 	ID3D11ShaderResourceView* SelectionMaskSRV = nullptr;
 	ID3D11DepthStencilView* DepthStencilView = nullptr;
+    ID3D11ShaderResourceView* DepthStencilSRV = nullptr;
+
 	float Width = 0.0f;
 	float Height = 0.0f;
 
@@ -52,6 +54,13 @@ struct FRenderTargetSet
 	}
 };
 
+struct FColorTarget
+{
+    TComPtr<ID3D11Texture2D> Texture;
+    TComPtr<ID3D11RenderTargetView> RTV;
+    TComPtr<ID3D11ShaderResourceView> SRV;
+};
+
 class FD3DDevice
 {
 private:
@@ -59,14 +68,24 @@ private:
 	TComPtr<ID3D11DeviceContext> DeviceContext;
 	TComPtr<IDXGISwapChain> SwapChain;
 
+	// Back Buffer
 	TComPtr<ID3D11Texture2D> FrameBuffer;
 	TComPtr<ID3D11RenderTargetView> FrameBufferRTV;
+
+	// Back Buffer용 Selection Mask
 	TComPtr<ID3D11Texture2D> SelectionMaskBuffer;
 	TComPtr<ID3D11RenderTargetView> SelectionMaskRTV;
 	TComPtr<ID3D11ShaderResourceView> SelectionMaskSRV;
-	TComPtr<ID3D11Texture2D> ViewportSceneColorTexture;
-	TComPtr<ID3D11RenderTargetView> ViewportSceneColorRTV;
-	TComPtr<ID3D11ShaderResourceView> ViewportSceneColorSRV;
+
+	// Post-Process가 도입되면서, 2개의 texture를 모두 사용해야함 -> Ping-Pong구조로 사용하게 개선
+    FColorTarget ViewportColorTargets[2];
+
+	// 현재 활성화된 ViewportColor의 index
+	int32 ActiveViewportColorIndex = 0;
+	// ViewportColorTarget의 개수
+    int32 NumOfViewportColor = 2;
+
+	// viewport용 Selection Mask Texture
 	TComPtr<ID3D11Texture2D> ViewportSelectionMaskTexture;
 	TComPtr<ID3D11RenderTargetView> ViewportSelectionMaskRTV;
 	TComPtr<ID3D11ShaderResourceView> ViewportSelectionMaskSRV;
@@ -78,8 +97,11 @@ private:
 
 	TComPtr<ID3D11Texture2D> DepthStencilBuffer;
 	TComPtr<ID3D11DepthStencilView> DepthStencilView;
+	
+
 	TComPtr<ID3D11Texture2D> ViewportDepthStencilTexture;
 	TComPtr<ID3D11DepthStencilView> ViewportDepthStencilView;
+    TComPtr<ID3D11ShaderResourceView> ViewportDepthStencilSRV;
 
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDefault;
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDepthReadOnly;
@@ -154,7 +176,22 @@ public:
 	ID3D11RenderTargetView* GetSelectionMaskRTV() const { return SelectionMaskRTV.Get(); }
 	ID3D11ShaderResourceView* GetSelectionMaskSRV() const { return SelectionMaskSRV.Get(); }
 	ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView.Get(); }
-	ID3D11ShaderResourceView* GetViewportSceneColorSRV() const { return ViewportSceneColorSRV.Get(); }
+    ID3D11ShaderResourceView* GetViewportDepthStencilSRV() const { return ViewportDepthStencilSRV.Get(); }
+
+	// Post Process ping-pong helper function
+    ID3D11ShaderResourceView*	GetViewportSceneColorSRV() const;
+    ID3D11ShaderResourceView*	GetFinalColorSRV() const;
+    ID3D11RenderTargetView*		GetCurrentColorRTV() const;
+    ID3D11ShaderResourceView*	GetPostProcessSourceSRV() const;
+    ID3D11RenderTargetView*     GetPostProcessDestRTV() const;
+	// 모든 ViewportColorTarget의 RTV가 valid한지 점검하는 함수.
+    bool						bAllViewportColorTargetRTVIsValid();
+	// ViewportColorTarget을 바꾸는 함수
+	void SwapPostProcessTargets();
+	// ViewportColorTarget을 0번 index의 resource를 쓰게 초기화 해주는 함수.
+    void ResetPostProcessTargets();
+
+
 	float GetViewportWidth() const { return ViewportInfo.Width; }
 	float GetViewportHeight() const { return ViewportInfo.Height; }
 	FRenderTargetSet GetBackBufferRenderTargets() const;
