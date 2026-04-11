@@ -200,7 +200,7 @@ FRenderTargetSet FD3DDevice::GetViewportRenderTargets() const
 	Targets.SelectionMaskRTV	= ViewportSelectionMaskRTV.Get();
 	Targets.SelectionMaskSRV	= ViewportSelectionMaskSRV.Get();
 	Targets.DepthStencilView	= ViewportDepthStencilView.Get();
-    Targets.DepthStencilSRV		= ViewportDepthStencilSRV.Get();
+    Targets.DepthSRV			= ViewportDepthSRV.Get();
 
 	Targets.Width = static_cast<float>(ViewportRenderTargetWidth);
 	Targets.Height = static_cast<float>(ViewportRenderTargetHeight);
@@ -494,12 +494,12 @@ void FD3DDevice::CreateViewportRenderTargets(uint32 Width, uint32 Height)
         depthSRVDesc.Texture2D.MostDetailedMip = 0;
         depthSRVDesc.Texture2D.MipLevels = 1;
     Device->CreateShaderResourceView(ViewportDepthStencilTexture.Get(), &depthSRVDesc,
-		ViewportDepthStencilSRV.ReleaseAndGetAddressOf());
+                                         ViewportDepthSRV.ReleaseAndGetAddressOf());
 }
 
 void FD3DDevice::ReleaseViewportRenderTargets()
 {
-    ViewportDepthStencilSRV.Reset();
+    ViewportDepthSRV.Reset();
 	ViewportDepthStencilView.Reset();
 	ViewportDepthStencilTexture.Reset();
 	ViewportSelectionMaskSRV.Reset();
