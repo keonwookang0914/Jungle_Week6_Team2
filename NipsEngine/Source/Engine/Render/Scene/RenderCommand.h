@@ -152,7 +152,12 @@ struct FFxaaConstantBuffer
 
     float padding[3];
 };
-
+struct FDepthSceneConstants
+{
+    float    NearPlane;
+    float    FarPlane;
+    FVector2 ViewportSize; // 16바이트 정렬 맞춰서 필요 시 패딩 추가
+};
 struct FRenderCommand
 {
 	//	VB, IB 모두 담고 있는 MB
@@ -179,3 +184,4 @@ struct FRenderCommand
 	EBlendState BlendState = static_cast<EBlendState>(-1);
 	ERenderCommandType Type = ERenderCommandType::Primitive;
 };
+

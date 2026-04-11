@@ -7,7 +7,8 @@ enum class EViewMode : int32
 	Lit = 0,
 	Unlit,
 	Wireframe,
-	Count
+	Count,
+	DepthScene
 };
 
 struct FShowFlags

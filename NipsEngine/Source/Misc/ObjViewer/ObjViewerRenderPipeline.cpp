@@ -32,8 +32,8 @@ void FObjViewerRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 		const FShowFlags& ShowFlags = Settings.ShowFlags;
 		EViewMode ViewMode = Settings.ViewMode;
 
-		Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
-		Bus.SetRenderSettings(ViewMode, ShowFlags);
+		Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(),Camera->GetFarPlane());
+        Bus.SetRenderSettings(ViewMode, ShowFlags);
 
 		Collector.CollectWorld(World, ShowFlags, ViewMode, Bus);
 		Collector.CollectGrid(Settings.GridSpacing, Settings.GridHalfLineCount, Bus);

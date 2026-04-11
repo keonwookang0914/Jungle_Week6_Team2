@@ -45,6 +45,10 @@ void FRenderer::Create(HWND hWindow)
 
 	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
     Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
+	
+	// 8. DepthSceneMode
+	Resources.DepthSceneShader.Create(Device.GetDevice(), L"Shaders/DepthScene.hlsl", "VS", "PS", nullptr, 0);
+
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
@@ -53,6 +57,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.OutlineConstantBuffer.Create(Device.GetDevice(), sizeof(FOutlineConstants));
 	Resources.StaticMeshConstantBuffer.Create(Device.GetDevice(), sizeof(FStaticMeshConstants));
 	Resources.FxaaConstantBuffer.Create(Device.GetDevice(), sizeof(FFxaaConstantBuffer));
+    Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 
 	// TODO : SamplerState 관리
 	D3D11_SAMPLER_DESC SampDesc = {};
@@ -104,6 +109,9 @@ void FRenderer::Release()
 	Resources.StaticMeshShader.Release();
 	Resources.FxaaShader.Release();
 
+
+	Resources.DepthSceneShader.Release();
+
 	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
 	Resources.FrameBuffer.Release();
@@ -112,6 +120,7 @@ void FRenderer::Release()
 	Resources.OutlineConstantBuffer.Release();
 	Resources.StaticMeshConstantBuffer.Release();
 	Resources.FxaaConstantBuffer.Release();
+    Resources.DepthSceneConstantBuffer.Release();
 
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
@@ -220,6 +229,8 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 		{
 			ExecuteDefaultPass(CurPass, Commands, InRenderBus, Context);
 		}
+
+
 	}
 }
 
@@ -412,9 +423,7 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
 {
 	//	Selection Mask에 대한 것인지 확인하여 RTV를 가져옴
-	ID3D11RenderTargetView* RTV = (Pass == ERenderPass::SelectionMask)
-		? CurrentRenderTargets.SelectionMaskRTV
-		: CurrentRenderTargets.SceneColorRTV;
+	ID3D11RenderTargetView* RTV = (Pass == ERenderPass::SelectionMask)	? CurrentRenderTargets.SelectionMaskRTV	: CurrentRenderTargets.SceneColorRTV;
 	ID3D11DepthStencilView* DSV = CurrentRenderTargets.DepthStencilView;
 	Context->OMSetRenderTargets(1, &RTV, DSV);
 

@@ -103,6 +103,7 @@ private:
 	TComPtr<ID3D11DepthStencilView> ViewportDepthStencilView;
     TComPtr<ID3D11ShaderResourceView> ViewportDepthStencilSRV;
 
+
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDefault;
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDepthReadOnly;
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateStencilWrite;

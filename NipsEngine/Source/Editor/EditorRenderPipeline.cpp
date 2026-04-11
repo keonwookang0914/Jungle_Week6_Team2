@@ -99,7 +99,7 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     const FShowFlags&      ShowFlags = Settings.ShowFlags;
     const EViewMode        ViewMode = SceneView.ViewMode;
 
-    Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
+	Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(),Camera->GetFarPlane());
     Bus.SetRenderSettings(ViewMode, ShowFlags);
 
     const FFrustum& ViewFrustum = Camera->GetFrustum();

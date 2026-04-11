@@ -568,10 +568,8 @@ void FD3DDevice::CreateDepthStencilBuffer()
 	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
-	Device->CreateTexture2D(&depthStencilDesc, nullptr,
-		DepthStencilBuffer.ReleaseAndGetAddressOf());
-	Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr,
-		DepthStencilView.ReleaseAndGetAddressOf());
+	Device->CreateTexture2D(&depthStencilDesc, nullptr,	DepthStencilBuffer.ReleaseAndGetAddressOf());
+	Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr,	DepthStencilView.ReleaseAndGetAddressOf());
 
 	//	Default
 	D3D11_DEPTH_STENCIL_DESC depthStencilStateDefaultDesc = {};
