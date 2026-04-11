@@ -17,6 +17,7 @@ struct FRenderResources
 	FConstantBuffer OutlineConstantBuffer;          // b5
 
     FConstantBuffer StaticMeshConstantBuffer;       // b6
+    FConstantBuffer FxaaConstantBuffer;				// b7
 
     FShader PrimitiveShader;
     FShader GizmoShader;
@@ -25,5 +26,11 @@ struct FRenderResources
 	FShader OutlineShader;
     FShader StaticMeshShader;
 
+	// Fast Approximate Anti Aliasing용 Shader
+    FShader FxaaShader;
+
 	TComPtr<ID3D11SamplerState> MeshSamplerState;
+
+    // FXAA 에서 선형 샘플링을 위해 필요한 SamplerState
+    TComPtr<ID3D11SamplerState> LinearSamplerState; 
 };
