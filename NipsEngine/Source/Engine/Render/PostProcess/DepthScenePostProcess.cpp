@@ -12,7 +12,7 @@ void FDepthScenePostProcess::Execute(
     ID3D11ShaderResourceView* SceneColorSRV, // 미사용 — 슬롯 t0은 Fog 등과의 컨벤션 통일을 위해 예약
     ID3D11RenderTargetView*   OutputRTV)
 {
-    if (RenderTargets.DepthStencilSRV == nullptr)
+    if (RenderTargets.DepthSRV == nullptr)
     {
         return;
     }
@@ -23,7 +23,7 @@ void FDepthScenePostProcess::Execute(
     // 2. Depth SRV 바인딩 — t1 슬롯
     //    t0 : SceneColorSRV 예약 (포스트프로세스 컨벤션)
     //    t1 : DepthStencilSRV
-    ID3D11ShaderResourceView* DepthSRV = RenderTargets.DepthStencilSRV;
+    ID3D11ShaderResourceView* DepthSRV = RenderTargets.DepthSRV;
     Context->PSSetShaderResources(1, 1, &DepthSRV);
 
     // 3. 셰이더 바인딩
