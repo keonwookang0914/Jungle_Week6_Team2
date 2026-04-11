@@ -43,6 +43,8 @@ struct FRenderTargetSet
 	ID3D11RenderTargetView* SelectionMaskRTV = nullptr;
 	ID3D11ShaderResourceView* SelectionMaskSRV = nullptr;
 	ID3D11DepthStencilView* DepthStencilView = nullptr;
+    ID3D11ShaderResourceView* DepthStencilSRV = nullptr;
+
 	float Width = 0.0f;
 	float Height = 0.0f;
 
@@ -95,8 +97,11 @@ private:
 
 	TComPtr<ID3D11Texture2D> DepthStencilBuffer;
 	TComPtr<ID3D11DepthStencilView> DepthStencilView;
+	
+
 	TComPtr<ID3D11Texture2D> ViewportDepthStencilTexture;
 	TComPtr<ID3D11DepthStencilView> ViewportDepthStencilView;
+    TComPtr<ID3D11ShaderResourceView> ViewportDepthStencilSRV;
 
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDefault;
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDepthReadOnly;
@@ -171,6 +176,7 @@ public:
 	ID3D11RenderTargetView* GetSelectionMaskRTV() const { return SelectionMaskRTV.Get(); }
 	ID3D11ShaderResourceView* GetSelectionMaskSRV() const { return SelectionMaskSRV.Get(); }
 	ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView.Get(); }
+    ID3D11ShaderResourceView* GetViewportDepthStencilSRV() const { return ViewportDepthStencilSRV.Get(); }
 
 	// Post Process ping-pong helper function
     ID3D11ShaderResourceView*	GetViewportSceneColorSRV() const;

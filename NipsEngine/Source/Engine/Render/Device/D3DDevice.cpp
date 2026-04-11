@@ -183,23 +183,25 @@ void FD3DDevice::ResetPostProcessTargets()
 FRenderTargetSet FD3DDevice::GetBackBufferRenderTargets() const
 {
 	FRenderTargetSet Targets;
-	Targets.SceneColorRTV = FrameBufferRTV.Get();
-	Targets.SelectionMaskRTV = SelectionMaskRTV.Get();
-	Targets.SelectionMaskSRV = SelectionMaskSRV.Get();
-	Targets.DepthStencilView = DepthStencilView.Get();
-	Targets.Width = ViewportInfo.Width;
-	Targets.Height = ViewportInfo.Height;
+	Targets.SceneColorRTV		= FrameBufferRTV.Get();
+	Targets.SelectionMaskRTV	= SelectionMaskRTV.Get();
+	Targets.SelectionMaskSRV	= SelectionMaskSRV.Get();
+	Targets.DepthStencilView	= DepthStencilView.Get();
+	Targets.Width				= ViewportInfo.Width;
+	Targets.Height				= ViewportInfo.Height;
 	return Targets;
 }
 
 FRenderTargetSet FD3DDevice::GetViewportRenderTargets() const
 {
 	FRenderTargetSet Targets;
-    Targets.SceneColorRTV = ViewportColorTargets[0].RTV.Get();
-    Targets.SceneColorSRV = ViewportColorTargets[0].SRV.Get();
-	Targets.SelectionMaskRTV = ViewportSelectionMaskRTV.Get();
-	Targets.SelectionMaskSRV = ViewportSelectionMaskSRV.Get();
-	Targets.DepthStencilView = ViewportDepthStencilView.Get();
+    Targets.SceneColorRTV		= ViewportColorTargets[0].RTV.Get();
+    Targets.SceneColorSRV		= ViewportColorTargets[0].SRV.Get();
+	Targets.SelectionMaskRTV	= ViewportSelectionMaskRTV.Get();
+	Targets.SelectionMaskSRV	= ViewportSelectionMaskSRV.Get();
+	Targets.DepthStencilView	= ViewportDepthStencilView.Get();
+    Targets.DepthStencilSRV		= ViewportDepthStencilSRV.Get();
+
 	Targets.Width = static_cast<float>(ViewportRenderTargetWidth);
 	Targets.Height = static_cast<float>(ViewportRenderTargetHeight);
 	return Targets;
@@ -462,23 +464,42 @@ void FD3DDevice::CreateViewportRenderTargets(uint32 Width, uint32 Height)
 	Device->CreateShaderResourceView(ViewportSelectionMaskTexture.Get(), &selectionMaskSRVDesc,
 		ViewportSelectionMaskSRV.ReleaseAndGetAddressOf());
 
+	// Depth Stencil을 위한 Texture 생성
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
 	depthStencilDesc.Width = Width;
 	depthStencilDesc.Height = Height;
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.ArraySize = 1;
-	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	depthStencilDesc.SampleDesc.Count = 1;
 	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+
 	Device->CreateTexture2D(&depthStencilDesc, nullptr,
 		ViewportDepthStencilTexture.ReleaseAndGetAddressOf());
-	Device->CreateDepthStencilView(ViewportDepthStencilTexture.Get(), nullptr,
+
+	// Depth Stencil View 생성
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthDSVDesc = {};
+        depthDSVDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        depthDSVDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+        depthDSVDesc.Texture2D.MipSlice = 0;
+
+	Device->CreateDepthStencilView(ViewportDepthStencilTexture.Get(), &depthDSVDesc,
 		ViewportDepthStencilView.ReleaseAndGetAddressOf());
+
+	// Detph Shader Resource View 생성
+	D3D11_SHADER_RESOURCE_VIEW_DESC depthSRVDesc = {};
+        depthSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        depthSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        depthSRVDesc.Texture2D.MostDetailedMip = 0;
+        depthSRVDesc.Texture2D.MipLevels = 1;
+    Device->CreateShaderResourceView(ViewportDepthStencilTexture.Get(), &depthSRVDesc,
+		ViewportDepthStencilSRV.ReleaseAndGetAddressOf());
 }
 
 void FD3DDevice::ReleaseViewportRenderTargets()
 {
+    ViewportDepthStencilSRV.Reset();
 	ViewportDepthStencilView.Reset();
 	ViewportDepthStencilTexture.Reset();
 	ViewportSelectionMaskSRV.Reset();
