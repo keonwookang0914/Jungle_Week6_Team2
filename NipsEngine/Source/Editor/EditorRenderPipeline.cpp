@@ -58,6 +58,19 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     {
         RenderViewport(Renderer, i);
     }
+	// FXAA Show Flag가 true일때만 사용
+	const FEditorSettings& Settings = Editor->GetSettings();
+	if (Settings.ShowFlags.bEnableFXAA)
+	{
+		// 모든 viewport scene을 한 텍스처에 다 모으고, FXAA를 모든 viewport에 대해 같은 source->dest로 돌린다.
+		for (int32 i = 0; i < FViewportLayout::MaxViewports; ++i)
+		{
+			ExecuteViewportFXAA(Renderer, i);
+		}
+
+		// PostProcess Target 변경(RTV를 다음 렌더에서 SRV로 사용)
+		Renderer.GetFD3DDevice().SwapPostProcessTargets();
+	}
 
     Renderer.UseBackBufferRenderTargets();
 
@@ -126,6 +139,23 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     // 4. CPU 배처 데이터 준비 → GPU 드로우 (SetSubViewport 영역에만 출력됨)
     Renderer.PrepareBatchers(Bus);
     Renderer.Render(Bus);
+}
+
+void FEditorRenderPipeline::ExecuteViewportFXAA(FRenderer& Renderer, int32 ViewportIndex) 
+{
+    FViewportLayout&     Layout = Editor->GetViewportLayout();
+    const FViewportRect& Rect = Layout.GetViewportState(ViewportIndex).Rect;
+    if (Rect.Width <= 0 || Rect.Height <= 0)
+    {
+        return;
+    }
+
+    const FViewportRect& HostRect = Layout.GetHostRect();
+    const int32          LocalX = Rect.X - HostRect.X;
+    const int32          LocalY = Rect.Y - HostRect.Y;
+
+    Renderer.GetFD3DDevice().SetSubViewport(LocalX, LocalY, Rect.Width, Rect.Height);
+    Renderer.ExecuteFXAAForViewport(LocalX, LocalY, Rect.Width, Rect.Height);
 }
 
 const FRenderCollector::FCullingStats& FEditorRenderPipeline::GetViewportCullingStats(int32 ViewportIndex) const

@@ -145,11 +145,14 @@ struct FStaticMeshConstants
 
 struct FFxaaConstantBuffer
 {
-    FVector2 InvScreenSize;    // (1/width, 1/height)
-    float  EdgeThreshold;    // ex: 1.0 / 8.0
-    float  EdgeThresholdMin; // ex: 1.0 / 16.0
-    float  Subpix;           // ex: 0.75
+    FVector2 InvRenderTargetSize;	// (1/width, 1/height)
+    FVector2 ViewportMinUV;			// 현재 viewport의 최소 UV
 
+    FVector2 ViewportMaxUV;			// 현재 viewport의 최대 UV
+    float  EdgeThreshold;			// ex: 1.0 / 8.0
+    float  EdgeThresholdMin;		// ex: 1.0 / 16.0
+
+    float  Subpix;					 // ex: 0.75
     float padding[3];
 };
 

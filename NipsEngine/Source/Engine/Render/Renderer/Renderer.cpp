@@ -9,6 +9,7 @@
 #include "Render/Mesh/MeshManager.h"
 #include "Core/Logging/Stats.h"
 #include "Core/Logging/GPUProfiler.h"
+#include "Editor/Settings/EditorSettings.h"
 
 void FRenderer::Create(HWND hWindow)
 {
@@ -43,7 +44,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.StaticMeshShader.Create(Device.GetDevice(), L"Shaders/ShaderStaticMesh.hlsl",
 		"mainVS", "mainPS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
-	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
+	// 8. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
     Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
@@ -68,11 +69,6 @@ void FRenderer::Create(HWND hWindow)
     FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
     FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
     FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.MipLODBias = 0.0f;
-    FxaaSampDesc.MaxAnisotropy = 1;
-    FxaaSampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    FxaaSampDesc.MinLOD = 0.0f;
-    FxaaSampDesc.MaxLOD = 0.0f;
     Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 
 	//	MeshManager init
@@ -407,6 +403,74 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 		DrawCommand(Context, Cmd);
 	}
 	// FXAA
+}
+
+// Fast Approximate Anti-Aliasing 코드 (임시로 이 함수에 다 박아둠. 반드시 제 위치 찾아가야함)
+void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight) 
+{
+    if (ViewportWidth <= 0 || ViewportHeight <= 0)
+        return;
+
+	// 읽을 SRV랑 OUTPUT을 쓸 RTV를 가져온다.
+	ID3D11DeviceContext*      Context = Device.GetDeviceContext();
+    ID3D11ShaderResourceView* SourceSRV = Device.GetPostProcessSourceSRV();
+    ID3D11RenderTargetView*   DestRTV = Device.GetPostProcessDestRTV();
+
+	if (!SourceSRV || !DestRTV)
+        return;
+
+	// Current Render Target(Viewport) 의 Width, Height를 가져오기
+	const float FullWidth = CurrentRenderTargets.Width;
+    const float FullHeight = CurrentRenderTargets.Height;
+
+	if (FullWidth <= 0.f || FullHeight <= 0.f)
+        return;
+
+	// 상수버퍼 설정하기
+	FFxaaConstantBuffer FXAAConstants = {};
+
+	// RenderTarget Size의 역수 (UV 정규화 목적)
+	FXAAConstants.InvRenderTargetSize = FVector2(1.0f / FullWidth, 1.0f / FullHeight);
+
+	// 해당 뷰포트의 Texture내의 SubUV 설정
+	FXAAConstants.ViewportMinUV =
+	    FVector2(static_cast<float>(ViewportX) / FullWidth, static_cast<float>(ViewportY) / FullHeight);
+	FXAAConstants.ViewportMaxUV = FVector2(static_cast<float>(ViewportX + ViewportWidth) / FullWidth,
+	                                       static_cast<float>(ViewportY + ViewportHeight) / FullHeight);
+
+    const FEditorSettings& Settings = FEditorSettings::Get();
+    FXAAConstants.EdgeThreshold = Settings.FXAA.EdgeThreshold;
+	FXAAConstants.EdgeThresholdMin = Settings.FXAA.EdgeThresholdMin;
+    FXAAConstants.Subpix = Settings.FXAA.Subpix;
+       
+
+	// 각종 render state 설정
+    Device.SetBlendState(EBlendState::Opaque);
+    Device.SetRasterizerState(ERasterizerState::SolidNoCull);
+    Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	Context->OMSetRenderTargets(1, &DestRTV, nullptr);
+    Context->OMSetDepthStencilState(nullptr, 0);
+
+	Resources.FxaaShader.Bind(Context);
+    Resources.FxaaConstantBuffer.Update(Context, &FXAAConstants, sizeof(FFxaaConstantBuffer));
+
+	ID3D11Buffer* CB = Resources.FxaaConstantBuffer.GetBuffer();
+	// Constant Buffer 8번 슬롯 사용 (7번은 Decal이 사용 예정)
+    Context->VSSetConstantBuffers(8, 1, &CB);
+    Context->PSSetConstantBuffers(8, 1, &CB);
+
+	// Source SRV 연결 + LInear Sampler 연결
+	Context->PSSetShaderResources(0, 1, &SourceSRV);
+    ID3D11SamplerState* Sampler = Resources.LinearSamplerState.Get();
+    Context->PSSetSamplers(0, 1, &Sampler);
+
+	// Draw 호출
+	Context->Draw(3, 0);
+
+	// NullSRV로 바인딩 해제.
+	ID3D11ShaderResourceView* NullSRV = nullptr;
+    Context->PSSetShaderResources(0, 1, &NullSRV);
 }
 
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
