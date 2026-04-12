@@ -83,13 +83,15 @@ void FRenderer::Create(HWND hWindow)
 		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.DecalSamplerState.ReleaseAndGetAddressOf());
 	}
-	// FXAA Linear Sampler State
-	D3D11_SAMPLER_DESC FxaaSampDesc = {};
-    FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-    FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
+	{
+		// FXAA Linear Sampler State
+		D3D11_SAMPLER_DESC FxaaSampDesc = {};
+		FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+		FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
+	}
 
 	//	MeshManager init
 	FMeshManager::Initialize();
@@ -158,7 +160,7 @@ void FRenderer::InitializePostProcesses()
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
 	// TODO: DepthScene PostProcess 구현 후 주석 해제
 	// PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
-	// FFogPostProcess
+	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
