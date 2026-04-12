@@ -59,11 +59,12 @@ public:
 	FRenderResources& GetResources() { return Resources; }
 
 	// Post Process 실행기
-    void ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views);
+	void ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views);
 
 private:
 	void InitializePassRenderStates();
 	void InitializePassBatchers();
+	void InitializePostProcesses();
 
 	void ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode ViewMode);
 	void BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContext* Context, ERenderCommandType& LastCommandType);
@@ -87,13 +88,7 @@ private:
 	FFontBatcher   FontBatcher;
 	FSubUVBatcher  SubUVBatcher;
 
-	// TODO: TArray로 IPostProcess 들고있게 변경
-    TArray<IPostProcess*> PostProcesses;
-	// Post Processes
-	// FogPostProcess
-    FDepthScenePostProcess DepthScenePostProcess;
-	OutlinePostProcess OutlinePostProcessPass;
-    FFXAAPostProcess FXAAPostProcess;
+	TArray<std::unique_ptr<IPostProcess>> PostProcesses;
 
 	// 패스별 커맨드 정렬이 필요한 경우 정렬된 복사본 반환, 아니면 원본 참조
 	const TArray<FRenderCommand>& GetAlignedCommands(ERenderPass Pass, const TArray<FRenderCommand>& Commands);

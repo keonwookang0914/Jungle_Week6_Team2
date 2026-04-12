@@ -88,10 +88,7 @@ void FRenderer::Create(HWND hWindow)
 
 	InitializePassRenderStates();
 	InitializePassBatchers();
-	PostProcesses.clear();
-	PostProcesses.push_back(&OutlinePostProcessPass);
-	PostProcesses.push_back(&FXAAPostProcess);
-	// UseBackBufferRenderTargets(); // ??
+	InitializePostProcesses();
 
 	// GPU Profiler 초기화
 	FGPUProfiler::Get().Initialize(Device.GetDevice(), Device.GetDeviceContext());
@@ -134,6 +131,17 @@ void FRenderer::Release()
 	PostProcesses.clear();
 
 	Device.Release();
+}
+
+void FRenderer::InitializePostProcesses()
+{
+	PostProcesses.clear();
+	
+	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
+	// FFogPostProcess
+	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
+	// FDepthPostProcess
+	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
 
 //	Bus → Batcher 데이터 수집 (CPU). BeginFrame 이전에 호출.
@@ -418,7 +426,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
 
     ID3D11DeviceContext* Context = Device.GetDeviceContext();
 
-    for (IPostProcess* PostProcess : PostProcesses)
+    for (const auto& PostProcess : PostProcesses)
     {
         if (PostProcess == nullptr)
             continue;
@@ -452,7 +460,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
-            PostProcess->Execute(Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
+            PostProcess->Execute(Device.GetDevice(), Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 
         Device.SwapPostProcessTargets();
