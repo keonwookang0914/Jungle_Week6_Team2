@@ -458,3 +458,4 @@ NipsEngine/Asset/Mesh/Bin/**
 NipsEngine/Asset/Scene/**
 !NipsEngine/Asset/**/*.meta
 NipsEngine/Asset/Mesh/**/*.bin
+NipsEngine/Settings/Editor.ini
