@@ -44,7 +44,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.StaticMeshShader.Create(Device.GetDevice(), L"Shaders/ShaderStaticMesh.hlsl",
 		"mainVS", "mainPS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
-	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
+	// 7. 안티 앨리어싱 (Fast Approximate Anti-Aliasing, FXAA)
     Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
 
 	// 8. DepthSceneMode

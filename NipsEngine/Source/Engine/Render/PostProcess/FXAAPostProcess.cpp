@@ -45,8 +45,8 @@ void FFXAAPostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context,
 	// 상수버퍼 VS, PS에 연결
 	ID3D11Buffer* CB = Resources.FxaaConstantBuffer.GetBuffer();
 	// Constant Buffer 8번 슬롯 사용 (7번은 Decal이 사용 예정)
-	Context->VSSetConstantBuffers(8, 1, &CB);
-	Context->PSSetConstantBuffers(8, 1, &CB);
+	Context->VSSetConstantBuffers(7, 1, &CB);
+	Context->PSSetConstantBuffers(7, 1, &CB);
 
 	// Source SRV 연결 + LInear Sampler 연결
 	ID3D11SamplerState* Sampler = Resources.LinearSamplerState.Get();

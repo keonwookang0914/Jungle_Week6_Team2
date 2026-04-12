@@ -4,7 +4,7 @@
 Texture2D Scene : register(t0); //Scene의 RTV를 SRV로 받음.
 SamplerState LinearSampler : register(s0); // 선형 샘플러
 
-cbuffer FXAACB : register(b8)
+cbuffer FXAACB : register(b7)
 {
     float2 InvRenderTargetSize;
     float2 ViewportMinUV;
