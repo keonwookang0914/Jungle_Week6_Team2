@@ -17,10 +17,10 @@ struct FRenderResources
 	FConstantBuffer OutlineConstantBuffer;          // b5
 
     FConstantBuffer StaticMeshConstantBuffer;       // b6
-    FConstantBuffer FxaaConstantBuffer;				// b7
+    FConstantBuffer FxaaConstantBuffer;				// b8
 
 
-    FConstantBuffer DepthSceneConstantBuffer; // FDepthSceneConstants 크기 b8
+    FConstantBuffer DepthSceneConstantBuffer; // FDepthSceneConstants 크기 b9
 
 
     FShader PrimitiveShader;

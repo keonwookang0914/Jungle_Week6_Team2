@@ -25,7 +25,7 @@ void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Co
 	// 3. 셰이더 바인딩
 	Resources.DepthSceneShader.Bind(Context);
 
-	// 4. Near/Far 상수 업데이트 — cb8 슬롯
+	// 4. Near/Far 상수 업데이트 — cb9 슬롯
 	FDepthSceneConstants Constants = {};
 	Constants.NearPlane = ViewDesc.NearPlane;
 	Constants.FarPlane = ViewDesc.FarPlane;
@@ -33,7 +33,7 @@ void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Co
 	Resources.DepthSceneConstantBuffer.Update(Context, &Constants, sizeof(FDepthSceneConstants));
 
 	ID3D11Buffer* CB = Resources.DepthSceneConstantBuffer.GetBuffer();
-	Context->PSSetConstantBuffers(8, 1, &CB);
+	Context->PSSetConstantBuffers(9, 1, &CB);
 
 	// 5. 풀스크린 삼각형 드로우
 	Context->Draw(3, 0);
