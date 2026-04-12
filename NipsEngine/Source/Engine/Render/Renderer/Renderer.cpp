@@ -43,7 +43,13 @@ void FRenderer::Create(HWND hWindow)
 	Resources.StaticMeshShader.Create(Device.GetDevice(), L"Shaders/ShaderStaticMesh.hlsl",
 		"mainVS", "mainPS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
-	// 7. 데칼 (ShaderDecal.hlsl)
+	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
+    Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
+
+	// 8. DepthSceneMode
+	Resources.DepthSceneShader.Create(Device.GetDevice(), L"Shaders/DepthScene.hlsl", "VS", "PS", nullptr, 0);
+
+	// 9. 데칼 (ShaderDecal.hlsl)
 	Resources.DecalShader.Create(Device.GetDevice(), L"Shaders/ShaderDecal.hlsl",
 		"VS", "PS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
@@ -53,6 +59,8 @@ void FRenderer::Create(HWND hWindow)
 	Resources.EditorConstantBuffer.Create(Device.GetDevice(), sizeof(FEditorConstants));
 	Resources.OutlineConstantBuffer.Create(Device.GetDevice(), sizeof(FOutlineConstants));
 	Resources.StaticMeshConstantBuffer.Create(Device.GetDevice(), sizeof(FStaticMeshConstants));
+	Resources.FxaaConstantBuffer.Create(Device.GetDevice(), sizeof(FFxaaConstantBuffer));
+    Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
 
 	// TODO : SamplerState 관리
@@ -74,6 +82,18 @@ void FRenderer::Create(HWND hWindow)
 		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.DecalSamplerState.ReleaseAndGetAddressOf());
 	}
+	// FXAA Linear Sampler State
+	D3D11_SAMPLER_DESC FxaaSampDesc = {};
+    FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+    FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    FxaaSampDesc.MipLODBias = 0.0f;
+    FxaaSampDesc.MaxAnisotropy = 1;
+    FxaaSampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    FxaaSampDesc.MinLOD = 0.0f;
+    FxaaSampDesc.MaxLOD = 0.0f;
+    Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 
 	//	MeshManager init
 	FMeshManager::Initialize();
@@ -87,7 +107,7 @@ void FRenderer::Create(HWND hWindow)
 
 	InitializePassRenderStates();
 	InitializePassBatchers();
-	UseBackBufferRenderTargets();
+	// UseBackBufferRenderTargets(); // ??
 
 	// GPU Profiler 초기화
 	FGPUProfiler::Get().Initialize(Device.GetDevice(), Device.GetDeviceContext());
@@ -95,23 +115,31 @@ void FRenderer::Create(HWND hWindow)
 
 void FRenderer::Release()
 {
+	// Release Shader
 	Resources.PrimitiveShader.Release();
 	Resources.GizmoShader.Release();
 	Resources.EditorShader.Release();
 	Resources.SelectionMaskShader.Release();
 	Resources.OutlineShader.Release();
 	Resources.StaticMeshShader.Release();
+	Resources.FxaaShader.Release();
+	Resources.DepthSceneShader.Release();
 	Resources.DecalShader.Release();
 
+	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
 	Resources.FrameBuffer.Release();
 	Resources.GizmoPerObjectConstantBuffer.Release();
 	Resources.EditorConstantBuffer.Release();
 	Resources.OutlineConstantBuffer.Release();
 	Resources.StaticMeshConstantBuffer.Release();
+	Resources.FxaaConstantBuffer.Release();
+    Resources.DepthSceneConstantBuffer.Release();
 	Resources.DecalConstantBuffer.Release();
 
+	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
+    Resources.LinearSamplerState.Reset();
 	Resources.DecalSamplerState.Reset();
 
 	FGPUProfiler::Get().Shutdown();
@@ -217,6 +245,8 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 		{
 			ExecuteDefaultPass(CurPass, Commands, InRenderBus, Context);
 		}
+
+
 	}
 }
 
@@ -404,14 +434,13 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 		}
 		DrawCommand(Context, Cmd);
 	}
+	// FXAA
 }
 
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
 {
 	//	Selection Mask에 대한 것인지 확인하여 RTV를 가져옴
-	ID3D11RenderTargetView* RTV = (Pass == ERenderPass::SelectionMask)
-		? CurrentRenderTargets.SelectionMaskRTV
-		: CurrentRenderTargets.SceneColorRTV;
+	ID3D11RenderTargetView* RTV = (Pass == ERenderPass::SelectionMask)	? CurrentRenderTargets.SelectionMaskRTV	: CurrentRenderTargets.SceneColorRTV;
 	ID3D11DepthStencilView* DSV = CurrentRenderTargets.DepthStencilView;
 	Context->OMSetRenderTargets(1, &RTV, DSV);
 
@@ -517,9 +546,9 @@ void FRenderer::BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContex
 			Context->VSSetConstantBuffers(1, 1, &cb1);
 			Context->PSSetConstantBuffers(1, 1, &cb1);
 
-			ID3D11Buffer* cb7 = Resources.DecalConstantBuffer.GetBuffer();
-			Context->VSSetConstantBuffers(7, 1, &cb7);
-			Context->PSSetConstantBuffers(7, 1, &cb7);
+			ID3D11Buffer* cb9 = Resources.DecalConstantBuffer.GetBuffer();
+			Context->VSSetConstantBuffers(9, 1, &cb9);
+			Context->PSSetConstantBuffers(9, 1, &cb9);
 
 			ID3D11SamplerState* Samplers[] = { Resources.DecalSamplerState.Get() };
 			Context->PSSetSamplers(1, 1, Samplers);

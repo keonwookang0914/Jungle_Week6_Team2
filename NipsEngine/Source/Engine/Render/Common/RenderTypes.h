@@ -44,5 +44,6 @@ enum class ERenderPass : uint32
 	Editor,
 	DepthLess,
 	PostProcessOutline,
+    DepthView,
 	MAX
 };

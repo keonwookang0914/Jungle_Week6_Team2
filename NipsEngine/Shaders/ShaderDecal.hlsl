@@ -1,6 +1,6 @@
 #include "Common.hlsl"
 
-cbuffer DecalBuffer : register(b7)
+cbuffer DecalBuffer : register(b9)
 {
     row_major float4x4 DecalViewProjection;
     float3 DecalForward;

@@ -147,6 +147,23 @@ struct FStaticMeshResources
 	ID3D11ShaderResourceView* BumpSRV     = { nullptr };
 };
 
+struct FFxaaConstantBuffer
+{
+    FVector2 InvScreenSize;    // (1/width, 1/height)
+    float  EdgeThreshold;    // ex: 1.0 / 8.0
+    float  EdgeThresholdMin; // ex: 1.0 / 16.0
+    float  Subpix;           // ex: 0.75
+
+    float padding[3];
+};
+
+struct FDepthSceneConstants
+{
+    float    NearPlane;
+    float    FarPlane;
+    FVector2 ViewportSize; // 16바이트 정렬 맞춰서 필요 시 패딩 추가
+};
+
 struct FDecalConstants
 {
 	FMatrix DecalViewProjection;
@@ -193,3 +210,4 @@ struct FRenderCommand
 	EBlendState BlendState = static_cast<EBlendState>(-1);
 	ERenderCommandType Type = ERenderCommandType::Primitive;
 };
+

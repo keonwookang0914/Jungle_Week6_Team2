@@ -30,7 +30,7 @@ void FDefaultRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 		FShowFlags ShowFlags;
 		EViewMode ViewMode = EViewMode::Lit;
 
-		Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix());
+		Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(), Camera->GetFarPlane());
 		Bus.SetRenderSettings(ViewMode, ShowFlags);
 
 		const FFrustum& ViewFrustum = Camera->GetFrustum();
