@@ -1,6 +1,14 @@
 ﻿#pragma once
+
 #include "Core/CoreTypes.h"
-#include <Render/Scene/RenderBus.h>
+#include "Render/Common/ViewTypes.h"
+#include "Render/Scene/RenderCommand.h"
+
+struct FOutlinePostProcessData
+{
+    bool              bEnabled = false;
+    FOutlineConstants Constants = {};
+};
 
 struct FPostProcessViewDesc
 {
@@ -8,12 +16,15 @@ struct FPostProcessViewDesc
     int32 Y = 0;
     int32 Width = 0;
     int32 Height = 0;
-    
-	// RenderBus의 값을 받아오는 멤버 변수들
-	EViewMode  ViewMode = EViewMode::Lit;
+
+    // RenderBus에서 snapshot한 viewport별 실행 정보
+    EViewMode  ViewMode = EViewMode::Lit;
     FShowFlags ShowFlags = {};
     FMatrix    View = FMatrix::Identity;
     FMatrix    Proj = FMatrix::Identity;
     float      NearPlane = 0.1f;
     float      FarPlane = 1000.0f;
+
+    // Selection 마스크 수집 결과에서 파생된 outline 정보
+    FOutlinePostProcessData Outline = {};
 };

@@ -202,6 +202,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Render\PostProcess\OutlinePostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
     <ClCompile Include="Source\Editor\EditorEngine.cpp" />
     <ClCompile Include="Source\Editor\EditorRenderPipeline.cpp" />
@@ -317,6 +318,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Engine\Render\PostProcess\OutlinePostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\FXAAPostProcess.h" />
     <ClInclude Include="Source\Editor\EditorEngine.h" />
     <ClInclude Include="Source\Editor\EditorRenderPipeline.h" />
@@ -419,6 +421,7 @@
     <ClInclude Include="Source\Engine\Render\LineBatcher.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessBase.h" />
+    <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessTypes.h" />
     <ClInclude Include="Source\Engine\Render\SubUVBatcher.h" />
     <ClInclude Include="Source\Engine\Render\Common\ComPtr.h" />
     <ClInclude Include="Source\Engine\Render\Common\RenderTypes.h" />

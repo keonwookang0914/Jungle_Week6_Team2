@@ -1,16 +1,14 @@
 ﻿// PostProcessDepthScene.cpp
 #include "Render/PostProcess/DepthScenePostProcess.h"
 
-bool FDepthScenePostProcess::IsEnabled(const FRenderBus& Bus) const
+bool FDepthScenePostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const 
 {
-    return Bus.GetViewMode() == EViewMode::DepthScene;
+    return ViewDesc.ViewMode == EViewMode::DepthScene;
 }
 
-void FDepthScenePostProcess::Execute(
-    ID3D11DeviceContext* Context, const FRenderBus& Bus, FRenderResources& Resources,
-    const FRenderTargetSet&   RenderTargets,
-    ID3D11ShaderResourceView* SceneColorSRV, // 미사용 — 슬롯 t0은 Fog 등과의 컨벤션 통일을 위해 예약
-    ID3D11RenderTargetView*   OutputRTV)
+void FDepthScenePostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,
+                                     FRenderResources& Resources, const FRenderTargetSet& RenderTargets,
+                                     ID3D11ShaderResourceView* SceneColorSRV, ID3D11RenderTargetView* OutputRTV)
 {
     if (RenderTargets.DepthSRV == nullptr)
     {
@@ -31,8 +29,8 @@ void FDepthScenePostProcess::Execute(
 
     // 4. Near/Far 상수 업데이트 — cb8 슬롯
     FDepthSceneConstants Constants = {};
-    Constants.NearPlane = Bus.GetNearPlane();
-    Constants.FarPlane = Bus.GetFarPlane();
+    Constants.NearPlane = ViewDesc.NearPlane;
+    Constants.FarPlane = ViewDesc.FarPlane;
     Constants.ViewportSize = FVector2(RenderTargets.Width, RenderTargets.Height);
     Resources.DepthSceneConstantBuffer.Update(Context, &Constants, sizeof(FDepthSceneConstants));
 

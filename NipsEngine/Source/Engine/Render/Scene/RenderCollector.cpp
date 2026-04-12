@@ -244,8 +244,11 @@ void FRenderCollector::CollectWorldWithFrustum(UWorld* World, const FFrustum& Vi
 	}
 }
 
-void FRenderCollector::CollectSelection(const TArray<AActor*>& SelectedActors, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus)
+void FRenderCollector::CollectSelection(const TArray<AActor*>& SelectedActors, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus,
+                                        FOutlinePostProcessData& OutOutlineData)
 {
+	OutOutlineData = {};
+
 	bool bHasSelectionMask = false;
 	for (AActor* Actor : SelectedActors)
 	{
@@ -254,10 +257,13 @@ void FRenderCollector::CollectSelection(const TArray<AActor*>& SelectedActors, c
 
 	if (bHasSelectionMask)
 	{
+		OutOutlineData.bEnabled = true;
+		OutOutlineData.Constants.OutlineColor = FVector4(1.0f, 0.5f, 0.0f, 1.0f);
+		OutOutlineData.Constants.OutlineThicknessPixels = 5.0f;
+
 		FRenderCommand PostProcessCmd = {};
 		PostProcessCmd.Type = ERenderCommandType::PostProcessOutline;
-		PostProcessCmd.Constants.Outline.OutlineColor = FVector4(1.0f, 0.5f, 0.0f, 1.0f);
-		PostProcessCmd.Constants.Outline.OutlineThicknessPixels = 5.0f;
+		PostProcessCmd.Constants.Outline = OutOutlineData.Constants;
 		RenderBus.AddCommand(ERenderPass::PostProcessOutline, PostProcessCmd);
 	}
 }

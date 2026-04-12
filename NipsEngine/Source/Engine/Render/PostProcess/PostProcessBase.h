@@ -4,6 +4,7 @@
 #include "Render/Common/RenderTypes.h"
 #include "Render/Resource/RenderResources.h"
 #include "Render/Scene/RenderBus.h"
+#include "PostProcessTypes.h"
 
 /*
  * IPostProcess — 포스트프로세스 패스 인터페이스
@@ -21,9 +22,10 @@ class IPostProcess
   public:
     virtual ~IPostProcess() = default;
 
-    virtual bool IsEnabled(const FRenderBus& Bus) const = 0;
+    virtual bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const = 0;
 
-    virtual void Execute(ID3D11DeviceContext* Context, const FRenderBus& Bus, FRenderResources& Resources,
+    virtual void Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,
+                         FRenderResources&         Resources,
                          const FRenderTargetSet&   RenderTargets, // DepthStencilSRV, SelectionMaskSRV 포함
                          ID3D11ShaderResourceView* SceneColorSRV, // Ping-Pong Source (Color)
                          ID3D11RenderTargetView*   OutputRTV      // Ping-Pong Dest

@@ -1,12 +1,13 @@
 ﻿#include "FXAAPostProcess.h"
 #include "Settings/EditorSettings.h"
 
-bool FFXAAPostProcess::IsEnabled(const FRenderBus& Bus) const 
+bool FFXAAPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const 
 { 
-	return Bus.GetShowFlags().bEnableFXAA; 
+	return ViewDesc.ShowFlags.bEnableFXAA; 
 }
 
-void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FRenderBus& Bus, FRenderResources& Resources,
+void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,
+                               FRenderResources& Resources,
                                const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV,
                                ID3D11RenderTargetView* OutputRTV)
 {

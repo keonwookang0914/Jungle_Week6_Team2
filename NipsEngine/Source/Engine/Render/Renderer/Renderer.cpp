@@ -414,24 +414,25 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 }
 
 // Fast Approximate Anti-Aliasing 코드 (임시로 이 함수에 다 박아둠. 반드시 제 위치 찾아가야함)
-void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight) 
+void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight)
 {
     if (ViewportWidth <= 0 || ViewportHeight <= 0)
         return;
 
-	// 읽을 SRV랑 OUTPUT을 쓸 RTV를 가져온다.
-	ID3D11DeviceContext*      Context = Device.GetDeviceContext();
+    // 읽을 SRV랑 OUTPUT을 쓸 RTV를 가져온다.
+    ID3D11DeviceContext*      Context = Device.GetDeviceContext();
     ID3D11ShaderResourceView* SourceSRV = Device.GetPostProcessSourceSRV();
     ID3D11RenderTargetView*   DestRTV = Device.GetPostProcessDestRTV();
 
-	FXAAPostProcess.SetViewportRect(ViewportX, ViewportY, ViewportWidth, ViewportHeight);
+    FXAAPostProcess.SetViewportRect(ViewportX, ViewportY, ViewportWidth, ViewportHeight);
 
     // 각종 render state 설정 -> 여기서 하지말고 Render
     Device.SetBlendState(EBlendState::Opaque);
     Device.SetRasterizerState(ERasterizerState::SolidNoCull);
     Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    FXAAPostProcess.Execute(Context, FRenderBus{}, Resources, CurrentRenderTargets, Device.GetPostProcessSourceSRV(),
+    FXAAPostProcess.Execute(Context, FPostProcessViewDesc{}, Resources, CurrentRenderTargets,
+                            Device.GetPostProcessSourceSRV(),
                             Device.GetPostProcessDestRTV());
 }
 
