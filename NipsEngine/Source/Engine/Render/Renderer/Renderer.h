@@ -13,6 +13,10 @@
 #include "Render/LineBatcher.h"
 #include "Render/FontBatcher.h"
 #include "Render/SubUVBatcher.h"
+#include "Render/PostProcess/FXAAPostProcess.h"
+#include "Render/PostProcess/DepthScenePostProcess.h"
+#include "Render/PostProcess/OutlinePostProcess.h"
+#include "Render/PostProcess/PostProcessTypes.h"
 
 #include <cstddef>
 #include <functional>
@@ -54,15 +58,18 @@ public:
 	FD3DDevice& GetFD3DDevice() { return Device; }
 	FRenderResources& GetResources() { return Resources; }
 
+	// Post Process 실행기
+	void ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views);
+
 private:
 	void InitializePassRenderStates();
 	void InitializePassBatchers();
+	void InitializePostProcesses();
 
 	void ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode ViewMode);
 	void BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContext* Context, ERenderCommandType& LastCommandType);
 
 	void DrawCommand(ID3D11DeviceContext* InDeviceContext, const FRenderCommand& InCommand);
-	void DrawPostProcessOutline(ID3D11DeviceContext* InDeviceContext);
 	void UpdateFrameBuffer(ID3D11DeviceContext* Context, const FRenderBus& InRenderBus);
 
 	// 기본 패스 실행기 — SetupRenderState + DrawCommand 루프
@@ -70,6 +77,7 @@ private:
 
 	// LineBatcher Flush 공통 — EditorConstants 업데이트 + EditorShader 바인딩
 	void FlushLineBatcher(FLineBatcher& Batcher, ERenderPass Pass, const FRenderBus& Bus, ID3D11DeviceContext* Context);
+
 
 private:
 	FD3DDevice Device;
@@ -79,6 +87,8 @@ private:
 	FLineBatcher   GridLineBatcher;
 	FFontBatcher   FontBatcher;
 	FSubUVBatcher  SubUVBatcher;
+
+	TArray<std::unique_ptr<IPostProcess>> PostProcesses;
 
 	// 패스별 커맨드 정렬이 필요한 경우 정렬된 복사본 반환, 아니면 원본 참조
 	const TArray<FRenderCommand>& GetAlignedCommands(ERenderPass Pass, const TArray<FRenderCommand>& Commands);

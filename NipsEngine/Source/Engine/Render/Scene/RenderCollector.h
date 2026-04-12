@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "RenderBus.h"
+#include "Render/PostProcess/PostProcessTypes.h"
 #include "Render/Resource/MeshBufferManager.h"
 #include "Spatial/WorldSpatialIndex.h"
 #include <unordered_set>
@@ -30,7 +31,8 @@ public:
 
 	void CollectWorld(UWorld* World, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus,
 	                  const FFrustum* ViewFrustum = nullptr);
-	void CollectSelection(const TArray<AActor*>& SelectedActors, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus);
+	void CollectSelection(const TArray<AActor*>& SelectedActors, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus,
+	                      FOutlinePostProcessData& OutOutlineData);
 	void CollectGizmo(UGizmoComponent* Gizmo, const FShowFlags& ShowFlags, FRenderBus& RenderBus, bool bIsActiveOperation);
 	void CollectGrid(float GridSpacing, int32 GridHalfLineCount, FRenderBus& RenderBus, bool bOrthographic = false);
 	const FCullingStats& GetLastCullingStats() const { return LastCullingStats; }

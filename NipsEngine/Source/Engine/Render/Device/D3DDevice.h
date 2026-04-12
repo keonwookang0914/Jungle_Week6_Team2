@@ -187,6 +187,7 @@ public:
     ID3D11RenderTargetView*		GetCurrentColorRTV() const;
     ID3D11ShaderResourceView*	GetPostProcessSourceSRV() const;
     ID3D11RenderTargetView*     GetPostProcessDestRTV() const;
+    void                        CopyPostProcessSourceToDest();
 	// 모든 ViewportColorTarget의 RTV가 valid한지 점검하는 함수.
     bool						bAllViewportColorTargetRTVIsValid();
 	// ViewportColorTarget을 바꾸는 함수

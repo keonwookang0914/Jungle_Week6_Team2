@@ -29,7 +29,7 @@ void FRenderBus::SetViewProjection(const FMatrix& InView, const FMatrix& InProj 
 	View = InView;
 	Proj = InProj;
 	NearPlane = InNearPlane;
-        FarPlane = InFarPlane;
+	FarPlane = InFarPlane;
 
 
 	const FMatrix CameraWorldMatrix = InView.GetInverse();

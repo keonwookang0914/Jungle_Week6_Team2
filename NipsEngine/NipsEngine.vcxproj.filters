@@ -123,6 +123,9 @@
     <FxCompile Include="Shaders\Editor.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\FXAA.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="Shaders\Gizmo.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -493,6 +496,8 @@
     <ClCompile Include="Source\Engine\Component\DecalComponent.cpp">
       <Filter>Source\Engine\Component</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
+    <ClCompile Include="Source\Engine\Render\PostProcess\OutlinePostProcess.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\EditorEngine.h">
@@ -983,5 +988,8 @@
     <ClInclude Include="Source\Engine\Component\DecalComponent.h">
       <Filter>Source\Engine\Component</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Render\PostProcess\FXAAPostProcess.h" />
+    <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessTypes.h" />
+    <ClInclude Include="Source\Engine\Render\PostProcess\OutlinePostProcess.h" />
   </ItemGroup>
 </Project>
