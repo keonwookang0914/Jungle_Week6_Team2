@@ -52,11 +52,13 @@ FMatrix UDecalComponent::GetDecalViewProjection() const
     const FVector WorldExtent(std::abs(WorldScale.X), std::abs(WorldScale.Y), std::abs(WorldScale.Z));
 
     constexpr float NearPlane = 0.0f;
-    const float FarPlane = WorldExtent.X * 2.0f;
-    const float Width = WorldExtent.Y * 2.0f;
-    const float Height = WorldExtent.Z * 2.0f;
-    const FMatrix Projection =
-        FMatrix::MakeOrthographicLH(Width, Height, NearPlane, FarPlane);
+    float FarPlane = WorldExtent.X * 2.0f;
+    float Width = WorldExtent.Y * 2.0f;
+    float Height = WorldExtent.Z * 2.0f;
+    if (FarPlane < 1e-4f) { FarPlane = 1e-4f; }
+    if (Width < 1e-4f) { Width = 1e-4f; }
+    if (Height < 1e-4f) { Height = 1e-4f; }
+    const FMatrix Projection = FMatrix::MakeOrthographicLH(Width, Height, NearPlane, FarPlane);
 
     const FVector Eye = GetWorldLocation() - (GetForwardVector() * WorldExtent.Z);
     const FVector Target = GetWorldLocation() + (GetForwardVector() * WorldExtent.Z);
