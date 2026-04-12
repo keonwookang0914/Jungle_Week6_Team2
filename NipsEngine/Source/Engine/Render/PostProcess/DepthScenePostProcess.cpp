@@ -6,7 +6,7 @@ bool FDepthScenePostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) con
     return ViewDesc.ViewMode == EViewMode::DepthScene;
 }
 
-void FDepthScenePostProcess::Execute(ID3D11Device* Device, ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc, FRenderResources& Resources, const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV, ID3D11RenderTargetView* OutputRTV)
+void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc, FRenderResources& Resources, const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV, ID3D11RenderTargetView* OutputRTV)
 {
 	if (RenderTargets.DepthSRV == nullptr)
 	{

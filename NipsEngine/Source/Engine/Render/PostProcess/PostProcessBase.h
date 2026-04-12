@@ -25,7 +25,7 @@ class IPostProcess
 
     virtual bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const = 0;
 
-    virtual void Execute(ID3D11Device* Device,
+    virtual void Execute(FD3DDevice* Device,
 						 ID3D11DeviceContext* Context, 
 						 const FPostProcessViewDesc& ViewDesc,
                          FRenderResources&         Resources,

@@ -47,7 +47,7 @@ void FRenderer::Create(HWND hWindow)
 	// 8. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
     Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
 	
-	// 8. DepthSceneMode
+	// 9. DepthSceneMode
 	Resources.DepthSceneShader.Create(Device.GetDevice(), L"Shaders/DepthScene.hlsl", "VS", "PS", nullptr, 0);
 
 
@@ -128,6 +128,8 @@ void FRenderer::Release()
 	GridLineBatcher.Release();
 	FontBatcher.Release();
 	SubUVBatcher.Release();
+
+	// Clear Post Process
 	PostProcesses.clear();
 
 	Device.Release();
@@ -138,9 +140,9 @@ void FRenderer::InitializePostProcesses()
 	PostProcesses.clear();
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
+	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
 	// FFogPostProcess
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
-	// FDepthPostProcess
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
 
@@ -460,7 +462,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
-            PostProcess->Execute(Device.GetDevice(), Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
+            PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 
         Device.SwapPostProcessTargets();
