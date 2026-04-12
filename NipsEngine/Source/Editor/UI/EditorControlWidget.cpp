@@ -60,7 +60,6 @@ void FEditorControlWidget::Render(float DeltaTime)
 			}
 			case 1: // TextRender
 			{
-				
 				ATextRenderActor* Actor = World->SpawnActor<ATextRenderActor>();
 				Actor->InitDefaultComponents();
 				Actor->SetActorLocation(CurSpawnPoint);
@@ -76,6 +75,13 @@ void FEditorControlWidget::Render(float DeltaTime)
 			case 3: // Billboard
 			{
 				ABillboardActor* Actor = World->SpawnActor<ABillboardActor>();
+				Actor->InitDefaultComponents();
+				Actor->SetActorLocation(CurSpawnPoint);
+				break;
+			}
+			case 4: // Decal
+			{
+				ADecalActor* Actor = World->SpawnActor<ADecalActor>();
 				Actor->InitDefaultComponents();
 				Actor->SetActorLocation(CurSpawnPoint);
 				break;

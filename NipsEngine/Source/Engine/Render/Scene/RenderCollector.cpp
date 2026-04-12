@@ -11,9 +11,11 @@
 #include "Component/SubUVComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Core/ResourceManager.h"
+#include "Component/DecalComponent.h"
 #include "Engine/Geometry/Frustum.h"
 #include "Engine/Asset/StaticMesh.h"
 #include "Render/Resource/Material.h"
+#include "Editor/UI/EditorConsoleWidget.h"
 #include <unordered_set>
 
 namespace
@@ -296,7 +298,7 @@ void FRenderCollector::CollectGizmo(UGizmoComponent* Gizmo, const FShowFlags& Sh
 		if (bInner)
 		{
 			Cmd.DepthStencilState = EDepthStencilState::GizmoInside;
-			Cmd.BlendState = EBlendState::AlphaBlend;
+			Cmd.BlendState = EBlendState::Opaque;
 		}
 		else
 		{
@@ -307,7 +309,7 @@ void FRenderCollector::CollectGizmo(UGizmoComponent* Gizmo, const FShowFlags& Sh
 		Cmd.Constants.Gizmo.bIsInnerGizmo = bInner ? 1 : 0;
 		Cmd.Constants.Gizmo.bClicking = bHolding ? 1 : 0;
 		Cmd.Constants.Gizmo.SelectedAxis = (SelectedAxis >= 0 && bIsActiveOperation) ? (uint32)SelectedAxis : 0xffffffffu;
-		Cmd.Constants.Gizmo.HoveredAxisOpacity = 0.3f;
+		Cmd.Constants.Gizmo.HoveredAxisOpacity = 1.0f;
 		return Cmd;
 		};
 
@@ -492,19 +494,19 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			{
 				Cmd.Constants.StaticMesh.bHasDiffuseMap =  1u;
 				Cmd.Constants.StaticMesh.bHasSpecularMap = 1u;
-				Cmd.Constants.StaticMesh.DiffuseSRV = DefaultSRV;
-				Cmd.Constants.StaticMesh.AmbientSRV = DefaultSRV;
-				Cmd.Constants.StaticMesh.SpecularSRV = DefaultSRV;
-				Cmd.Constants.StaticMesh.BumpSRV = DefaultSRV;
+				Cmd.Resources.StaticMesh.DiffuseSRV = DefaultSRV;
+				Cmd.Resources.StaticMesh.AmbientSRV = DefaultSRV;
+				Cmd.Resources.StaticMesh.SpecularSRV = DefaultSRV;
+				Cmd.Resources.StaticMesh.BumpSRV = DefaultSRV;
 			}
 			else
 			{
 				Cmd.Constants.StaticMesh.bHasDiffuseMap = MtlData->bHasDiffuseTexture ? 1u : 0u;
 				Cmd.Constants.StaticMesh.bHasSpecularMap = MtlData->bHasSpecularTexture ? 1u : 0u;
-				Cmd.Constants.StaticMesh.DiffuseSRV = MtlData->bHasDiffuseTexture ? ResolveSRV(MtlData->DiffuseTexPath) : DefaultSRV;
-				Cmd.Constants.StaticMesh.AmbientSRV = MtlData->bHasAmbientTexture ? ResolveSRV(MtlData->AmbientTexPath) : DefaultSRV;
-				Cmd.Constants.StaticMesh.SpecularSRV = MtlData->bHasSpecularTexture ? ResolveSRV(MtlData->SpecularTexPath) : DefaultSRV;
-				Cmd.Constants.StaticMesh.BumpSRV = MtlData->bHasBumpTexture ? ResolveSRV(MtlData->BumpTexPath) : DefaultSRV;
+				Cmd.Resources.StaticMesh.DiffuseSRV = MtlData->bHasDiffuseTexture ? ResolveSRV(MtlData->DiffuseTexPath) : DefaultSRV;
+				Cmd.Resources.StaticMesh.AmbientSRV = MtlData->bHasAmbientTexture ? ResolveSRV(MtlData->AmbientTexPath) : DefaultSRV;
+				Cmd.Resources.StaticMesh.SpecularSRV = MtlData->bHasSpecularTexture ? ResolveSRV(MtlData->SpecularTexPath) : DefaultSRV;
+				Cmd.Resources.StaticMesh.BumpSRV = MtlData->bHasBumpTexture ? ResolveSRV(MtlData->BumpTexPath) : DefaultSRV;
 			}
 
 			RenderBus.AddCommand(ERenderPass::Opaque, Cmd);
@@ -558,6 +560,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		RenderBus.AddCommand(ERenderPass::SubUV, Cmd);
 		break;
 	}
+
 	case EPrimitiveType::EPT_Billboard:
 	{
 		UBillboardComponent* BillboardComp = static_cast<UBillboardComponent*>(Primitive);
@@ -577,6 +580,62 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		Cmd.DepthStencilState = EDepthStencilState::Default;
 
 		RenderBus.AddCommand(ERenderPass::SubUV, Cmd);  // SubUV 패스 재사용
+		break;
+	}
+
+	case EPrimitiveType::EPT_Decal:
+	{
+		UDecalComponent* DecalComponent = static_cast<UDecalComponent*>(Primitive);
+		FTextureResource* DecalTexture = DecalComponent->GetCachedDecalTexture();
+		ID3D11ShaderResourceView* SRV = (DecalTexture && DecalTexture->SRV) ? DecalTexture->SRV.Get() : FResourceManager::Get().GetDefaultWhiteSRV();
+
+		AActor* DecalOwner = DecalComponent->GetOwner();
+		UWorld* World = DecalOwner ? DecalOwner->GetWorld() : nullptr;
+		if (World == nullptr) { return; }
+
+		TArray<UStaticMeshComponent*> StaticMeshComponents;
+		for (TActorIterator<AActor> Iter(World); Iter; ++Iter)
+		{
+			AActor* Actor = *Iter;
+			if (Actor == nullptr || !Actor->IsVisible()) { continue; }
+			for (UPrimitiveComponent* Component : Actor->GetPrimitiveComponents())
+			{
+				if (Component == nullptr || !Component->IsVisible()) { continue; }
+				if (Component->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
+				StaticMeshComponents.push_back(static_cast<UStaticMeshComponent*>(Component));
+			}
+		}
+
+		for (UStaticMeshComponent* StaticMeshComponent : StaticMeshComponents)
+		{
+			const UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
+			if (!StaticMesh || !StaticMesh->HasValidMeshData()) { continue; }
+
+			FMeshBuffer* MeshBuffer = MeshBufferManager.GetStaticMeshBuffer(StaticMesh, 0);
+			if (!MeshBuffer) { continue; }
+
+			const FStaticMesh* MeshData = StaticMesh->GetMeshData(0);
+			if (MeshData == nullptr) { continue; }
+
+			const TArray<FStaticMeshSection>& Sections = MeshData->Sections;
+
+			FRenderCommand Cmd = {};
+			Cmd.Type = ERenderCommandType::Decal;
+			Cmd.DepthStencilState = EDepthStencilState::DepthReadOnly;
+			Cmd.BlendState = EBlendState::AlphaBlend;
+
+			// Static Mesh
+			Cmd.PerObjectConstants = FPerObjectConstants{ StaticMeshComponent->GetWorldMatrix(), FColor::White().ToVector4() };
+			Cmd.MeshBuffer = MeshBuffer;
+			Cmd.SectionIndexStart = 0;
+			Cmd.SectionIndexCount = MeshBuffer->GetIndexBuffer().GetIndexCount();
+
+			// Decal Info
+			Cmd.Constants.Decal.DecalForward = DecalComponent->GetDecalForward();
+			Cmd.Constants.Decal.DecalViewProjection = DecalComponent->GetDecalViewProjection();
+			Cmd.Resources.Decal.DecalTextureSRV = SRV;
+			RenderBus.AddCommand(ERenderPass::Decal, Cmd);
+		}
 		break;
 	}
 	default:

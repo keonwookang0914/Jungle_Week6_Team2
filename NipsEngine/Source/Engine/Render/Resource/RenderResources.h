@@ -15,13 +15,10 @@ struct FRenderResources
     FConstantBuffer GizmoPerObjectConstantBuffer;   // b2
     FConstantBuffer EditorConstantBuffer;           // b4
 	FConstantBuffer OutlineConstantBuffer;          // b5
-
     FConstantBuffer StaticMeshConstantBuffer;       // b6
-    FConstantBuffer FxaaConstantBuffer;				// b8
-
-
-    FConstantBuffer DepthSceneConstantBuffer; // FDepthSceneConstants 크기 b9
-
+    FConstantBuffer FxaaConstantBuffer;				// b7
+    FConstantBuffer DepthSceneConstantBuffer; // FDepthSceneConstants 크기 b8
+    FConstantBuffer DecalConstantBuffer; // b9
 
     FShader PrimitiveShader;
     FShader GizmoShader;
@@ -30,12 +27,13 @@ struct FRenderResources
 	FShader OutlineShader;
     FShader StaticMeshShader;
     FShader DepthSceneShader;
-
 	// Fast Approximate Anti Aliasing용 Shader
     FShader FxaaShader;
+    FShader DecalShader;
 
 	TComPtr<ID3D11SamplerState> MeshSamplerState;
 
     // FXAA 에서 선형 샘플링을 위해 필요한 SamplerState
-    TComPtr<ID3D11SamplerState> LinearSamplerState; 
+    TComPtr<ID3D11SamplerState> LinearSamplerState;
+    TComPtr<ID3D11SamplerState> DecalSamplerState;
 };

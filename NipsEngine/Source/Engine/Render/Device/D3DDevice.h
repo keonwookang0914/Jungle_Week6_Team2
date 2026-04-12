@@ -34,6 +34,7 @@ enum class ERasterizerState
 	SolidFrontCull,
 	SolidNoCull,
 	WireFrame,
+	DepthBias, // For Decal
 };
 
 struct FRenderTargetSet
@@ -94,6 +95,7 @@ private:
 	TComPtr<ID3D11RasterizerState> RasterizerStateFrontCull;
 	TComPtr<ID3D11RasterizerState> RasterizerStateNoCull;
 	TComPtr<ID3D11RasterizerState> RasterizerStateWireFrame;
+	TComPtr<ID3D11RasterizerState> RasterizerStateDepthBias;
 
 	TComPtr<ID3D11Texture2D> DepthStencilBuffer;
 	TComPtr<ID3D11DepthStencilView> DepthStencilView;

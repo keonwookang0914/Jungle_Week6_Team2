@@ -156,6 +156,9 @@
     <FxCompile Include="Shaders\ShaderSubUV.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\ShaderDecal.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Editor\EditorEngine.cpp">
@@ -490,6 +493,9 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.cpp" />
+    <ClCompile Include="Source\Engine\Component\DecalComponent.cpp">
+      <Filter>Source\Engine\Component</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\OutlinePostProcess.cpp" />
   </ItemGroup>
@@ -979,6 +985,9 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessBase.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.h" />
+    <ClInclude Include="Source\Engine\Component\DecalComponent.h">
+      <Filter>Source\Engine\Component</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Render\PostProcess\FXAAPostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessTypes.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\OutlinePostProcess.h" />
