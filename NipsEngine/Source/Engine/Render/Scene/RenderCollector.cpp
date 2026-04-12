@@ -260,11 +260,6 @@ void FRenderCollector::CollectSelection(const TArray<AActor*>& SelectedActors, c
 		OutOutlineData.bEnabled = true;
 		OutOutlineData.Constants.OutlineColor = FVector4(1.0f, 0.5f, 0.0f, 1.0f);
 		OutOutlineData.Constants.OutlineThicknessPixels = 5.0f;
-
-		FRenderCommand PostProcessCmd = {};
-		PostProcessCmd.Type = ERenderCommandType::PostProcessOutline;
-		PostProcessCmd.Constants.Outline = OutOutlineData.Constants;
-		RenderBus.AddCommand(ERenderPass::PostProcessOutline, PostProcessCmd);
 	}
 }
 

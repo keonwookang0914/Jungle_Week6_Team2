@@ -160,6 +160,20 @@ ID3D11RenderTargetView* FD3DDevice::GetPostProcessDestRTV() const
     return ViewportColorTargets[1u - ActiveViewportColorIndex].RTV.Get();
 }
 
+void FD3DDevice::CopyPostProcessSourceToDest()
+{
+    const int32 SourceIndex = ActiveViewportColorIndex;
+    const int32 DestIndex = 1u - ActiveViewportColorIndex;
+
+    if (!ViewportColorTargets[SourceIndex].Texture || !ViewportColorTargets[DestIndex].Texture)
+    {
+        return;
+    }
+
+    DeviceContext->CopyResource(ViewportColorTargets[DestIndex].Texture.Get(),
+                                ViewportColorTargets[SourceIndex].Texture.Get());
+}
+
 bool FD3DDevice::bAllViewportColorTargetRTVIsValid() 
 {
     for (int32 i = 0; i < NumOfViewportColor; ++i)

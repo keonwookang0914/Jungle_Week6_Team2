@@ -15,6 +15,7 @@
 #include "Render/SubUVBatcher.h"
 #include "Render/PostProcess/FXAAPostProcess.h"
 #include "Render/PostProcess/DepthScenePostProcess.h"
+#include "Render/PostProcess/OutlinePostProcess.h"
 #include "Render/PostProcess/PostProcessTypes.h"
 
 #include <cstddef>
@@ -60,7 +61,7 @@ public:
 	// TODO: 반드시 Private으로 이동
     void ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight);
 	// Post Process 실행기
-    void ExecutePostProcessStack();
+    void ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views);
 
 private:
 	void InitializePassRenderStates();
@@ -70,7 +71,6 @@ private:
 	void BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContext* Context, ERenderCommandType& LastCommandType);
 
 	void DrawCommand(ID3D11DeviceContext* InDeviceContext, const FRenderCommand& InCommand);
-	void DrawPostProcessOutline(ID3D11DeviceContext* InDeviceContext);
 	void UpdateFrameBuffer(ID3D11DeviceContext* Context, const FRenderBus& InRenderBus);
 
 	// 기본 패스 실행기 — SetupRenderState + DrawCommand 루프
@@ -94,7 +94,7 @@ private:
 	// Post Processes
 	// FogPostProcess
     FDepthScenePostProcess DepthScenePostProcess;
-	// OutlinePostProcess
+	OutlinePostProcess OutlinePostProcessPass;
     FFXAAPostProcess FXAAPostProcess;
 
 	// 패스별 커맨드 정렬이 필요한 경우 정렬된 복사본 반환, 아니면 원본 참조

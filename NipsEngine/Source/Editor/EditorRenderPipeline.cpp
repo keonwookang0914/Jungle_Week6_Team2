@@ -61,6 +61,9 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     {
         RenderViewport(Renderer, i, PostProcessViews);
     }
+
+    Renderer.ExecutePostProcessStack(PostProcessViews);
+
 	// FXAA Show Flag가 true일때만 사용
 	const FEditorSettings& Settings = Editor->GetSettings();
 	if (Settings.ShowFlags.bEnableFXAA)

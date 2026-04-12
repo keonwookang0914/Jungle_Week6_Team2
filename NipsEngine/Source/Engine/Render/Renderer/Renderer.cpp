@@ -88,6 +88,8 @@ void FRenderer::Create(HWND hWindow)
 
 	InitializePassRenderStates();
 	InitializePassBatchers();
+	PostProcesses.clear();
+	PostProcesses.push_back(&OutlinePostProcessPass);
 	// UseBackBufferRenderTargets(); // ??
 
 	// GPU Profiler 초기화
@@ -128,6 +130,7 @@ void FRenderer::Release()
 	GridLineBatcher.Release();
 	FontBatcher.Release();
 	SubUVBatcher.Release();
+	PostProcesses.clear();
 
 	Device.Release();
 }
@@ -245,7 +248,6 @@ void FRenderer::InitializePassRenderStates()
 	S[(uint32)E::DepthLess] = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend, ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.GizmoShader,     false };
 	S[(uint32)E::Font] = { EDepthStencilState::Default,      EBlendState::AlphaBlend, ERasterizerState::SolidNoCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                    true };
 	S[(uint32)E::SubUV] = { EDepthStencilState::Default,      EBlendState::AlphaBlend, ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                    true };
-	S[(uint32)E::PostProcessOutline] = { EDepthStencilState::Default, EBlendState::AlphaBlend, ERasterizerState::SolidNoCull, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.OutlineShader, false };
 }
 
 // ============================================================
@@ -404,11 +406,6 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 		Device.SetBlendState(TargetBlend);
 
 		BindShaderByType(Cmd, Context, LastCommandType);
-		if (Cmd.Type == ERenderCommandType::PostProcessOutline)
-		{
-			DrawPostProcessOutline(Context);
-			continue;
-		}
 		DrawCommand(Context, Cmd);
 	}
 }
@@ -436,9 +433,52 @@ void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 V
                             Device.GetPostProcessDestRTV());
 }
 
-void FRenderer::ExecutePostProcessStack() 
+void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views) 
 {
+    if (Views.empty() || PostProcesses.empty())
+        return;
 
+    ID3D11DeviceContext* Context = Device.GetDeviceContext();
+
+    for (IPostProcess* PostProcess : PostProcesses)
+    {
+        if (PostProcess == nullptr)
+            continue;
+
+        bool bAnyEnabled = false;
+        for (const FPostProcessViewDesc& View : Views)
+        {
+            if (PostProcess->IsEnabled(View))
+            {
+                bAnyEnabled = true;
+                break;
+            }
+        }
+
+        if (!bAnyEnabled)
+            continue;
+
+        Device.CopyPostProcessSourceToDest();
+
+        Device.SetBlendState(EBlendState::AlphaBlend);
+        Device.SetRasterizerState(ERasterizerState::SolidNoCull);
+        Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        Context->OMSetDepthStencilState(nullptr, 0);
+
+        ID3D11ShaderResourceView* SourceSRV = Device.GetPostProcessSourceSRV();
+        ID3D11RenderTargetView* DestRTV = Device.GetPostProcessDestRTV();
+
+        for (const FPostProcessViewDesc& View : Views)
+        {
+            if (!PostProcess->IsEnabled(View))
+                continue;
+
+            Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+            PostProcess->Execute(Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
+        }
+
+        Device.SwapPostProcessTargets();
+    }
 }
 
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
@@ -493,19 +533,6 @@ void FRenderer::BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContex
 
 	case ERenderCommandType::SelectionMask:
 		break;
-
-	case ERenderCommandType::PostProcessOutline:
-	{
-		FOutlineConstants outlineConstants = InCmd.Constants.Outline;
-		outlineConstants.ViewportSize = FVector2(CurrentRenderTargets.Width, CurrentRenderTargets.Height);
-
-		Resources.OutlineShader.Bind(Context);
-		Resources.OutlineConstantBuffer.Update(Context, &outlineConstants, sizeof(FOutlineConstants));
-		ID3D11Buffer* cb = Resources.OutlineConstantBuffer.GetBuffer();
-		Context->VSSetConstantBuffers(5, 1, &cb);
-		Context->PSSetConstantBuffers(5, 1, &cb);
-		break;
-	}
 
     case ERenderCommandType::StaticMesh:
         Resources.StaticMeshConstantBuffer.Update(Context, &InCmd.Constants.StaticMesh, sizeof(FStaticMeshConstants));
@@ -578,21 +605,6 @@ void FRenderer::DrawCommand(ID3D11DeviceContext* InDeviceContext, const FRenderC
 	{
 		InDeviceContext->Draw(vertexCount, 0);
 	}
-}
-
-void FRenderer::DrawPostProcessOutline(ID3D11DeviceContext* InDeviceContext)
-{
-	ID3D11RenderTargetView* RTV = CurrentRenderTargets.SceneColorRTV;
-	InDeviceContext->OMSetRenderTargets(1, &RTV, nullptr);
-	InDeviceContext->OMSetDepthStencilState(nullptr, 0);
-
-	ID3D11ShaderResourceView* maskSRV = CurrentRenderTargets.SelectionMaskSRV;
-	InDeviceContext->PSSetShaderResources(7, 1, &maskSRV);
-
-	InDeviceContext->Draw(3, 0);
-
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	InDeviceContext->PSSetShaderResources(7, 1, &nullSRV);
 }
 
 //	Present the rendered frame to the screen. 반드시 Render 이후에 호출되어야 함.
