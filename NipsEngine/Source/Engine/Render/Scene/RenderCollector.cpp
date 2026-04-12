@@ -630,7 +630,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			Cmd.SectionIndexCount = MeshBuffer->GetIndexBuffer().GetIndexCount();
 
 			// Decal Info
-			Cmd.Constants.Decal.DecalForward = DecalComponent->GetDecalForward();
+			Cmd.Constants.Decal.DecalForward = DecalComponent->GetForwardVector();
 			Cmd.Constants.Decal.DecalViewProjection = DecalComponent->GetDecalViewProjection();
 			Cmd.Resources.Decal.DecalTextureSRV = SRV;
 			RenderBus.AddCommand(ERenderPass::Decal, Cmd);

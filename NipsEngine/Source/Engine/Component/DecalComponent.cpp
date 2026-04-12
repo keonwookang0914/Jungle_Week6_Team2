@@ -58,17 +58,10 @@ FMatrix UDecalComponent::GetDecalViewProjection() const
     const FMatrix Projection =
         FMatrix::MakeOrthographicLH(Width, Height, NearPlane, FarPlane);
 
-    const FVector Eye = GetWorldLocation() - (GetDecalForward() * WorldExtent.Z);
-    const FVector Target = GetWorldLocation() + (GetDecalForward() * WorldExtent.Z);
+    const FVector Eye = GetWorldLocation() - (GetForwardVector() * WorldExtent.Z);
+    const FVector Target = GetWorldLocation() + (GetForwardVector() * WorldExtent.Z);
     const FMatrix View = FMatrix::MakeViewLookAtLH(Eye, Target, GetUpVector());
     return View * Projection;
-}
-
-FVector UDecalComponent::GetDecalForward() const
-{
-    FMatrix WorldMatrix = GetWorldMatrix();
-    FVector DecalForward = -WorldMatrix.GetForwardVector();
-    return DecalForward.GetSafeNormal();
 }
 
 void UDecalComponent::UpdateWorldAABB() const

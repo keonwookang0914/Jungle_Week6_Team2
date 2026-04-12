@@ -48,5 +48,4 @@ public:
 	}
 
 	FMatrix GetDecalViewProjection() const;
-	FVector GetDecalForward() const;
 };
