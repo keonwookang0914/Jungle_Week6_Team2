@@ -23,7 +23,6 @@ enum class ERenderCommandType
 	Primitive,
 	Gizmo,
 	SelectionMask,
-	PostProcessOutline,
 	Billboard,
 	DebugBox,
 	Grid,		// Grid 패스 — LineBatcher 경유
