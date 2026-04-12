@@ -30,6 +30,7 @@ enum class ERenderCommandType
 	Font,		// TextRenderComponent — FontBatcher 경유
 	SubUV,		// SubUVComponent     — SubUVBatcher 경유
 	StaticMesh,	// UStaticMeshComponent — OBJ 메시 퐁셰이딩
+	Decal,
 };
 
 //PerObject
@@ -135,12 +136,28 @@ struct FStaticMeshConstants
 	uint32 bHasSpecularMap  = 0;     // cbuffer bytes 80-83  — HLSL uint bHasSpecularMap 대응
 	float  Padding1         = 0.f;   // cbuffer bytes 84-87
 	float  Padding2         = 0.f;   // cbuffer bytes 88-91  (16바이트 블록 완성)
+};
 
-	// Texture SRV (CPU-only, cbuffer 범위 밖)
+struct FStaticMeshResources
+{
+	// Texture SRV (CPU-only)
 	ID3D11ShaderResourceView* DiffuseSRV  = { nullptr };
 	ID3D11ShaderResourceView* AmbientSRV  = { nullptr };
 	ID3D11ShaderResourceView* SpecularSRV = { nullptr };
 	ID3D11ShaderResourceView* BumpSRV     = { nullptr };
+};
+
+struct FDecalConstants
+{
+	FMatrix DecalViewProjection;
+	FVector DecalForward;
+	float padding0;
+};
+
+struct FDecalResources
+{
+	// Decal texture SRV (CPU-only)
+	ID3D11ShaderResourceView* DecalTextureSRV  = { nullptr };
 };
 
 struct FRenderCommand
@@ -161,9 +178,16 @@ struct FRenderCommand
 		FGridConstants Grid;
 		FFontConstants Font;
 		FSubUVConstants SubUV;
-		FBillboardConstants Billboard;  // ← 추가
+		FBillboardConstants Billboard;
 		FStaticMeshConstants StaticMesh;
+		FDecalConstants Decal;
 	} Constants;
+
+	struct
+	{
+		FStaticMeshResources StaticMesh;
+		FDecalResources Decal;
+	} Resources;
 
 	EDepthStencilState DepthStencilState = static_cast<EDepthStencilState>(-1);
 	EBlendState BlendState = static_cast<EBlendState>(-1);

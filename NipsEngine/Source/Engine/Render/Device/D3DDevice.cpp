@@ -223,6 +223,9 @@ void FD3DDevice::SetRasterizerState(ERasterizerState InState)
 	case ERasterizerState::WireFrame:
 		DeviceContext->RSSetState(RasterizerStateWireFrame.Get());
 		break;
+	case ERasterizerState::DepthBias:
+		DeviceContext->RSSetState(RasterizerStateDepthBias.Get());
+		break;
 	}
 
 	CurrentRasterizerState = InState;
@@ -468,6 +471,15 @@ void FD3DDevice::CreateRasterizerState()
 	Device->CreateRasterizerState(&wireFrameDesc,
 		RasterizerStateWireFrame.ReleaseAndGetAddressOf());
 
+	D3D11_RASTERIZER_DESC depthBiasDesc = {};
+	depthBiasDesc.FillMode = D3D11_FILL_SOLID;
+	depthBiasDesc.CullMode = D3D11_CULL_BACK;
+	depthBiasDesc.DepthBias = -100; // DXGI_FORMAT_D24_UNORM_S8_UINT 기준
+	depthBiasDesc.DepthBiasClamp = -1.0f;
+	depthBiasDesc.SlopeScaledDepthBias = -0.01f;
+	Device->CreateRasterizerState(&depthBiasDesc,
+		RasterizerStateDepthBias.ReleaseAndGetAddressOf());
+
 	CurrentRasterizerState = ERasterizerState::SolidBackCull;
 }
 
@@ -477,6 +489,7 @@ void FD3DDevice::ReleaseRasterizerState()
 	RasterizerStateFrontCull.Reset();
 	RasterizerStateNoCull.Reset();
 	RasterizerStateWireFrame.Reset();
+	RasterizerStateDepthBias.Reset();
 }
 
 void FD3DDevice::CreateDepthStencilBuffer()

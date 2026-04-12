@@ -2,9 +2,10 @@
 
 #include "Component/StaticMeshComponent.h"
 #include "Component/TextRenderComponent.h"
+#include "Component/DecalComponent.h"
+#include "Component/SubUVComponent.h"
 #include "Core/ResourceManager.h"
 #include <format>
-#include <Component/SubUVComponent.h>
 
 namespace
 {
@@ -22,20 +23,23 @@ REGISTER_FACTORY(ASphereActor)
 DEFINE_CLASS(APlaneActor, AActor)
 REGISTER_FACTORY(APlaneActor)
 
-DEFINE_CLASS(AAttachTestActor, AActor) 
+DEFINE_CLASS(AAttachTestActor, AActor)
 REGISTER_FACTORY(AAttachTestActor)
 
-DEFINE_CLASS(AStaticMeshActor, AActor) 
+DEFINE_CLASS(AStaticMeshActor, AActor)
 REGISTER_FACTORY(AStaticMeshActor)
 
-DEFINE_CLASS(ASubUVActor, AActor) 
+DEFINE_CLASS(ASubUVActor, AActor)
 REGISTER_FACTORY(ASubUVActor)
 
-DEFINE_CLASS(ATextRenderActor, AActor) 
+DEFINE_CLASS(ATextRenderActor, AActor)
 REGISTER_FACTORY(ATextRenderActor)
 
-DEFINE_CLASS(ABillboardActor, AActor) 
+DEFINE_CLASS(ABillboardActor, AActor)
 REGISTER_FACTORY(ABillboardActor)
+
+DEFINE_CLASS(ADecalActor, AActor)
+REGISTER_FACTORY(ADecalActor)
 
 void ACubeActor::InitDefaultComponents()
 {
@@ -157,7 +161,7 @@ void ASubUVActor::InitDefaultComponents()
 	SubUV->SetParticle(FName("Explosion"));
 	SubUV->SetSpriteSize(2.0f, 2.0f);
 	SubUV->SetFrameRate(30.f);
-    
+
     auto* Text = AddComponent<UTextRenderComponent>();
     Text->AttachToComponent(SubUV);
     Text->SetFont(FName("Default"));
@@ -173,7 +177,7 @@ void ATextRenderActor::InitDefaultComponents()
 	SetRootComponent(Text);
 	Text->SetFont(FName("Default"));
 	Text->SetText("TextRender");
-    
+
     auto* TextUUID = AddComponent<UTextRenderComponent>();
     TextUUID->AttachToComponent(Text);
     TextUUID->SetFont(FName("Default"));
@@ -184,7 +188,7 @@ void ATextRenderActor::InitDefaultComponents()
 }
 
 void ABillboardActor::InitDefaultComponents()
-{	
+{
 	UBillboardComponent* Billboard = AddComponent<UBillboardComponent>();
 	SetRootComponent(Billboard);
 	Billboard->SetTextureName(("Asset\\Texture\\Pawn_64x.png"));
@@ -197,4 +201,11 @@ void ABillboardActor::InitDefaultComponents()
 
     FVector Extent = TextUUID->GetWorldAABB().GetExtent();
     TextUUID->SetRelativeLocation(FVector(0.0f, 0.0f, Extent.Y * 0.6f));
+}
+
+void ADecalActor::InitDefaultComponents()
+{
+	DecalComponent = AddComponent<UDecalComponent>();
+	SetRootComponent(DecalComponent);
+	DecalComponent->SetDecalTextureName("Asset\\Texture\\Pawn_64x.png");
 }

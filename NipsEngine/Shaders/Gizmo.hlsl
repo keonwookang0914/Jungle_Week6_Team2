@@ -46,6 +46,7 @@ float4 PS(PSInput input) : SV_TARGET
     {
         outColor.a *= HoveredAxisOpacity;
     }
+    outColor.a = 1.0f;
     
     if (axis != SelectedAxis && bClicking)
     {

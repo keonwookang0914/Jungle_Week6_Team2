@@ -15,8 +15,8 @@ struct FRenderResources
     FConstantBuffer GizmoPerObjectConstantBuffer;   // b2
     FConstantBuffer EditorConstantBuffer;           // b4
 	FConstantBuffer OutlineConstantBuffer;          // b5
-
     FConstantBuffer StaticMeshConstantBuffer;       // b6
+    FConstantBuffer DecalConstantBuffer; // b7
 
     FShader PrimitiveShader;
     FShader GizmoShader;
@@ -24,6 +24,8 @@ struct FRenderResources
 	FShader SelectionMaskShader;
 	FShader OutlineShader;
     FShader StaticMeshShader;
+    FShader DecalShader;
 
 	TComPtr<ID3D11SamplerState> MeshSamplerState;
+    TComPtr<ID3D11SamplerState> DecalSamplerState;
 };

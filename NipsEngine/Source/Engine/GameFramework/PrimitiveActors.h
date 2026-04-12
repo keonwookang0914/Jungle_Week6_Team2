@@ -3,6 +3,7 @@
 #include "AActor.h"
 
 class UTextRenderComponent;
+class UDecalComponent;
 
 class ACubeActor : public AActor
 {
@@ -74,4 +75,16 @@ public:
 	ABillboardActor() = default;
 
     void InitDefaultComponents();
+};
+
+class ADecalActor : public AActor
+{
+public:
+	DECLARE_CLASS(ADecalActor, AActor)
+	ADecalActor() = default;
+
+	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
+	UDecalComponent* DecalComponent;
+
+	void InitDefaultComponents();
 };

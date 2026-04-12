@@ -6,6 +6,7 @@
 #include "Component/BillboardComponent.h"
 #include "Component/TextRenderComponent.h"
 #include "Component/SubUVComponent.h"
+#include "Component/DecalComponent.h"
 #include "Component/GizmoComponent.h"
 #include "Core/PropertyTypes.h"
 #include "Core/ResourceManager.h"
@@ -57,7 +58,15 @@ static const TArray<FComponentMenuEntry> ComponentMenuRegistry = {
             Comp->SetTextureName("Asset/Texture/Pawn_64x.png");
             return Comp;
         }
-    }
+    },
+	{
+		"Decal Component",
+		[](AActor* Actor) -> USceneComponent* {
+			UDecalComponent* Comp = Actor->AddComponent<UDecalComponent>();
+			Comp->SetDecalTextureName("Asset/Texture/Pawn_64x.png");
+			return Comp;
+		}
+	}
 };
 
 void FEditorPropertyWidget::Render(float DeltaTime)
