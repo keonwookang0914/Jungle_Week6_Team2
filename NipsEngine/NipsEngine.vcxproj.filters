@@ -490,6 +490,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.cpp" />
+    <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\EditorEngine.h">
@@ -977,5 +978,6 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessBase.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.h" />
+    <ClInclude Include="Source\Engine\Render\PostProcess\FXAAPostProcess.h" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@
 #include "Render/LineBatcher.h"
 #include "Render/FontBatcher.h"
 #include "Render/SubUVBatcher.h"
+#include "Render/PostProcess/FXAAPostProcess.h"
 
 #include <cstddef>
 #include <functional>
@@ -82,6 +83,7 @@ private:
 	FLineBatcher   GridLineBatcher;
 	FFontBatcher   FontBatcher;
 	FSubUVBatcher  SubUVBatcher;
+    FFXAAPostProcess FXAAPostProcess;
 
 	// 패스별 커맨드 정렬이 필요한 경우 정렬된 복사본 반환, 아니면 원본 참조
 	const TArray<FRenderCommand>& GetAlignedCommands(ERenderPass Pass, const TArray<FRenderCommand>& Commands);
