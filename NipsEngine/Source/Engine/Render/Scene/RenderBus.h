@@ -22,7 +22,7 @@ public:
 	const TArray<FRenderCommand>& GetCommands(ERenderPass Pass) const;
 
 	// Getter,Setter
-	void SetViewProjection(const FMatrix& InView, const FMatrix& InProj);
+	void SetViewProjection(const FMatrix& InView, const FMatrix& InProj , float InNearPlane, float InFarPlane);
 	void SetRenderSettings(const EViewMode NewViewMode, const FShowFlags NewShowFlags);
 
 	const FMatrix& GetView() const { return View; }
@@ -34,6 +34,9 @@ public:
 	EViewMode GetViewMode() const { return ViewMode; }
 	FShowFlags GetShowFlags() const { return ShowFlags; }
 	const FVector& GetWireframeColor() const { return WireframeColor; }
+    const float    GetNearPlane() const { return NearPlane; }
+    const float    GetFarPlane() const { return FarPlane; }
+
 	void SetWireframeColor(const FVector& InColor) { WireframeColor = InColor; }
 	bool IsOrthographic() const { return Proj.M[3][3] == 1.0f; }
 
@@ -46,7 +49,8 @@ private:
 	FVector CameraForward;
 	FVector CameraRight;
 	FVector CameraUp;
-
+    float   NearPlane;
+    float	FarPlane;
 	//Editor Settings
 	EViewMode ViewMode;
 	FShowFlags ShowFlags;

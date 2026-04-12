@@ -19,12 +19,17 @@ struct FRenderResources
     FConstantBuffer StaticMeshConstantBuffer;       // b6
     FConstantBuffer FxaaConstantBuffer;				// b7
 
+
+    FConstantBuffer DepthSceneConstantBuffer; // FDepthSceneConstants 크기 b8
+
+
     FShader PrimitiveShader;
     FShader GizmoShader;
     FShader EditorShader;
 	FShader SelectionMaskShader;
 	FShader OutlineShader;
     FShader StaticMeshShader;
+    FShader DepthSceneShader;
 
 	// Fast Approximate Anti Aliasing용 Shader
     FShader FxaaShader;

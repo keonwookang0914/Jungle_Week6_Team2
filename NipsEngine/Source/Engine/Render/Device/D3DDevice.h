@@ -56,8 +56,8 @@ struct FRenderTargetSet
 
 struct FColorTarget
 {
-    TComPtr<ID3D11Texture2D> Texture;
-    TComPtr<ID3D11RenderTargetView> RTV;
+    TComPtr<ID3D11Texture2D>          Texture;
+    TComPtr<ID3D11RenderTargetView>   RTV;
     TComPtr<ID3D11ShaderResourceView> SRV;
 };
 
@@ -102,6 +102,7 @@ private:
 	TComPtr<ID3D11Texture2D> ViewportDepthStencilTexture;
 	TComPtr<ID3D11DepthStencilView> ViewportDepthStencilView;
     TComPtr<ID3D11ShaderResourceView> ViewportDepthSRV;
+
 
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDefault;
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDepthReadOnly;
