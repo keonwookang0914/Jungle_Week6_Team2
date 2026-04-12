@@ -438,8 +438,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
 
         Device.CopyPostProcessSourceToDest();
 
-        const bool bIsFXAA = (PostProcess == &FXAAPostProcess);
-        Device.SetBlendState(bIsFXAA ? EBlendState::Opaque : EBlendState::AlphaBlend);
+        Device.SetBlendState(PostProcess->GetBlendState());
         Device.SetRasterizerState(ERasterizerState::SolidNoCull);
         Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Context->OMSetDepthStencilState(nullptr, 0);

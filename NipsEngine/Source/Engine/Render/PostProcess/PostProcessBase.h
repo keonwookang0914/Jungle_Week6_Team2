@@ -3,7 +3,6 @@
 
 #include "Render/Common/RenderTypes.h"
 #include "Render/Resource/RenderResources.h"
-#include "Render/Scene/RenderBus.h"
 #include "PostProcessTypes.h"
 
 /*
@@ -21,6 +20,8 @@ class IPostProcess
 {
   public:
     virtual ~IPostProcess() = default;
+
+    virtual EBlendState GetBlendState() const { return EBlendState::Opaque; }
 
     virtual bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const = 0;
 

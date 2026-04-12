@@ -5,6 +5,8 @@ class OutlinePostProcess : public IPostProcess
 {
 
 public:
+    EBlendState GetBlendState() const override { return EBlendState::AlphaBlend; }
+
     bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const override;
 
 	void Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc, FRenderResources& Resources,
