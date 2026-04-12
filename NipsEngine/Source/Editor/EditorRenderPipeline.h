@@ -15,7 +15,6 @@ public:
 	void Execute(float DeltaTime, FRenderer& Renderer) override;	
 	void Render3DWorld(FRenderer& Renderer);
 	void Render2DOverlay(float DeltaTime, FRenderer& Renderer);
-	void ExecuteViewportFXAA(FRenderer& Renderer, int32 ViewportIndex);
 	const FRenderCollector::FCullingStats& GetViewportCullingStats(int32 ViewportIndex) const;
 
 private:

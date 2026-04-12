@@ -58,8 +58,6 @@ public:
 	FD3DDevice& GetFD3DDevice() { return Device; }
 	FRenderResources& GetResources() { return Resources; }
 
-	// TODO: 반드시 Private으로 이동
-    void ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight);
 	// Post Process 실행기
     void ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views);
 

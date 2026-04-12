@@ -3,7 +3,7 @@
 
 bool FFXAAPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const 
 { 
-	return ViewDesc.ShowFlags.bEnableFXAA; 
+	return ViewDesc.ViewMode != EViewMode::DepthScene && ViewDesc.ShowFlags.bEnableFXAA; 
 }
 
 void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,

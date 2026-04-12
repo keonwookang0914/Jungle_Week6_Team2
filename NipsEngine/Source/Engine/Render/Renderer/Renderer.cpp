@@ -90,6 +90,7 @@ void FRenderer::Create(HWND hWindow)
 	InitializePassBatchers();
 	PostProcesses.clear();
 	PostProcesses.push_back(&OutlinePostProcessPass);
+	PostProcesses.push_back(&FXAAPostProcess);
 	// UseBackBufferRenderTargets(); // ??
 
 	// GPU Profiler 초기화
@@ -410,29 +411,6 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 	}
 }
 
-// Fast Approximate Anti-Aliasing 코드 (임시로 이 함수에 다 박아둠. 반드시 제 위치 찾아가야함)
-void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight)
-{
-    if (ViewportWidth <= 0 || ViewportHeight <= 0)
-        return;
-
-    // 읽을 SRV랑 OUTPUT을 쓸 RTV를 가져온다.
-    ID3D11DeviceContext*      Context = Device.GetDeviceContext();
-    ID3D11ShaderResourceView* SourceSRV = Device.GetPostProcessSourceSRV();
-    ID3D11RenderTargetView*   DestRTV = Device.GetPostProcessDestRTV();
-
-    FXAAPostProcess.SetViewportRect(ViewportX, ViewportY, ViewportWidth, ViewportHeight);
-
-    // 각종 render state 설정 -> 여기서 하지말고 Render
-    Device.SetBlendState(EBlendState::Opaque);
-    Device.SetRasterizerState(ERasterizerState::SolidNoCull);
-    Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    FXAAPostProcess.Execute(Context, FPostProcessViewDesc{}, Resources, CurrentRenderTargets,
-                            Device.GetPostProcessSourceSRV(),
-                            Device.GetPostProcessDestRTV());
-}
-
 void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views) 
 {
     if (Views.empty() || PostProcesses.empty())
@@ -460,7 +438,8 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
 
         Device.CopyPostProcessSourceToDest();
 
-        Device.SetBlendState(EBlendState::AlphaBlend);
+        const bool bIsFXAA = (PostProcess == &FXAAPostProcess);
+        Device.SetBlendState(bIsFXAA ? EBlendState::Opaque : EBlendState::AlphaBlend);
         Device.SetRasterizerState(ERasterizerState::SolidNoCull);
         Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Context->OMSetDepthStencilState(nullptr, 0);
@@ -474,6 +453,10 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+            if (bIsFXAA)
+            {
+                FXAAPostProcess.SetViewportRect(View.X, View.Y, View.Width, View.Height);
+            }
             PostProcess->Execute(Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 
