@@ -1,6 +1,7 @@
-﻿#include "DecalComponent.h"
+#include "DecalComponent.h"
 
 #include <cmath>
+#include <cstring>
 
 #include "Core/ResourceManager.h"
 #include "UI/EditorConsoleWidget.h"
@@ -20,10 +21,28 @@ UDecalComponent* UDecalComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
 
     NewComp->SetVisibility(this->IsVisible());
-    NewComp->DecalTextureName = this->DecalTextureName;
+    NewComp->DecalTexturePath = this->DecalTexturePath;
     NewComp->CachedDecalTexture = this->GetCachedDecalTexture();
 
+    NewComp->DuplicateSubObjects();
+
     return NewComp;
+}
+
+void UDecalComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProps)
+{
+    UPrimitiveComponent::GetEditableProperties(OutProps);
+    OutProps.push_back({ "Decal Texture Path", EPropertyType::String, &DecalTexturePath });
+}
+
+void UDecalComponent::PostEditProperty(const char* PropertyName)
+{
+    UPrimitiveComponent::PostEditProperty(PropertyName);
+
+    if (strcmp(PropertyName, "Decal Texture Path") == 0)
+    {
+        SetDecalTexturePath(DecalTexturePath);
+    }
 }
 
 FMatrix UDecalComponent::GetDecalViewProjection() const

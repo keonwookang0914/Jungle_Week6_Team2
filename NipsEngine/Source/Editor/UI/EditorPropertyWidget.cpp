@@ -63,7 +63,7 @@ static const TArray<FComponentMenuEntry> ComponentMenuRegistry = {
 		"Decal Component",
 		[](AActor* Actor) -> USceneComponent* {
 			UDecalComponent* Comp = Actor->AddComponent<UDecalComponent>();
-			Comp->SetDecalTextureName("Asset/Texture/Pawn_64x.png");
+			Comp->SetDecalTexturePath("Asset/Texture/Pawn_64x.png");
 			return Comp;
 		}
 	}
@@ -507,6 +507,32 @@ void FEditorPropertyWidget::RenderPropertyWidget(FPropertyDescriptor& Prop)
 				if (ImGui::BeginCombo(Prop.Name, Current.empty() ? "<None>" : Current.c_str()))
 				{
 					for (const FString& Path : MeshPaths)
+					{
+						const bool bSelected = (Current == Path);
+						if (ImGui::Selectable(Path.c_str(), bSelected))
+						{
+							*Val = Path;
+							bChanged = true;
+						}
+						if (bSelected)
+						{
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+			}
+		}
+		else if (strcmp(Prop.Name, "Decal Texture Path") == 0)
+		{
+			const TArray<FString>& TexturePaths = FResourceManager::Get().GetTextureFilePath();
+			const FString Current = *Val;
+
+			if (!TexturePaths.empty())
+			{
+				if (ImGui::BeginCombo(Prop.Name, Current.empty() ? "<None>" : Current.c_str()))
+				{
+					for (const FString& Path : TexturePaths)
 					{
 						const bool bSelected = (Current == Path);
 						if (ImGui::Selectable(Path.c_str(), bSelected))

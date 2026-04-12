@@ -1,5 +1,6 @@
 ﻿#include "GameFramework/PrimitiveActors.h"
 
+#include "Component/BillboardComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Component/TextRenderComponent.h"
 #include "Component/DecalComponent.h"
@@ -207,5 +208,5 @@ void ADecalActor::InitDefaultComponents()
 {
 	DecalComponent = AddComponent<UDecalComponent>();
 	SetRootComponent(DecalComponent);
-	DecalComponent->SetDecalTextureName("Asset\\Texture\\Pawn_64x.png");
+	DecalComponent->SetDecalTexturePath("Asset\\Texture\\Pawn_64x.png");
 }
