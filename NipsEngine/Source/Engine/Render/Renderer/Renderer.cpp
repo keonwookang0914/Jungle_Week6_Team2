@@ -453,10 +453,6 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
-            if (bIsFXAA)
-            {
-                FXAAPostProcess.SetViewportRect(View.X, View.Y, View.Width, View.Height);
-            }
             PostProcess->Execute(Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 

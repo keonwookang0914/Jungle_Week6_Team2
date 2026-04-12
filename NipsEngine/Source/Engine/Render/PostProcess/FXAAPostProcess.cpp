@@ -11,7 +11,7 @@ void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessV
                                const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV,
                                ID3D11RenderTargetView* OutputRTV)
 {
-    if (!bHasViewport || ViewportWidth <= 0.f || ViewportHeight <= 0)
+    if (ViewDesc.Width <= 0 || ViewDesc.Height <= 0)
         return;
     if (!Context || !SceneColorSRV || !OutputRTV)
         return;
@@ -29,10 +29,10 @@ void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessV
 	FXAAConstants.InvRenderTargetSize = FVector2(1.0f / FullWidth, 1.0f / FullHeight);
 
     // 해당 뷰포트의 Texture내의 SubUV 설정
-    FXAAConstants.ViewportMinUV = FVector2(static_cast<float>(ViewportX) / FullWidth, 
-										   static_cast<float>(ViewportY) / FullHeight);
-    FXAAConstants.ViewportMaxUV = FVector2(static_cast<float>(ViewportX + ViewportWidth) / FullWidth,
-                                           static_cast<float>(ViewportY + ViewportHeight) / FullHeight);
+    FXAAConstants.ViewportMinUV = FVector2(static_cast<float>(ViewDesc.X) / FullWidth, 
+										   static_cast<float>(ViewDesc.Y) / FullHeight);
+    FXAAConstants.ViewportMaxUV = FVector2(static_cast<float>(ViewDesc.X + ViewDesc.Width) / FullWidth,
+                                           static_cast<float>(ViewDesc.Y + ViewDesc.Height) / FullHeight);
 
     const FEditorSettings& Settings = FEditorSettings::Get();
     FXAAConstants.EdgeThreshold = Settings.FXAA.EdgeThreshold;
@@ -63,24 +63,4 @@ void FFXAAPostProcess::Execute(ID3D11DeviceContext* Context, const FPostProcessV
 	// NullSRV로 바인딩 해제.
     ID3D11ShaderResourceView* NullSRV = nullptr;
     Context->PSSetShaderResources(0, 1, &NullSRV);
-
-	ClearViewportRect();
-}
-
-void FFXAAPostProcess::SetViewportRect(int32 InX, int32 InY, int32 InWidth, int32 InHeight) 
-{ 
-	ViewportX = InX;
-    ViewportY = InY;
-    ViewportWidth = InWidth;
-    ViewportHeight = InHeight;
-	bHasViewport = true;
-}
-
-void FFXAAPostProcess::ClearViewportRect() 
-{
-    ViewportX = 0;
-    ViewportY = 0;
-    ViewportWidth = 0;
-    ViewportHeight = 0;
-    bHasViewport = false;
 }
