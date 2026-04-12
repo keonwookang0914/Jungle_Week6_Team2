@@ -140,7 +140,8 @@ void FRenderer::InitializePostProcesses()
 	PostProcesses.clear();
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
-	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	// TODO: DepthScene PostProcess 구현 후 주석 해제
+	// PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
 	// FFogPostProcess
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
