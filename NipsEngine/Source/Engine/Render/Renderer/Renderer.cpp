@@ -435,6 +435,11 @@ void FRenderer::ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 V
                             Device.GetPostProcessDestRTV());
 }
 
+void FRenderer::ExecutePostProcessStack() 
+{
+
+}
+
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
 {
 	//	Selection Mask에 대한 것인지 확인하여 RTV를 가져옴

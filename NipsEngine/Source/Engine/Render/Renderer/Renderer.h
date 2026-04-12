@@ -14,6 +14,8 @@
 #include "Render/FontBatcher.h"
 #include "Render/SubUVBatcher.h"
 #include "Render/PostProcess/FXAAPostProcess.h"
+#include "Render/PostProcess/DepthScenePostProcess.h"
+#include "Render/PostProcess/PostProcessTypes.h"
 
 #include <cstddef>
 #include <functional>
@@ -57,6 +59,8 @@ public:
 
 	// TODO: 반드시 Private으로 이동
     void ExecuteFXAAForViewport(int32 ViewportX, int32 ViewportY, int32 ViewportWidth, int32 ViewportHeight);
+	// Post Process 실행기
+    void ExecutePostProcessStack();
 
 private:
 	void InitializePassRenderStates();
@@ -75,6 +79,7 @@ private:
 	// LineBatcher Flush 공통 — EditorConstants 업데이트 + EditorShader 바인딩
 	void FlushLineBatcher(FLineBatcher& Batcher, ERenderPass Pass, const FRenderBus& Bus, ID3D11DeviceContext* Context);
 
+
 private:
 	FD3DDevice Device;
 	FRenderTargetSet CurrentRenderTargets;
@@ -83,6 +88,13 @@ private:
 	FLineBatcher   GridLineBatcher;
 	FFontBatcher   FontBatcher;
 	FSubUVBatcher  SubUVBatcher;
+
+	// TODO: TArray로 IPostProcess 들고있게 변경
+    TArray<IPostProcess*> PostProcesses;
+	// Post Processes
+	// FogPostProcess
+    FDepthScenePostProcess DepthScenePostProcess;
+	// OutlinePostProcess
     FFXAAPostProcess FXAAPostProcess;
 
 	// 패스별 커맨드 정렬이 필요한 경우 정렬된 복사본 반환, 아니면 원본 참조
