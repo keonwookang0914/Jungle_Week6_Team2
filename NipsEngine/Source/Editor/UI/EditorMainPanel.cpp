@@ -45,6 +45,7 @@ namespace
 		case EViewMode::Lit:       return "Lit";
 		case EViewMode::Unlit:     return "Unlit";
 		case EViewMode::Wireframe: return "Wireframe";
+		case EViewMode::DepthScene:return "DepthScene";
 		default:                   return "Lit";
 		}
 	}
@@ -375,11 +376,12 @@ void FEditorMainPanel::RenderViewportMenuBarForIndex(int32 Index)
 		{
 			EViewMode::Lit,
 			EViewMode::Unlit,
-			EViewMode::Wireframe
+			EViewMode::Wireframe,
+			EViewMode::DepthScene
 		};
-		static constexpr const char* Labels[] = { "Lit", "Unlit", "Wireframe" };
+		static constexpr const char* Labels[] = {"Lit", "Unlit", "Wireframe", "DepthScene"};
 
-		for (int32 j = 0; j < 3; ++j)
+		for (int32 j = 0; j < 4; ++j)
 		{
 			const bool bSel = (State.ViewMode == Modes[j]);
 			if (ImGui::MenuItem(Labels[j], nullptr, bSel))

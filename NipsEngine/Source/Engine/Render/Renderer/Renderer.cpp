@@ -89,6 +89,7 @@ void FRenderer::Create(HWND hWindow)
 	InitializePassRenderStates();
 	InitializePassBatchers();
 	PostProcesses.clear();
+	PostProcesses.push_back(&DepthScenePostProcess);
 	PostProcesses.push_back(&OutlinePostProcessPass);
 	PostProcesses.push_back(&FXAAPostProcess);
 	// UseBackBufferRenderTargets(); // ??
@@ -438,8 +439,9 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
 
         Device.CopyPostProcessSourceToDest();
 
+        const bool bUsesOpaqueBlend = (PostProcess == &DepthScenePostProcess || PostProcess == &FXAAPostProcess);
         const bool bIsFXAA = (PostProcess == &FXAAPostProcess);
-        Device.SetBlendState(bIsFXAA ? EBlendState::Opaque : EBlendState::AlphaBlend);
+        Device.SetBlendState(bUsesOpaqueBlend ? EBlendState::Opaque : EBlendState::AlphaBlend);
         Device.SetRasterizerState(ERasterizerState::SolidNoCull);
         Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Context->OMSetDepthStencilState(nullptr, 0);

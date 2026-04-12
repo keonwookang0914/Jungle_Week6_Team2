@@ -14,7 +14,8 @@ enum class EViewModeIndex
 {
 	Lit,        // 기본 라이팅 적용
 	Unlit,      // 라이팅 없음
-	Wireframe   // 와이어프레임
+	Wireframe,  // 와이어프레임
+	DepthScene  // Scene 깊이값
 };
 
 // ============================================================
