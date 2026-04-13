@@ -269,6 +269,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 		if (InputSystem::Get().GetKeyDown(VK_ESCAPE))
 		{
 			UnlockCursor();
+			while (ShowCursor(TRUE) < 0);
 			Editor->StopPlaySession();
 		}
 

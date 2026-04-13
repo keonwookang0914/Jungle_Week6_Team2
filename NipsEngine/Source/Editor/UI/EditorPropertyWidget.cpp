@@ -14,6 +14,8 @@
 #include <functional>
 #include "Component/SubUVComponent.h"
 #include "Selection/SelectionManager.h"
+#include <Component/ProjectileMovementComponent.h>
+#include <Component/RotatingMovementComponent.h>
 
 #define SEPARATOR(); ImGui::Spacing(); ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing(); ImGui::Spacing();
 
@@ -21,7 +23,7 @@
 struct FComponentMenuEntry
 {
     const char* DisplayName;
-    std::function<USceneComponent*(AActor*)> CreateAndInitFunc;
+    std::function<UActorComponent*(AActor*)> CreateAndInitFunc;
 };
 
 // 2. 에디터에서 추가 가능한 컴포넌트 배열 (이 리스트만 관리하면 됩니다)
@@ -64,6 +66,22 @@ static const TArray<FComponentMenuEntry> ComponentMenuRegistry = {
 		[](AActor* Actor) -> USceneComponent* {
 			UDecalComponent* Comp = Actor->AddComponent<UDecalComponent>();
 			Comp->SetDecalTextureName("Asset/Texture/Pawn_64x.png");
+			return Comp;
+		}
+	},
+	{
+		"Projectile Movement Component",
+		[](AActor* Actor) -> UActorComponent* {
+			UProjectileMovementComponent* Comp = Actor->AddComponent<UProjectileMovementComponent>();
+			Comp->SetUpdatedComponent(Actor->GetRootComponent());
+			return Comp;
+		}
+	},
+	{
+		"Rotating Movement Component",
+		[](AActor* Actor) -> UActorComponent* {
+			URotatingMovementComponent* Comp = Actor->AddComponent<URotatingMovementComponent>();
+			Comp->SetUpdatedComponent(Actor->GetRootComponent());
 			return Comp;
 		}
 	}
@@ -187,16 +205,23 @@ void FEditorPropertyWidget::Render(float DeltaTime)
 				if (!ImGui::Selectable(Entry.DisplayName)) 
 					continue;
 
-				USceneComponent* NewComp = Entry.CreateAndInitFunc(PrimaryActor);
+				UActorComponent* NewComp = Entry.CreateAndInitFunc(PrimaryActor);
 
 				if (!NewComp) 
 					continue;
 
-				USceneComponent* RootComp = PrimaryActor->GetRootComponent();
-				if (RootComp)
-					NewComp->AttachToComponent(RootComp);
-				else
-					PrimaryActor->SetRootComponent(NewComp);
+				if (NewComp->IsA<USceneComponent>())
+				{
+					USceneComponent* RootComp = PrimaryActor->GetRootComponent();
+					if (RootComp)
+					{
+						static_cast<USceneComponent*>(NewComp)->AttachToComponent(RootComp);
+					}
+					else
+					{
+						PrimaryActor->SetRootComponent(static_cast<USceneComponent*>(NewComp));
+					}
+				}
 
 				SelectedComponent = NewComp;
 			}
