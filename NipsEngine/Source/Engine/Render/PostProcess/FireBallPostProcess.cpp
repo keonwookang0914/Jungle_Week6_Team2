@@ -4,7 +4,7 @@
 
 bool UFireBallPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const
 {
-	return !ViewDesc.FireBallInfoArray.empty();
+	return ViewDesc.ViewMode != EViewMode::DepthScene && !ViewDesc.FireBallInfoArray.empty();
 }
 
 void UFireBallPostProcess::Execute(

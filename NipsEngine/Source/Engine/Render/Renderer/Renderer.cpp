@@ -1,5 +1,4 @@
 ﻿#include "Renderer.h"
-#include "Renderer.h"
 
 #include <iostream>
 #include <algorithm>
@@ -105,9 +104,6 @@ void FRenderer::Create(HWND hWindow)
 		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.PointSamplerState.ReleaseAndGetAddressOf());
 	}
-	// postprocess manage stack
-	PostProcessArray.push_back(std::make_unique<FDepthScenePostProcess>());
-
 	//	MeshManager init
 	FMeshManager::Initialize();
 
@@ -153,8 +149,6 @@ void FRenderer::Release()
 	Resources.FireBallConstantBuffer.Release();
 	Resources.ViewportInfoConstantBuffer.Release();
 
-	PostProcessArray.clear();
-
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
     Resources.LinearSamplerState.Reset();
@@ -179,9 +173,9 @@ void FRenderer::InitializePostProcesses()
 	PostProcesses.clear();
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
-	// TODO: DepthScene PostProcess 구현 후 주석 해제
-	 PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
 	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
+	// PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
