@@ -8,6 +8,10 @@
 #include "Core/ResourceManager.h"
 #include <format>
 
+#ifndef NO_UUID
+#define NO_UUID 1
+#endif
+
 namespace
 {
 	constexpr const char* CubeMeshPath = "Asset/Mesh/Cube.obj";
@@ -133,7 +137,6 @@ void AAttachTestActor::InitDefaultComponents()
 		Sphere->SetRelativeLocation(Positions[i]);
 	}
 
-	// Text attached directly to Root
 	auto* Text = AddComponent<UTextRenderComponent>();
 	Text->AttachToComponent(Cube);
 	Text->SetText("UUID: " + std::to_string(GetUUID()));
@@ -145,14 +148,14 @@ void AStaticMeshActor::InitDefaultComponents()
 	auto* StaticMesh = AddComponent<UStaticMeshComponent>();;
 	SetRootComponent(StaticMesh);
 
-	//// Text attached directly to Root
+#ifndef NO_UUID
 	auto* Text = AddComponent<UTextRenderComponent>();
 	Text->AttachToComponent(StaticMesh);
 	Text->SetFont(FName("Default"));
 	Text->SetText("UUID: " + std::to_string(GetUUID()));
-
 	FVector Extent = StaticMesh->GetWorldAABB().GetExtent();
 	Text->SetRelativeLocation(FVector(0.0f, 0.0f, Extent.Z * 2.0f));
+#endif
 }
 
 void ASubUVActor::InitDefaultComponents()

@@ -50,7 +50,7 @@ float4 PS(PSInput input) : SV_TARGET
     }
 
     float normalDotDecalForward = dot(normalize(input.worldNormal), -DecalForward);
-    if (normalDotDecalForward <= 0.0f)
+    if (normalDotDecalForward < 0.0f)
     {
         return float4(0, 0, 0, 0);
     }
@@ -58,13 +58,15 @@ float4 PS(PSInput input) : SV_TARGET
     float2 decalUV = decalNDC.xy * 0.5f + 0.5f; // NDC를 UV로 변환
     decalUV.y = 1.0f - decalUV.y; // Texture 좌표계는 Y축이 반대
 
-    // TODO: decalNDC.z에 따라 alpha에 lerp 적용
-
     float4 decalColor = DecalTexture.Sample(DecalSampler, decalUV);
     if (decalColor.a <= 0.01f)
     {
         return float4(0, 0, 0, 0);
     }
+
+    const float fadeStart = 0.8f;
+    const float depthFade = smoothstep(1.0f, fadeStart, decalNDC.z);
+    decalColor.a *= depthFade;
 
     return decalColor;
 }

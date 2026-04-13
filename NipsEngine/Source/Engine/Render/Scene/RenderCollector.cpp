@@ -152,6 +152,7 @@ namespace
 		// 화면에 차지하는 비율이 가장 낮을 경우 최하위 LOD 반환
 		return MaxLOD;
 	}
+
 }
 
 void FRenderCollector::CollectWorld(UWorld* World, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus,
@@ -609,14 +610,13 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		DecalCandidateScratch.clear();
 		World->GetSpatialIndex().FrustumQueryPrimitives(DecalFrustum, DecalCandidateScratch, DecalQueryScratch);
 
-		const FOBB DecalOBB = DecalComponent->GetDecalOBB();
-
 		for (UPrimitiveComponent* Candidate : DecalCandidateScratch)
 		{
 			if (Candidate == nullptr || !Candidate->IsVisible()) { continue; }
 			if (Candidate->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
-			if (!DecalComponent->GetDecalOBB().IntersectAABBCrossAxesOnly(Candidate->GetWorldAABB()))
+			if (!DecalComponent->GetDecalOBB().IntersectAABBWithSAT(Candidate->GetWorldAABB(), false, false, true))
 			{
+				// TODO: CrossAxes 정상 동작 여부 확인 필요
 				LastDecalStats.CulledCandidates++;
 				continue;
 			}
