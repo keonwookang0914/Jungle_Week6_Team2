@@ -73,8 +73,8 @@ FMatrix UDecalComponent::GetDecalViewProjection() const
     if (Height < 1e-4f) { Height = 1e-4f; }
     const FMatrix Projection = FMatrix::MakeOrthographicLH(Width, Height, NearPlane, FarPlane);
 
-    const FVector Eye = GetWorldLocation() - (GetForwardVector() * WorldExtent.Z);
-    const FVector Target = GetWorldLocation() + (GetForwardVector() * WorldExtent.Z);
+    const FVector Eye = GetWorldLocation() - (GetForwardVector() * WorldExtent.X);
+    const FVector Target = GetWorldLocation() + (GetForwardVector() * WorldExtent.X);
     const FMatrix View = FMatrix::MakeViewLookAtLH(Eye, Target, GetUpVector());
     return View * Projection;
 }
