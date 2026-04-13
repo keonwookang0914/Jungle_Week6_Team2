@@ -31,6 +31,7 @@ void FFXAAPostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context,
 	FXAAConstants.ViewportMaxUV = FVector2(static_cast<float>(ViewDesc.X + ViewDesc.Width) / FullWidth,
 		static_cast<float>(ViewDesc.Y + ViewDesc.Height) / FullHeight);
 
+	// 기존에 저장된 Setting값 기반으로 상수버퍼 채우기
 	const FEditorSettings& Settings = FEditorSettings::Get();
 	FXAAConstants.EdgeThreshold = Settings.FXAA.EdgeThreshold;
 	FXAAConstants.EdgeThresholdMin = Settings.FXAA.EdgeThresholdMin;
@@ -44,7 +45,7 @@ void FFXAAPostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context,
 
 	// 상수버퍼 VS, PS에 연결
 	ID3D11Buffer* CB = Resources.FxaaConstantBuffer.GetBuffer();
-	// Constant Buffer 8번 슬롯 사용 (7번은 Decal이 사용 예정)
+	// Constant Buffer 7번 슬롯 사용 (8번은 DephtScene, 9번은 Decal이 사용)
 	Context->VSSetConstantBuffers(7, 1, &CB);
 	Context->PSSetConstantBuffers(7, 1, &CB);
 
