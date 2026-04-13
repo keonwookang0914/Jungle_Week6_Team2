@@ -18,6 +18,7 @@
 #include "Render/PostProcess/FireBallPostProcess.h"
 #include "Render/PostProcess/OutlinePostProcess.h"
 #include "Render/PostProcess/PostProcessTypes.h"
+#include "Render/PostProcess/HeightFogPostProcess.h"
 
 #include <cstddef>
 #include <functional>

@@ -20,7 +20,7 @@ SamplerState PointSampler : register(s0);
 // float3 CameraWorldPos    + float _Pad1            → 16 bytes
 // float4x4 InvViewProj                              → 64 bytes
 // Total : 128 bytes
-// ----------------------------------------------------------------
+// ---------------------------------------------------------------- 
 cbuffer HeightFogBuffer : register(b11)
 {
     float3 FogWorldPosition; // 컴포넌트 높이 기준점

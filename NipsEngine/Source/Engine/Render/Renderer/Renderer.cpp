@@ -56,6 +56,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
 
 	// 11. Fog Shader
+	Resources.HeightFogShader.Create(Device.GetDevice(), L"Shaders/HeightFogShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
@@ -68,6 +69,8 @@ void FRenderer::Create(HWND hWindow)
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
 	Resources.FireBallConstantBuffer.Create(Device.GetDevice(), sizeof(FFireBallCBuffer));
 	Resources.ViewportInfoConstantBuffer.Create(Device.GetDevice(), sizeof(FViewportInfoConstants));
+	Resources.HeightFogConstantBuffer.Create(Device.GetDevice(), sizeof(FHeightFogCBuffer));
+
 
 	// TODO : SamplerState 관리
 	{
@@ -137,6 +140,7 @@ void FRenderer::Release()
 	Resources.DepthSceneShader.Release();
 	Resources.DecalShader.Release();
 	Resources.FireBallShader.Release();
+	Resources.HeightFogShader.Release();
 
 	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
@@ -150,6 +154,7 @@ void FRenderer::Release()
 	Resources.DecalConstantBuffer.Release();
 	Resources.FireBallConstantBuffer.Release();
 	Resources.ViewportInfoConstantBuffer.Release();
+	Resources.HeightFogConstantBuffer.Release();
 
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
@@ -176,8 +181,8 @@ void FRenderer::InitializePostProcesses()
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
 	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
-	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
-	// PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
+	PostProcesses.push_back(std::make_unique<UHeightFogPostProcess>());
+	PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }

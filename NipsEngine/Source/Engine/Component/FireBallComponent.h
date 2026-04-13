@@ -30,5 +30,5 @@ private:
 	float    Intensity = {1.0f};
 	float    Radius = {3.0f}; 
 	float    RadiusFallOff = {1.0f};
-	FColor Color = {1.0f, 0.5f, 0.0f, 1.0f}; 
+	FColor Color = {0.8f, 0.2f, 0.1f, 1.0f}; 
 };
