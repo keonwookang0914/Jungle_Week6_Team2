@@ -641,9 +641,13 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 	}
 
 	case EPrimitiveType::EPT_FireBall:
+	{
 		UFireBallComponent* FireBallComponent = static_cast<UFireBallComponent*>(Primitive);
 		FFireBallInfo FireBallInfo = CollectFireBallInfoFromFireBallComponent(FireBallComponent);
 		RenderBus.GatherFireBallComponentInfo(FireBallInfo);
+		break;
+
+	}
 
 	default:
 		if (PrimType == EPrimitiveType::EPT_TransGizmo || PrimType == EPrimitiveType::EPT_RotGizmo || PrimType == EPrimitiveType::EPT_ScaleGizmo)
