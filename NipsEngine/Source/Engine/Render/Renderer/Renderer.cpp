@@ -54,7 +54,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.DecalShader.Create(Device.GetDevice(), L"Shaders/ShaderDecal.hlsl",
 		"VS", "PS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 	//10. FireBall fireballshader.hlsl
-	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS", "PS", nullptr, 0);
+	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));

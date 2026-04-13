@@ -12,6 +12,7 @@ class UGizmoComponent;
 struct FFrustum;
 
 class UFireBallComponent;
+class UHeightFogComponent;
 
 
 class FRenderCollector {
@@ -53,4 +54,6 @@ private:
 	void CollectAABBCommand(UPrimitiveComponent* PrimitiveComponent, const FShowFlags& ShowFlags, FRenderBus& RenderBus);
 
 	FFireBallInfo CollectFireBallInfoFromFireBallComponent(UFireBallComponent* InFireBallComponent);
+
+	FHeightFogInfo CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent);
 };

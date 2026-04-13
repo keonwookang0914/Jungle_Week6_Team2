@@ -42,12 +42,15 @@ public:
 
 	// Need to Copy
 	TArray<FFireBallInfo> GetFireBallInfoArray();
+	TArray<FHeightFogInfo> GetHeightFogInfoArray();
 
 	void GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo);
+	void GatherHeightFogComponentInfo(FHeightFogInfo InHeightFogInfo);
 
 private:
 	TArray<FRenderCommand> PassQueues[(uint32)ERenderPass::MAX];
 	TArray< FFireBallInfo> GatherFireBallInfoArray;
+	TArray<FHeightFogInfo> GatherFogInfoArray;
 
 	FMatrix View;
 	FMatrix Proj;

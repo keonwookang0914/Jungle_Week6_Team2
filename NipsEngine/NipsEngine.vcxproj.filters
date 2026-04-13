@@ -502,6 +502,7 @@
     <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\OutlinePostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\FireBallPostProcess.cpp" />
+    <ClCompile Include="Source\Engine\Component\HeightFogComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\EditorEngine.h">
@@ -999,5 +1000,6 @@
     <ClInclude Include="Source\Engine\Render\PostProcess\PostProcessTypes.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\OutlinePostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\FireBallPostProcess.h" />
+    <ClInclude Include="Source\Engine\Component\HeightFogComponent.h" />
   </ItemGroup>
 </Project>

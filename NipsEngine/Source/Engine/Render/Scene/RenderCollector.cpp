@@ -11,6 +11,7 @@
 #include "Component/SubUVComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Component/FireBallComponent.h"
+#include "Component/HeightFogComponent.h"
 #include "Core/ResourceManager.h"
 #include "Component/DecalComponent.h"
 #include "Engine/Geometry/Frustum.h"
@@ -648,6 +649,13 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		break;
 
 	}
+	case EPrimitiveType::EPT_HeightFog:
+	{
+		UHeightFogComponent* HeightFogCompoent = static_cast<UHeightFogComponent*>(Primitive);
+		FHeightFogInfo HeightFogInfo = CollectHeightFogInfoFromFogComponent(HeightFogCompoent);
+		RenderBus.GatherHeightFogComponentInfo(HeightFogInfo);
+		break;
+	}
 
 	default:
 		if (PrimType == EPrimitiveType::EPT_TransGizmo || PrimType == EPrimitiveType::EPT_RotGizmo || PrimType == EPrimitiveType::EPT_ScaleGizmo)
@@ -755,4 +763,13 @@ FFireBallInfo FRenderCollector::CollectFireBallInfoFromFireBallComponent(UFireBa
 {
 	return FFireBallInfo(InFireBallComponent->GetWorldLocation(), InFireBallComponent->GetColor(), InFireBallComponent->GetIntensity(), InFireBallComponent->GetRadius(), InFireBallComponent->GetRadiusFallOff());
 }
+
+FHeightFogInfo FRenderCollector::CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent)
+{
+	return FHeightFogInfo(InHeightFogComponent->GetWorldLocation() , InHeightFogComponent->GetFogDensity() ,
+					InHeightFogComponent->GetFogHeightFalloff() , InHeightFogComponent->GetStartDistance() ,
+					InHeightFogComponent->GetFogCutoffDistance() , InHeightFogComponent->GetFogMaxOpacity() , 
+					InHeightFogComponent->GetFogInscatteringColor() );
+}
+
 

@@ -20,6 +20,7 @@ struct FRenderResources
     FConstantBuffer DepthSceneConstantBuffer;		// b8
     FConstantBuffer DecalConstantBuffer;			// b9
 	FConstantBuffer FireBallConstantBuffer;			// b10
+	FConstantBuffer HeightFogConstantBuffer;		// b11
 
     FShader PrimitiveShader;
     FShader GizmoShader;
@@ -32,6 +33,7 @@ struct FRenderResources
     FShader FxaaShader;
     FShader DecalShader;
 	FShader FireBallShader;
+	FShader HeightFogShader;
 
 	TComPtr<ID3D11SamplerState> MeshSamplerState;
 

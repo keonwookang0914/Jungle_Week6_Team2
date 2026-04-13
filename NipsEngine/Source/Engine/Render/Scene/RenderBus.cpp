@@ -50,7 +50,17 @@ TArray<FFireBallInfo> FRenderBus::GetFireBallInfoArray()
 	return GatherFireBallInfoArray;
 }
 
+TArray<FHeightFogInfo> FRenderBus::GetHeightFogInfoArray()
+{
+	return GatherFogInfoArray;
+}
+
 void FRenderBus::GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo)
 {
 	GatherFireBallInfoArray.push_back(std::move(InFireBallInfo));
+}
+
+void FRenderBus::GatherHeightFogComponentInfo(FHeightFogInfo InHeightFogInfo)
+{
+	GatherFogInfoArray.push_back(std::move(InHeightFogInfo));
 }
