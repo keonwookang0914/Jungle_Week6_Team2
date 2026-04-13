@@ -22,14 +22,15 @@ struct PSInput
     float4 position : SV_Position;
 };
 
-float Luma(float3 rgb)
+float Luma1(float3 rgb)
 {
     // 단순 구현, 표준 계수 사용
     return dot(rgb, float3(0.299, 0.587, 0.114));
 }
 
-float LumaOpt(float3 rgb)
+float Luma2(float3 rgb)
 {
+    // Luma 계산 최적화
     return rgb.y * (0.587 / 0.299) + rgb.x;
 }
 
@@ -73,11 +74,11 @@ float4 PS(PSInput input) : SV_TARGET
     float3 rgbE = SampleScene(uv + float2(px.x, 0));
     
     //RGB -> LUma로 변경
-    float lumaM = Luma(rgbM);
-    float lumaN = Luma(rgbN);
-    float lumaS = Luma(rgbS);
-    float lumaE = Luma(rgbE);
-    float lumaW = Luma(rgbW);
+    float lumaM = Luma2(rgbM);
+    float lumaN = Luma2(rgbN);
+    float lumaS = Luma2(rgbS);
+    float lumaE = Luma2(rgbE);
+    float lumaW = Luma2(rgbW);
     
     float rangeMin = min(lumaM, min(min(lumaN, lumaS), min(lumaE, lumaW)));
     float rangeMax = max(lumaM, max(max(lumaN, lumaS), max(lumaE, lumaW)));
@@ -96,10 +97,10 @@ float4 PS(PSInput input) : SV_TARGET
     float3 rgbSE = SampleScene(uv + float2( px.x,  px.y)); // 남동
     
     // 대각선 RGB -> Luma로 변경
-    float lumaNW = Luma(rgbNW);
-    float lumaNE = Luma(rgbNE);
-    float lumaSW = Luma(rgbSW);
-    float lumaSE = Luma(rgbSE);
+    float lumaNW = Luma2(rgbNW);
+    float lumaNE = Luma2(rgbNE);
+    float lumaSW = Luma2(rgbSW);
+    float lumaSE = Luma2(rgbSE);
     
     // Edge의 방향 판정 -> 경계가 가로인가, 세로인가? 
     // 픽셀 중심 통과 1픽셀 선 대응 목적 3x3 주변의 row/column별 high-pass크기 가중 합산
@@ -153,8 +154,8 @@ float4 PS(PSInput input) : SV_TARGET
     float2 uv1 = uvEdge - edgeStep;
     float2 uv2 = uvEdge + edgeStep;
 
-    float lumaEnd1 = Luma(SampleScene(uv1)) - lumaLocalAverage;
-    float lumaEnd2 = Luma(SampleScene(uv2)) - lumaLocalAverage;
+    float lumaEnd1 = Luma2(SampleScene(uv1)) - lumaLocalAverage;
+    float lumaEnd2 = Luma2(SampleScene(uv2)) - lumaLocalAverage;
 
     bool reached1 = abs(lumaEnd1) >= gradientScaled;
     bool reached2 = abs(lumaEnd2) >= gradientScaled;
@@ -166,14 +167,14 @@ float4 PS(PSInput input) : SV_TARGET
         if (!reached1)
         {
             uv1 -= edgeStep;
-            lumaEnd1 = Luma(SampleScene(uv1)) - lumaLocalAverage;
+            lumaEnd1 = Luma2(SampleScene(uv1)) - lumaLocalAverage;
             reached1 = abs(lumaEnd1) >= gradientScaled;
         }
 
         if (!reached2)
         {
             uv2 += edgeStep;
-            lumaEnd2 = Luma(SampleScene(uv2)) - lumaLocalAverage;
+            lumaEnd2 = Luma2(SampleScene(uv2)) - lumaLocalAverage;
             reached2 = abs(lumaEnd2) >= gradientScaled;
         }
     }
