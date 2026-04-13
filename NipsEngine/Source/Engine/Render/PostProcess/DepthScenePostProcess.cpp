@@ -3,7 +3,7 @@
 
 bool FDepthScenePostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const
 {
-    return ViewDesc.DepthScene == EViewMode::DepthScene;
+    return ViewDesc.ViewMode == EViewMode::DepthScene;
 }
 
 void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc, FRenderResources& Resources, const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV, ID3D11RenderTargetView* OutputRTV)
@@ -33,7 +33,7 @@ void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Co
     Resources.DepthSceneConstantBuffer.Update(Context, &Constants, sizeof(FDepthSceneConstants));
 
 	ID3D11Buffer* CB = Resources.DepthSceneConstantBuffer.GetBuffer();
-	Context->PSSetConstantBuffers(9, 1, &CB);
+	Context->PSSetConstantBuffers(8, 1, &CB);
 
 	// 5. 풀스크린 삼각형 드로우
 	Context->Draw(3, 0);

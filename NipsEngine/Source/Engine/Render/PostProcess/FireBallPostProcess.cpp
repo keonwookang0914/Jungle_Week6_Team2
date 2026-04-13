@@ -58,8 +58,6 @@ void UFireBallPostProcess::Execute(
 	Context->PSSetSamplers(0, 1, Samplers);
 
 	// ⑧ Draw (Vertex Buffer 없이 fullscreen triangle)
-	Context->IASetInputLayout(nullptr);
-	Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 	Context->Draw(3, 0);
 
 	// ⑨ SRV 클린업
