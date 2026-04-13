@@ -54,6 +54,9 @@ cbuffer OutlineConstants : register(b5)
 // cbuffer DecalBuffer : register(b7)
 // cbuffer ViewportInfoBuffer : register(b12)
 
+// 멀티 뷰포트 post process에서 공통으로 사용하는 viewport 정보.
+// sampling은 전체 render target 기준으로 하되, 현재 viewport 경계를 알기 위해
+// 원점/크기/역해상도를 함께 넘긴다.
 cbuffer ViewportInfoBuffer : register(b12)
 {
     float2 InvFullRenderTargetSize;
@@ -93,7 +96,8 @@ float3x3 Inverse3x3(float3x3 m)
 
 float2 GetPostProcessFullPixelCoord(float2 svPosition)
 {
-    return ViewportOriginPixels + svPosition;
+    // 현재 post process 경로에서는 SV_Position이 이미 full render target pixel 기준이다.
+    return svPosition;
 }
 
 float2 GetPostProcessFullUV(float2 svPosition)
@@ -101,10 +105,21 @@ float2 GetPostProcessFullUV(float2 svPosition)
     return GetPostProcessFullPixelCoord(svPosition) * InvFullRenderTargetSize;
 }
 
+float2 GetPostProcessViewportMinUV()
+{
+    return ViewportOriginPixels * InvFullRenderTargetSize;
+}
+
+float2 GetPostProcessViewportMaxUV()
+{
+    return (ViewportOriginPixels + ViewportSizePixels) * InvFullRenderTargetSize;
+}
+
 float2 ClampPostProcessViewportUV(float2 uv)
 {
-    float2 viewportMinUV = ViewportOriginPixels * InvFullRenderTargetSize;
-    float2 viewportMaxUV = (ViewportOriginPixels + ViewportSizePixels) * InvFullRenderTargetSize;
+    float2 viewportMinUV = GetPostProcessViewportMinUV();
+    float2 viewportMaxUV = GetPostProcessViewportMaxUV();
+    // Neighbor sample이 다른 viewport를 읽지 않도록 half pixel margin으로 clamp한다.
     float2 halfPixel = InvFullRenderTargetSize * 0.5f;
     return clamp(uv, viewportMinUV + halfPixel, viewportMaxUV - halfPixel);
 }

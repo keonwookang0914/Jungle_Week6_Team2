@@ -469,6 +469,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
         return;
 
     ID3D11DeviceContext* Context = Device.GetDeviceContext();
+    constexpr UINT ViewportInfoSlot = 12;
 
     for (const auto& PostProcess : PostProcesses)
     {
@@ -504,6 +505,21 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+
+            FViewportInfoConstants ViewportInfo = {};
+            if (CurrentRenderTargets.Width > 0.0f && CurrentRenderTargets.Height > 0.0f)
+            {
+                ViewportInfo.InvFullRenderTargetSize =
+                    FVector2(1.0f / CurrentRenderTargets.Width, 1.0f / CurrentRenderTargets.Height);
+            }
+            ViewportInfo.ViewportOriginPixels = FVector2(static_cast<float>(View.X), static_cast<float>(View.Y));
+            ViewportInfo.ViewportSizePixels = FVector2(static_cast<float>(View.Width), static_cast<float>(View.Height));
+
+            Resources.ViewportInfoConstantBuffer.Update(Context, &ViewportInfo, sizeof(FViewportInfoConstants));
+            ID3D11Buffer* ViewportCB = Resources.ViewportInfoConstantBuffer.GetBuffer();
+            Context->VSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+            Context->PSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+
             PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 

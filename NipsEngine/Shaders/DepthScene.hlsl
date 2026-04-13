@@ -1,5 +1,7 @@
 // DepthScene.hlsl
 
+#include "Common.hlsl"
+
 // ============================================================
 // Constant Buffers
 // ============================================================
@@ -9,7 +11,7 @@ cbuffer DepthSceneConstants : register(b8)
 {
     float NearPlane;
     float FarPlane;
-    float2 ViewportSize;
+    float2 DepthScenePadding0;
 };
 
 // ============================================================
@@ -31,7 +33,6 @@ SamplerState PointSampler : register(s0);
 struct VS_OUTPUT
 {
     float4 Position : SV_POSITION;
-    float2 UV : TEXCOORD0;
 };
 
 VS_OUTPUT VS(uint VertexID : SV_VertexID)
@@ -47,9 +48,7 @@ VS_OUTPUT VS(uint VertexID : SV_VertexID)
     Output.Position = float4(Position, 0.0f, 1.0f);
 
     // UV: NDC → [0, 1] 변환 (D3D11 텍스처 좌표는 Y축 반전)
-    Output.UV.x = (Position.x + 1.0f) * 0.5f;
-    Output.UV.y = (1.0f - Position.y) * 0.5f;
-
+    // 현재는 TEXCOORD를 따로 쓰지 않고 공용 helper에서 같은 의미의 UV를 계산한다.
     return Output;
 }
 
@@ -60,15 +59,15 @@ VS_OUTPUT VS(uint VertexID : SV_VertexID)
 // 가까운 거리에서 정밀도가 집중되므로 육안으로 보기 어렵고,
 // 선형화하면 Near=흰색(1.0), Far=검정(0.0)으로 거리감이 직관적으로 나타남.
 
-float LinearizeDepth(float NDCDepth)
+float LinearizeDepth(float ndcDepth)
 {
     // D3D11 투영 역변환
     // LinearDepth = Near * Far / (Far - NDCDepth * (Far - Near))
-    float LinearDepth = (NearPlane * FarPlane) / (FarPlane - NDCDepth * (FarPlane - NearPlane));
+    float linearDepth = (NearPlane * FarPlane) / (FarPlane - ndcDepth * (FarPlane - NearPlane));
 
     // [Near, Far] 범위를 [0, 1]로 정규화
     // Near에 가까울수록 1.0 (밝음), Far에 가까울수록 0.0 (어두움)
-    return 1.0f - saturate((LinearDepth - NearPlane) / (FarPlane - NearPlane));
+    return 1.0f - saturate((linearDepth - NearPlane) / max(FarPlane - NearPlane, 1e-6f));
 }
 
 // ============================================================
@@ -77,17 +76,21 @@ float LinearizeDepth(float NDCDepth)
 
 float4 PS(VS_OUTPUT Input) : SV_TARGET
 {
-    float NDCDepth = DepthTexture.Sample(PointSampler, Input.UV).r;
+    // UV는 별도 TEXCOORD가 아니라 공용 helper로 계산한다.
+    // 멀티 뷰포트에서는 sub-viewport 안에서만 PS가 실행되지만,
+    // depth sampling은 전체 render target 기준 UV로 해야 한다.
+    float2 uv = ClampPostProcessViewportUV(GetPostProcessFullUV(Input.Position.xy));
+    float ndcDepth = DepthTexture.Sample(PointSampler, uv).r;
 
     // 깊이가 기록되지 않은 픽셀(배경) 처리
     // D3D11 기본 클리어값은 1.0f
-    if (NDCDepth >= 1.0f)
+    if (ndcDepth >= 1.0f)
     {
         return float4(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
-    float Depth = LinearizeDepth(NDCDepth);
+    float depth = LinearizeDepth(ndcDepth);
 
     // 흑백 깊이 시각화 — 가까울수록 밝고 멀수록 어두움
-    return float4(Depth, Depth, Depth, 1.0f);
+    return float4(depth, depth, depth, 1.0f);
 }

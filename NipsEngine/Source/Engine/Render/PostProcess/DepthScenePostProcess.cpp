@@ -29,7 +29,6 @@ void FDepthScenePostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Co
     FDepthSceneConstants Constants = {};
     Constants.NearPlane = ViewDesc.NearPlane;
     Constants.FarPlane = ViewDesc.FarPlane;
-    Constants.ViewportSize = FVector2(RenderTargets.Width, RenderTargets.Height);
     Resources.DepthSceneConstantBuffer.Update(Context, &Constants, sizeof(FDepthSceneConstants));
 
 	ID3D11Buffer* CB = Resources.DepthSceneConstantBuffer.GetBuffer();

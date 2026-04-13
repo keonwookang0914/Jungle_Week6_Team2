@@ -19,6 +19,7 @@ struct FFireBallConstants
 
 cbuffer FireBallBuffer : register(b10)
 {
+    // depth에서 world position을 복원하기 위한 역행렬
     row_major float4x4 InvViewProj;
     FFireBallConstants FireBalls[MAX_FIREBALL_COUNT];
     int FireBallCount;
@@ -28,6 +29,7 @@ cbuffer FireBallBuffer : register(b10)
 // ─────────────────────────────────────────────
 // Textures
 // ─────────────────────────────────────────────
+// t0 : SceneColor, t1 : Depth
 Texture2D SceneColorTexture : register(t0);
 Texture2D DepthTexture : register(t1);
 SamplerState PointSampler : register(s0);
@@ -55,18 +57,18 @@ float3 HSVtoRGB(float3 c)
 // ─────────────────────────────────────────────
 // World Position 복원 함수 (Standard-Z)
 // ─────────────────────────────────────────────
-float3 ReconstructWorldPosition(float2 UV, float Depth)
+float3 ReconstructWorldPosition(float2 uv, float depth)
 {
-    float4 NDCPos;
-    NDCPos.x = UV.x * 2.0f - 1.0f;
-    NDCPos.y = UV.y * -2.0f + 1.0f;
-    NDCPos.z = Depth;
-    NDCPos.w = 1.0f;
+    float4 ndcPos;
+    ndcPos.x = uv.x * 2.0f - 1.0f;
+    ndcPos.y = uv.y * -2.0f + 1.0f;
+    ndcPos.z = depth;
+    ndcPos.w = 1.0f;
 
-    float4 WorldPos = mul(NDCPos, InvViewProj);
-    WorldPos /= WorldPos.w;
+    float4 worldPos = mul(ndcPos, InvViewProj);
+    worldPos /= worldPos.w;
 
-    return WorldPos.xyz;
+    return worldPos.xyz;
 }
 
 // ─────────────────────────────────────────────
@@ -75,14 +77,15 @@ float3 ReconstructWorldPosition(float2 UV, float Depth)
 struct VSOutput
 {
     float4 Position : SV_Position;
-    float2 UV : TEXCOORD0;
 };
 
 VSOutput VS_Main(uint VertexID : SV_VertexID)
 {
     VSOutput Output;
-    Output.UV = float2((VertexID << 1) & 2, VertexID & 2);
-    Output.Position = float4(Output.UV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
+
+    // 버텍스 버퍼 없이 풀스크린 삼각형 생성
+    float2 uv = float2((VertexID << 1) & 2, VertexID & 2);
+    Output.Position = float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
     return Output;
 }
 
@@ -91,47 +94,50 @@ VSOutput VS_Main(uint VertexID : SV_VertexID)
 // ─────────────────────────────────────────────
 float4 PS_Main(VSOutput Input) : SV_Target
 {
+    // 멀티 뷰포트에서는 반드시 전체 render target 기준 UV로 depth/scene을 읽어야 한다.
+    float2 uv = ClampPostProcessViewportUV(GetPostProcessFullUV(Input.Position.xy));
+
     // 1. Depth 샘플링
-    float Depth = DepthTexture.Sample(PointSampler, Input.UV).r;
+    float depth = DepthTexture.Sample(PointSampler, uv).r;
 
     // Sky / Empty 픽셀 스킵
-    if (Depth >= 1.0f)
+    if (depth >= 1.0f)
     {
-        return SceneColorTexture.Sample(PointSampler, Input.UV);
+        return SceneColorTexture.Sample(PointSampler, uv);
     }
 
     // 2. World Position 복원
-    float3 WorldPos = ReconstructWorldPosition(Input.UV, Depth);
+    float3 worldPos = ReconstructWorldPosition(uv, depth);
 
     // 3. SceneColor 샘플링
-    float4 SceneColor = SceneColorTexture.Sample(PointSampler, Input.UV);
+    float4 sceneColor = SceneColorTexture.Sample(PointSampler, uv);
 
     // 4. 모든 FireBall 누적
     for (int i = 0; i < FireBallCount; ++i)
     {
-        float3 Center = FireBalls[i].WorldLocation.xyz;
-        float Dist = distance(WorldPos, Center);
-        float Radius = FireBalls[i].Radius;
-        float RadiusFalloff = FireBalls[i].RadiusFalloff;
+        float3 center = FireBalls[i].WorldLocation.xyz;
+        float dist = distance(worldPos, center);
+        float radius = FireBalls[i].Radius;
+        float radiusFalloff = FireBalls[i].RadiusFalloff;
 
-        if (Dist > RadiusFalloff)
+        if (dist > radiusFalloff)
             continue;
 
-        float Weight = 1.0f - smoothstep(Radius, RadiusFalloff, Dist);
-        float BlendWeight = saturate(Weight * FireBalls[i].Intensity);
-        float3 LightColor = FireBalls[i].LinearColor.rgb * FireBalls[i].Intensity;
+        float weight = 1.0f - smoothstep(radius, radiusFalloff, dist);
+        float blendWeight = saturate(weight * FireBalls[i].Intensity);
+        float3 lightColor = FireBalls[i].LinearColor.rgb * FireBalls[i].Intensity;
 
         // HSV 공간에서 H, S만 FireBall 색으로 이동, V는 원본 유지
-        float3 SceneHSV = RGBtoHSV(SceneColor.rgb);
-        float3 LightHSV = RGBtoHSV(LightColor);
+        float3 sceneHSV = RGBtoHSV(sceneColor.rgb);
+        float3 lightHSV = RGBtoHSV(lightColor);
 
-        float3 BlendedHSV;
-        BlendedHSV.x = lerp(SceneHSV.x, LightHSV.x, BlendWeight); // H: 색조
-        BlendedHSV.y = lerp(SceneHSV.y, LightHSV.y, BlendWeight); // S: 채도
-        BlendedHSV.z = SceneHSV.z; // V: 명도 원본 유지
+        float3 blendedHSV;
+        blendedHSV.x = lerp(sceneHSV.x, lightHSV.x, blendWeight); // H: 색조
+        blendedHSV.y = lerp(sceneHSV.y, lightHSV.y, blendWeight); // S: 채도
+        blendedHSV.z = sceneHSV.z; // V: 명도 원본 유지
 
-        SceneColor.rgb = HSVtoRGB(BlendedHSV);
+        sceneColor.rgb = HSVtoRGB(blendedHSV);
     }
 
-    return SceneColor;
+    return sceneColor;
 }
