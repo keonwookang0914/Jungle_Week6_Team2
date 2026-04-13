@@ -52,6 +52,16 @@ cbuffer OutlineConstants : register(b5)
 
 // cbuffer StaticMeshBuffer : register(b6)
 // cbuffer DecalBuffer : register(b7)
+// cbuffer ViewportInfoBuffer : register(b12)
+
+cbuffer ViewportInfoBuffer : register(b12)
+{
+    float2 InvFullRenderTargetSize;
+    float2 ViewportOriginPixels;
+
+    float2 ViewportSizePixels;
+    float2 ViewportInfoPadding0;
+};
 
 float4 ApplyMVP(float3 pos)
 {
@@ -79,4 +89,22 @@ float3x3 Inverse3x3(float3x3 m)
     result[2][1] = -(m[0][0] * m[2][1] - m[0][1] * m[2][0]) * invDet;
     result[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) * invDet;
     return result;
+}
+
+float2 GetPostProcessFullPixelCoord(float2 svPosition)
+{
+    return ViewportOriginPixels + svPosition;
+}
+
+float2 GetPostProcessFullUV(float2 svPosition)
+{
+    return GetPostProcessFullPixelCoord(svPosition) * InvFullRenderTargetSize;
+}
+
+float2 ClampPostProcessViewportUV(float2 uv)
+{
+    float2 viewportMinUV = ViewportOriginPixels * InvFullRenderTargetSize;
+    float2 viewportMaxUV = (ViewportOriginPixels + ViewportSizePixels) * InvFullRenderTargetSize;
+    float2 halfPixel = InvFullRenderTargetSize * 0.5f;
+    return clamp(uv, viewportMinUV + halfPixel, viewportMaxUV - halfPixel);
 }

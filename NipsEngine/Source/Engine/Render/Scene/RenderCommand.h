@@ -168,6 +168,14 @@ struct FDepthSceneConstants
     FVector2 ViewportSize; // 16바이트 정렬 맞춰서 필요 시 패딩 추가
 };
 
+struct FViewportInfoConstants
+{
+    FVector2 InvFullRenderTargetSize = FVector2(0.0f, 0.0f);
+    FVector2 ViewportOriginPixels = FVector2(0.0f, 0.0f);
+    FVector2 ViewportSizePixels = FVector2(0.0f, 0.0f);
+    FVector2 Padding0 = FVector2(0.0f, 0.0f);
+};
+
 struct FDecalConstants
 {
 	FMatrix DecalViewProjection;

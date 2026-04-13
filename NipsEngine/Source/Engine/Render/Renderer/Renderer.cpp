@@ -66,6 +66,7 @@ void FRenderer::Create(HWND hWindow)
     Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
 	Resources.FireBallConstantBuffer.Create(Device.GetDevice(), sizeof(FFireBallCBuffer));
+	Resources.ViewportInfoConstantBuffer.Create(Device.GetDevice(), sizeof(FViewportInfoConstants));
 
 	// TODO : SamplerState 관리
 	{
@@ -150,6 +151,7 @@ void FRenderer::Release()
     Resources.DepthSceneConstantBuffer.Release();
 	Resources.DecalConstantBuffer.Release();
 	Resources.FireBallConstantBuffer.Release();
+	Resources.ViewportInfoConstantBuffer.Release();
 
 	PostProcessArray.clear();
 
