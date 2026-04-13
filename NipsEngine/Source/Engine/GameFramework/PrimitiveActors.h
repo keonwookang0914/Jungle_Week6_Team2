@@ -4,6 +4,7 @@
 
 class UTextRenderComponent;
 class UDecalComponent;
+class UFireBallComponent;
 
 class ACubeActor : public AActor
 {
@@ -85,6 +86,17 @@ public:
 
 	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 	UDecalComponent* DecalComponent;
+
+	void InitDefaultComponents();
+};
+class AFireBallActor : public AActor
+{
+public:
+	DECLARE_CLASS(AFireBallActor, AActor)
+	AFireBallActor() = default;
+
+	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
+	UFireBallComponent* FireBallComponent;
 
 	void InitDefaultComponents();
 };

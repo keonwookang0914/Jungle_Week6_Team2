@@ -27,6 +27,7 @@ struct FPostProcessViewDesc
 
 
 	TArray<FFireBallInfo> FireBallInfoArray;
+	FHeightFogInfo HeightFogInfo;
 
     // Selection 마스크 수집 결과에서 파생된 outline 정보
     FOutlinePostProcessData Outline = {};

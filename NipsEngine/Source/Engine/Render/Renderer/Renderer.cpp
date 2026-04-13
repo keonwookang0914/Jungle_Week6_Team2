@@ -55,6 +55,8 @@ void FRenderer::Create(HWND hWindow)
 	//10. FireBall fireballshader.hlsl
 	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
 
+	// 11. Fog Shader
+
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
 	Resources.GizmoPerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FGizmoConstants));

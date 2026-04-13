@@ -4,6 +4,7 @@
 #include "Component/TextRenderComponent.h"
 #include "Component/DecalComponent.h"
 #include "Component/SubUVComponent.h"
+#include "Component/FireBallComponent.h"
 #include "Core/ResourceManager.h"
 #include <format>
 
@@ -40,6 +41,9 @@ REGISTER_FACTORY(ABillboardActor)
 
 DEFINE_CLASS(ADecalActor, AActor)
 REGISTER_FACTORY(ADecalActor)
+
+DEFINE_CLASS(AFireBallActor, AActor)
+REGISTER_FACTORY(AFireBallActor)
 
 void ACubeActor::InitDefaultComponents()
 {
@@ -208,4 +212,11 @@ void ADecalActor::InitDefaultComponents()
 	DecalComponent = AddComponent<UDecalComponent>();
 	SetRootComponent(DecalComponent);
 	DecalComponent->SetDecalTextureName("Asset\\Texture\\Pawn_64x.png");
+}
+
+void AFireBallActor::InitDefaultComponents()
+{
+	FireBallComponent = AddComponent<UFireBallComponent>();
+	SetRootComponent(FireBallComponent);
+
 }

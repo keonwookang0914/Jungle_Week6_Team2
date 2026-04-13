@@ -22,6 +22,7 @@ struct FRenderResources
 	FConstantBuffer FireBallConstantBuffer;			// b10
 	FConstantBuffer HeightFogConstantBuffer;		// b11
 	FConstantBuffer ViewportInfoConstantBuffer;		// b12
+	
 
     FShader PrimitiveShader;
     FShader GizmoShader;

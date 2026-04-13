@@ -8,6 +8,7 @@ enum class EViewMode : int32
 	Unlit,
 	Wireframe,
 	DepthScene,
+	HeightFog,
 	Count
 };
 
