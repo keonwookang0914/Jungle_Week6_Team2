@@ -2,18 +2,15 @@
 
 #include "Render/PostProcess/PostProcessBase.h"
 
-
-// PostProcessDepthScene.h
-#pragma once
-
-#include "Render/PostProcess/PostProcessBase.h"
-
 class FDepthScenePostProcess : public IPostProcess
 {
   public:
-    bool IsEnabled(const FRenderBus& Bus) const override;
+    virtual bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const override;
 
-    void Execute(ID3D11DeviceContext* Context, const FRenderBus& Bus, FRenderResources& Resources,
-                 const FRenderTargetSet& RenderTargets, ID3D11ShaderResourceView* SceneColorSRV,
-                 ID3D11RenderTargetView* OutputRTV) override;
+    virtual void Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,
+                         FRenderResources&         Resources,
+                         const FRenderTargetSet&   RenderTargets, // DepthStencilSRV, SelectionMaskSRV 포함
+                         ID3D11ShaderResourceView* SceneColorSRV, // Ping-Pong Source (Color)
+                         ID3D11RenderTargetView*   OutputRTV      // Ping-Pong Dest
+                         ) override;
 };

@@ -185,3 +185,12 @@ struct FRenderCommand
 	ERenderCommandType Type = ERenderCommandType::Primitive;
 };
 
+
+struct FFireBallInfo
+{
+    FVector4 WorldLocation;
+    FColor   LinearColor;
+    float    Intensity;
+    float    Radius;
+    float    RadiusFalloff;
+};

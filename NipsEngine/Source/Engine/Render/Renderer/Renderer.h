@@ -17,6 +17,9 @@
 #include <cstddef>
 #include <functional>
 
+//postprocess
+#include "Render/PostProcess/DepthScenePostProcess.h"
+
 // 패스별 Batcher 바인딩 — Clear → Collect → Flush 패턴
 struct FPassBatcherBinding
 {
@@ -87,6 +90,10 @@ private:
 	FPassRenderState    PassRenderStates[(uint32)ERenderPass::MAX];
 	FPassBatcherBinding PassBatchers[(uint32)ERenderPass::MAX];
 	ID3D11ShaderResourceView* SubUVCachedSRV = nullptr;
+
+
+	//PostProcess
+    TArray<std::unique_ptr<IPostProcess>> PostProcessArray;
 
 	//	Primitive and Gizmo Input Layout
 	D3D11_INPUT_ELEMENT_DESC PrimitiveInputLayout[2] =

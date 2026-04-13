@@ -80,6 +80,9 @@ void FRenderer::Create(HWND hWindow)
     FxaaSampDesc.MaxLOD = 0.0f;
     Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 
+	// postprocess manage stack
+	PostProcessArray.push_back(std::make_unique<FDepthScenePostProcess>());
+
 	//	MeshManager init
 	FMeshManager::Initialize();
 
@@ -121,6 +124,8 @@ void FRenderer::Release()
 	Resources.StaticMeshConstantBuffer.Release();
 	Resources.FxaaConstantBuffer.Release();
     Resources.DepthSceneConstantBuffer.Release();
+
+	PostProcessArray.clear();
 
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
@@ -229,9 +234,8 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 		{
 			ExecuteDefaultPass(CurPass, Commands, InRenderBus, Context);
 		}
-
-
 	}
+
 }
 
 // ============================================================
