@@ -1,5 +1,4 @@
 ﻿#include "Renderer.h"
-#include "Renderer.h"
 
 #include <iostream>
 #include <algorithm>
@@ -66,6 +65,7 @@ void FRenderer::Create(HWND hWindow)
     Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
 	Resources.FireBallConstantBuffer.Create(Device.GetDevice(), sizeof(FFireBallCBuffer));
+	Resources.ViewportInfoConstantBuffer.Create(Device.GetDevice(), sizeof(FViewportInfoConstants));
 
 	// TODO : SamplerState 관리
 	{
@@ -104,9 +104,6 @@ void FRenderer::Create(HWND hWindow)
 		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.PointSamplerState.ReleaseAndGetAddressOf());
 	}
-	// postprocess manage stack
-	PostProcessArray.push_back(std::make_unique<FDepthScenePostProcess>());
-
 	//	MeshManager init
 	FMeshManager::Initialize();
 
@@ -150,8 +147,7 @@ void FRenderer::Release()
     Resources.DepthSceneConstantBuffer.Release();
 	Resources.DecalConstantBuffer.Release();
 	Resources.FireBallConstantBuffer.Release();
-
-	PostProcessArray.clear();
+	Resources.ViewportInfoConstantBuffer.Release();
 
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
@@ -177,9 +173,9 @@ void FRenderer::InitializePostProcesses()
 	PostProcesses.clear();
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
-	// TODO: DepthScene PostProcess 구현 후 주석 해제
-	 PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
 	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
+	// PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
@@ -467,6 +463,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
         return;
 
     ID3D11DeviceContext* Context = Device.GetDeviceContext();
+    constexpr UINT ViewportInfoSlot = 12;
 
     for (const auto& PostProcess : PostProcesses)
     {
@@ -502,6 +499,21 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+
+            FViewportInfoConstants ViewportInfo = {};
+            if (CurrentRenderTargets.Width > 0.0f && CurrentRenderTargets.Height > 0.0f)
+            {
+                ViewportInfo.InvFullRenderTargetSize =
+                    FVector2(1.0f / CurrentRenderTargets.Width, 1.0f / CurrentRenderTargets.Height);
+            }
+            ViewportInfo.ViewportOriginPixels = FVector2(static_cast<float>(View.X), static_cast<float>(View.Y));
+            ViewportInfo.ViewportSizePixels = FVector2(static_cast<float>(View.Width), static_cast<float>(View.Height));
+
+            Resources.ViewportInfoConstantBuffer.Update(Context, &ViewportInfo, sizeof(FViewportInfoConstants));
+            ID3D11Buffer* ViewportCB = Resources.ViewportInfoConstantBuffer.GetBuffer();
+            Context->VSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+            Context->PSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+
             PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 

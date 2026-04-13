@@ -1,9 +1,10 @@
-﻿#include "FireBallPostProcess.h"
+#include "FireBallPostProcess.h"
 
+#include <algorithm>
 
 bool UFireBallPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const
 {
-	return !ViewDesc.FireBallInfoArray.empty();
+	return ViewDesc.ViewMode != EViewMode::DepthScene && !ViewDesc.FireBallInfoArray.empty();
 }
 
 void UFireBallPostProcess::Execute(
@@ -15,19 +16,21 @@ void UFireBallPostProcess::Execute(
 	ID3D11ShaderResourceView* SceneColorSRV,
 	ID3D11RenderTargetView* OutputRTV)
 {
+	(void)Device;
+
 	// ① Output RTV 바인딩 (Depth 없이 Color만)
 	Context->OMSetRenderTargets(1, &OutputRTV, nullptr);
 
 	// ② InvViewProj 계산
 	FMatrix ViewProj = ViewDesc.View * ViewDesc.Proj;
-	FMatrix InvViewProj =  ViewProj.GetInverse();
+	FMatrix InvViewProj = ViewProj.GetInverse();
 
 	// ③ FFireBallCBuffer 채우기
 	FFireBallCBuffer CBufferData = {};
 	CBufferData.InvViewProj = InvViewProj;
 
-	const uint32 FireBallCount = ViewDesc.FireBallInfoArray.size() < MAX_FIREBALL_COUNT ? ViewDesc.FireBallInfoArray.size() : MAX_FIREBALL_COUNT;
-	for (int32 i = 0; i < FireBallCount; ++i)
+	const uint32 FireBallCount = static_cast<uint32>(std::min<size_t>(ViewDesc.FireBallInfoArray.size(), MAX_FIREBALL_COUNT));
+	for (uint32 i = 0; i < FireBallCount; ++i)
 	{
 		const FFireBallInfo& Info = ViewDesc.FireBallInfoArray[i];
 		CBufferData.FireBalls[i].WorldLocation = Info.GetWorldLocation();
@@ -58,8 +61,6 @@ void UFireBallPostProcess::Execute(
 	Context->PSSetSamplers(0, 1, Samplers);
 
 	// ⑧ Draw (Vertex Buffer 없이 fullscreen triangle)
-	Context->IASetInputLayout(nullptr);
-	Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 	Context->Draw(3, 0);
 
 	// ⑨ SRV 클린업

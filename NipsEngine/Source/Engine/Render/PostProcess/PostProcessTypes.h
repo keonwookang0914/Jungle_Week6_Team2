@@ -18,7 +18,6 @@ struct FPostProcessViewDesc
 
     // RenderBus에서 snapshot한 viewport별 실행 정보
     EViewMode  ViewMode = EViewMode::Lit;
-    EViewMode  DepthScene = EViewMode::DepthScene;
 
     FShowFlags ShowFlags = {};
     FMatrix    View = FMatrix::Identity;

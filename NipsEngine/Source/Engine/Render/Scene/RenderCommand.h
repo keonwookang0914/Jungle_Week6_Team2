@@ -150,22 +150,25 @@ struct FStaticMeshResources
 
 struct FFxaaConstantBuffer
 {
-    FVector2 InvRenderTargetSize;	// (1/width, 1/height)
-    FVector2 ViewportMinUV;			// 현재 viewport의 최소 UV
-
-    FVector2 ViewportMaxUV;			// 현재 viewport의 최대 UV
-    float  EdgeThreshold;			// ex: 1.0 / 8.0
-    float  EdgeThresholdMin;		// ex: 1.0 / 16.0
-
-    float  Subpix;					 // ex: 0.75
-    float padding[3];
+    float EdgeThreshold = 1.0f / 8.0f;      // ex: 1.0 / 8.0
+    float EdgeThresholdMin = 1.0f / 16.0f; // ex: 1.0 / 16.0
+    float Subpix = 0.75f;                  // ex: 0.75
+    float Padding0 = 0.0f;
 };
 
 struct FDepthSceneConstants
 {
-    float    NearPlane;
-    float    FarPlane;
-    FVector2 ViewportSize; // 16바이트 정렬 맞춰서 필요 시 패딩 추가
+    float NearPlane = 0.1f;
+    float FarPlane = 1000.0f;
+    FVector2 Padding0 = FVector2(0.0f, 0.0f); // 16바이트 정렬 맞춤용 패딩
+};
+
+struct FViewportInfoConstants
+{
+    FVector2 InvFullRenderTargetSize = FVector2(0.0f, 0.0f);
+    FVector2 ViewportOriginPixels = FVector2(0.0f, 0.0f);
+    FVector2 ViewportSizePixels = FVector2(0.0f, 0.0f);
+    FVector2 Padding0 = FVector2(0.0f, 0.0f);
 };
 
 struct FDecalConstants

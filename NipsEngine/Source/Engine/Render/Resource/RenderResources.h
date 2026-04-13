@@ -18,9 +18,10 @@ struct FRenderResources
     FConstantBuffer StaticMeshConstantBuffer;       // b6
     FConstantBuffer FxaaConstantBuffer;				// b7
     FConstantBuffer DepthSceneConstantBuffer;		// b8
-    FConstantBuffer DecalConstantBuffer;			// b9
+	FConstantBuffer DecalConstantBuffer;			// b9
 	FConstantBuffer FireBallConstantBuffer;			// b10
 	FConstantBuffer HeightFogConstantBuffer;		// b11
+	FConstantBuffer ViewportInfoConstantBuffer;		// b12
 
     FShader PrimitiveShader;
     FShader GizmoShader;
