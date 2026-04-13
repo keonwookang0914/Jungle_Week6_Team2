@@ -32,6 +32,7 @@ PSInput VS(VSInput input)
 
     output.position = ApplyMVP(input.position);
     output.worldPos = mul(float4(input.position, 1.0f), Model).xyz;
+    // TODO: Normal Matrix 확인 필요
     output.worldNormal = normalize(mul(input.normal, (float3x3)Model));
 
     return output;

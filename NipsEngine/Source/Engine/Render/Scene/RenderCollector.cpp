@@ -588,10 +588,10 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		FTextureResource* DecalTexture = DecalComponent->GetCachedDecalTexture();
 		ID3D11ShaderResourceView* SRV = (DecalTexture && DecalTexture->SRV) ? DecalTexture->SRV.Get() : FResourceManager::Get().GetDefaultWhiteSRV();
 
+		// TODO: Decal이 영향을 미치는 오브젝트들을 효율적으로 찾는 방법 필요
 		AActor* DecalOwner = DecalComponent->GetOwner();
 		UWorld* World = DecalOwner ? DecalOwner->GetWorld() : nullptr;
 		if (World == nullptr) { return; }
-
 		TArray<UStaticMeshComponent*> StaticMeshComponents;
 		for (TActorIterator<AActor> Iter(World); Iter; ++Iter)
 		{

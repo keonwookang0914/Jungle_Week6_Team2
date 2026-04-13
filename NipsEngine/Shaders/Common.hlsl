@@ -51,7 +51,7 @@ cbuffer OutlineConstants : register(b5)
 };
 
 // cbuffer StaticMeshBuffer : register(b6)
-// cbuffer DecalBuffer : register(b7)
+// cbuffer DecalBuffer : register(b9)
 
 float4 ApplyMVP(float3 pos)
 {

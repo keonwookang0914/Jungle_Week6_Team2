@@ -1,10 +1,10 @@
-#include "DecalComponent.h"
+﻿#include "DecalComponent.h"
 
 #include <cmath>
 #include <cstring>
 
 #include "Core/ResourceManager.h"
-#include "UI/EditorConsoleWidget.h"
+#include "Engine/Geometry/OBB.h"
 
 DEFINE_CLASS(UDecalComponent, UPrimitiveComponent)
 REGISTER_FACTORY(UDecalComponent)
@@ -43,6 +43,19 @@ void UDecalComponent::PostEditProperty(const char* PropertyName)
     {
         SetDecalTexturePath(DecalTexturePath);
     }
+}
+
+FOBB UDecalComponent::GetDecalOBB() const
+{
+	const FVector WorldScale = GetWorldScale();
+	const FVector WorldExtent(std::abs(WorldScale.X), std::abs(WorldScale.Y), std::abs(WorldScale.Z));
+	FOBB DecalOBB;
+	DecalOBB.Center = GetWorldLocation();
+	DecalOBB.Extents = WorldExtent;
+	DecalOBB.Axes[0] = GetForwardVector();
+	DecalOBB.Axes[1] = GetRightVector();
+	DecalOBB.Axes[2] = GetUpVector();
+	return DecalOBB;
 }
 
 FMatrix UDecalComponent::GetDecalViewProjection() const

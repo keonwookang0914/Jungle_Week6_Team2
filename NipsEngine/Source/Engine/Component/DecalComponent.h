@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "PrimitiveComponent.h"
 #include "Core/ResourceManager.h"
@@ -6,6 +6,7 @@
 
 // TODO: 어째서 UTexture2D가 아닐까요?
 struct FTextureResource;
+struct FOBB;
 
 // TODO: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 class UDecalComponent : public UPrimitiveComponent
@@ -16,8 +17,8 @@ public:
 	static constexpr EPrimitiveType PrimitiveType = EPrimitiveType::EPT_Decal;
 	EPrimitiveType GetPrimitiveType() const override { return PrimitiveType; }
 
-	virtual UDecalComponent* Duplicate() override;
-	virtual UDecalComponent* DuplicateSubObjects() override { return this; }
+	UDecalComponent* Duplicate() override;
+	UDecalComponent* DuplicateSubObjects() override { return this; }
 
 	void GetEditableProperties(TArray<FPropertyDescriptor>& OutProps) override;
 	void PostEditProperty(const char* PropertyName) override;
@@ -46,6 +47,8 @@ public:
 		}
 		return CachedDecalTexture;
 	}
+
+	FOBB GetDecalOBB() const;
 
 	FMatrix GetDecalViewProjection() const;
 };

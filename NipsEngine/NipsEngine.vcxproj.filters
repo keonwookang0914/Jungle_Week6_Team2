@@ -437,9 +437,6 @@
     <ClCompile Include="Source\Engine\Spatial\BVH.cpp">
       <Filter>Source\Engine\Spatial</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Spatial\KDTree.cpp">
-      <Filter>Source\Engine\Spatial</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Spatial\WorldSpatialIndex.cpp">
       <Filter>Source\Engine\Spatial</Filter>
     </ClCompile>
@@ -492,6 +489,9 @@
     <ClCompile Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.cpp" />
     <ClCompile Include="Source\Engine\Component\DecalComponent.cpp">
       <Filter>Source\Engine\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Geometry\OBB.cpp">
+      <Filter>Source\Engine\Geometry</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -918,9 +918,6 @@
     <ClInclude Include="Source\Engine\Spatial\BVH.h">
       <Filter>Source\Engine\Spatial</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Engine\Spatial\KDTree.h">
-      <Filter>Source\Engine\Spatial</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Engine\Spatial\WorldSpatialIndex.h">
       <Filter>Source\Engine\Spatial</Filter>
     </ClInclude>
@@ -982,6 +979,9 @@
     <ClInclude Include="Source\Engine\Render\PostProcess\DepthScenePostProcess.h" />
     <ClInclude Include="Source\Engine\Component\DecalComponent.h">
       <Filter>Source\Engine\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Geometry\OBB.h">
+      <Filter>Source\Engine\Geometry</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
