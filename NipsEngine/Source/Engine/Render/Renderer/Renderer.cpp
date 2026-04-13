@@ -9,6 +9,7 @@
 #include "Render/Mesh/MeshManager.h"
 #include "Core/Logging/Stats.h"
 #include "Core/Logging/GPUProfiler.h"
+#include "Editor/Settings/EditorSettings.h"
 
 void FRenderer::Create(HWND hWindow)
 {
@@ -43,7 +44,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.StaticMeshShader.Create(Device.GetDevice(), L"Shaders/ShaderStaticMesh.hlsl",
 		"mainVS", "mainPS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
 
-	// 7. 안티 앨리어싱 (Fast approXimate Anti-Aliasing, FXAA)
+	// 7. 안티 앨리어싱 (Fast Approximate Anti-Aliasing, FXAA)
     Resources.FxaaShader.Create(Device.GetDevice(), L"Shaders/FXAA.hlsl", "VS", "PS", nullptr, 0);
 
 	// 8. DepthSceneMode
@@ -82,18 +83,15 @@ void FRenderer::Create(HWND hWindow)
 		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.DecalSamplerState.ReleaseAndGetAddressOf());
 	}
-	// FXAA Linear Sampler State
-	D3D11_SAMPLER_DESC FxaaSampDesc = {};
-    FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-    FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    FxaaSampDesc.MipLODBias = 0.0f;
-    FxaaSampDesc.MaxAnisotropy = 1;
-    FxaaSampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    FxaaSampDesc.MinLOD = 0.0f;
-    FxaaSampDesc.MaxLOD = 0.0f;
-    Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
+	{
+		// FXAA Linear Sampler State
+		D3D11_SAMPLER_DESC FxaaSampDesc = {};
+		FxaaSampDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+		FxaaSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		FxaaSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
+	}
 
 	//	MeshManager init
 	FMeshManager::Initialize();
@@ -107,7 +105,7 @@ void FRenderer::Create(HWND hWindow)
 
 	InitializePassRenderStates();
 	InitializePassBatchers();
-	// UseBackBufferRenderTargets(); // ??
+	InitializePostProcesses();
 
 	// GPU Profiler 초기화
 	FGPUProfiler::Get().Initialize(Device.GetDevice(), Device.GetDeviceContext());
@@ -149,7 +147,22 @@ void FRenderer::Release()
 	FontBatcher.Release();
 	SubUVBatcher.Release();
 
+	// Clear Post Process
+	PostProcesses.clear();
+
 	Device.Release();
+}
+
+void FRenderer::InitializePostProcesses()
+{
+	PostProcesses.clear();
+	
+	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
+	// TODO: DepthScene PostProcess 구현 후 주석 해제
+	// PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
+	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
+	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
 
 //	Bus → Batcher 데이터 수집 (CPU). BeginFrame 이전에 호출.
@@ -245,8 +258,6 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 		{
 			ExecuteDefaultPass(CurPass, Commands, InRenderBus, Context);
 		}
-
-
 	}
 }
 
@@ -268,7 +279,6 @@ void FRenderer::InitializePassRenderStates()
 	S[(uint32)E::DepthLess]          = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.GizmoShader,          false };
 	S[(uint32)E::Font]               = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                         true  };
 	S[(uint32)E::SubUV]              = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                         true  };
-	S[(uint32)E::PostProcessOutline] = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.OutlineShader,        false };
 }
 
 // ============================================================
@@ -427,14 +437,56 @@ void FRenderer::ExecuteDefaultPass(ERenderPass Pass, const TArray<FRenderCommand
 		Device.SetBlendState(TargetBlend);
 
 		BindShaderByType(Cmd, Context, LastCommandType);
-		if (Cmd.Type == ERenderCommandType::PostProcessOutline)
-		{
-			DrawPostProcessOutline(Context);
-			continue;
-		}
 		DrawCommand(Context, Cmd);
 	}
-	// FXAA
+}
+
+void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& Views) 
+{
+    if (Views.empty() || PostProcesses.empty())
+        return;
+
+    ID3D11DeviceContext* Context = Device.GetDeviceContext();
+
+    for (const auto& PostProcess : PostProcesses)
+    {
+        if (PostProcess == nullptr)
+            continue;
+
+        bool bAnyEnabled = false;
+        for (const FPostProcessViewDesc& View : Views)
+        {
+            if (PostProcess->IsEnabled(View))
+            {
+                bAnyEnabled = true;
+                break;
+            }
+        }
+
+        if (!bAnyEnabled)
+            continue;
+
+        Device.CopyPostProcessSourceToDest();
+
+        Device.SetBlendState(PostProcess->GetBlendState());
+        Device.SetRasterizerState(ERasterizerState::SolidNoCull);
+        Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        Context->OMSetDepthStencilState(nullptr, 0);
+
+        ID3D11ShaderResourceView* SourceSRV = Device.GetPostProcessSourceSRV();
+        ID3D11RenderTargetView* DestRTV = Device.GetPostProcessDestRTV();
+
+        for (const FPostProcessViewDesc& View : Views)
+        {
+            if (!PostProcess->IsEnabled(View))
+                continue;
+
+            Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+            PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
+        }
+
+        Device.SwapPostProcessTargets();
+    }
 }
 
 void FRenderer::ApplyPassRenderState(ERenderPass Pass, ID3D11DeviceContext* Context, EViewMode CurViewMode)
@@ -489,19 +541,6 @@ void FRenderer::BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContex
 
 	case ERenderCommandType::SelectionMask:
 		break;
-
-	case ERenderCommandType::PostProcessOutline:
-	{
-		FOutlineConstants outlineConstants = InCmd.Constants.Outline;
-		outlineConstants.ViewportSize = FVector2(CurrentRenderTargets.Width, CurrentRenderTargets.Height);
-
-		Resources.OutlineShader.Bind(Context);
-		Resources.OutlineConstantBuffer.Update(Context, &outlineConstants, sizeof(FOutlineConstants));
-		ID3D11Buffer* cb = Resources.OutlineConstantBuffer.GetBuffer();
-		Context->VSSetConstantBuffers(5, 1, &cb);
-		Context->PSSetConstantBuffers(5, 1, &cb);
-		break;
-	}
 
     case ERenderCommandType::StaticMesh:
         Resources.StaticMeshConstantBuffer.Update(Context, &InCmd.Constants.StaticMesh, sizeof(FStaticMeshConstants));
@@ -600,21 +639,6 @@ void FRenderer::DrawCommand(ID3D11DeviceContext* InDeviceContext, const FRenderC
 	{
 		InDeviceContext->Draw(vertexCount, 0);
 	}
-}
-
-void FRenderer::DrawPostProcessOutline(ID3D11DeviceContext* InDeviceContext)
-{
-	ID3D11RenderTargetView* RTV = CurrentRenderTargets.SceneColorRTV;
-	InDeviceContext->OMSetRenderTargets(1, &RTV, nullptr);
-	InDeviceContext->OMSetDepthStencilState(nullptr, 0);
-
-	ID3D11ShaderResourceView* maskSRV = CurrentRenderTargets.SelectionMaskSRV;
-	InDeviceContext->PSSetShaderResources(7, 1, &maskSRV);
-
-	InDeviceContext->Draw(3, 0);
-
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	InDeviceContext->PSSetShaderResources(7, 1, &nullSRV);
 }
 
 //	Present the rendered frame to the screen. 반드시 Render 이후에 호출되어야 함.

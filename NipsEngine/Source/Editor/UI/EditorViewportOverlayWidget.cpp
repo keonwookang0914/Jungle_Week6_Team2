@@ -44,6 +44,7 @@ static const char* GetViewModeName(EViewMode Mode)
 	case EViewMode::Lit:       return "Lit";
 	case EViewMode::Unlit:     return "Unlit";
 	case EViewMode::Wireframe: return "Wireframe";
+	case EViewMode::DepthScene:return "DepthScene";
 	default:                   return "Lit";
 	}
 }
@@ -87,8 +88,25 @@ void FEditorViewportOverlayWidget::RenderViewportSettings(float DeltaTime)
         ImGui::Unindent();
     }
 	ImGui::Checkbox("Enable LOD", &Settings.ShowFlags.bEnableLOD);
+	ImGui::Checkbox("Enable FXAA", &Settings.ShowFlags.bEnableFXAA);
 
     ImGui::Separator();
+
+	ImGui::Text("FXAA");
+	ImGui::BeginDisabled(!Settings.ShowFlags.bEnableFXAA);
+
+	ImGui::SetNextItemWidth(ItemWidth);
+	ImGui::SliderFloat("Edge Threshold", &Settings.FXAA.EdgeThreshold, 1.0f / 32.0f, 1.0f / 3.0f, "%.5f");
+
+	ImGui::SetNextItemWidth(ItemWidth);
+	ImGui::SliderFloat("Edge Threshold Min", &Settings.FXAA.EdgeThresholdMin, 0.0f, 1.0f / 8.0f, "%.5f");
+
+	ImGui::SetNextItemWidth(ItemWidth);
+	ImGui::SliderFloat("Subpix", &Settings.FXAA.Subpix, 0.0f, 1.0f, "%.2f");
+
+	ImGui::EndDisabled();
+
+	ImGui::Separator();
 
     // Grid Settings
     ImGui::Text("Grid");

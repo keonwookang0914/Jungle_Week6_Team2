@@ -7,8 +7,8 @@ enum class EViewMode : int32
 	Lit = 0,
 	Unlit,
 	Wireframe,
-	Count,
-	DepthScene
+	DepthScene,
+	Count
 };
 
 struct FShowFlags
@@ -21,4 +21,5 @@ struct FShowFlags
 	bool bBoundingVolume = false;
 	bool bBVHBoundingVolume = false;
 	bool bEnableLOD = true;
+    bool bEnableFXAA = true;
 };

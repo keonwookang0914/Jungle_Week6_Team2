@@ -408,3 +408,28 @@ void USceneComponent::Rotate(float DeltaYaw, float DeltaPitch)
 		AddRelativePitch(DeltaPitch);
 	}
 }
+
+bool USceneComponent::MoveComponent(const FVector& Delta, const FQuat& NewRotation)
+{
+	// Quaternion 정규화
+	FQuat NormalizedRotation = NewRotation;
+	NormalizedRotation.Normalize();
+
+	const FVector NewWorldLocation = GetWorldLocation() + Delta;
+
+	if (ParentComponent != nullptr)
+	{
+		const FTransform ParentWorldTransform = ParentComponent->GetWorldTransform();
+		RelativeLocation = ParentWorldTransform.InverseTransformPosition(NewWorldLocation);
+
+		const FQuat NewRelativeRotation = (NormalizedRotation * ParentWorldTransform.GetRotation().Inverse()).GetNormalized();
+		SetRelativeRotationQuat(NewRelativeRotation);
+	}
+	else
+	{
+		RelativeLocation = NewWorldLocation;
+		SetRelativeRotationQuat(NormalizedRotation);
+	}
+
+	return true;
+}

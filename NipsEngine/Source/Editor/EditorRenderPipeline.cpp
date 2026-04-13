@@ -58,11 +58,16 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     Renderer.BeginFrame();
     Renderer.UseViewportRenderTargets();
 
+    TArray<FPostProcessViewDesc> PostProcessViews;
+    PostProcessViews.reserve(FViewportLayout::MaxViewports);
+
     // 4개 뷰포트를 순서대로 렌더링
     for (int32 i = 0; i < FViewportLayout::MaxViewports; ++i)
     {
-        RenderViewport(Renderer, i);
+        RenderViewport(Renderer, i, PostProcessViews);
     }
+
+    Renderer.ExecutePostProcessStack(PostProcessViews);
 
     Renderer.UseBackBufferRenderTargets();
 
@@ -72,7 +77,7 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     Renderer.EndFrame();
 }
 
-void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIndex)
+void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews)
 {
     FEditorViewportClient& VC = Editor->GetViewportLayout().GetViewportClient(ViewportIndex);
 
@@ -116,6 +121,8 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     // 뷰포트별 카메라 기준으로 기즈모 스케일 결정
     // TickInteraction 에서 한 번만 처리하면 마지막 뷰포트가 다른 뷰포트의 스케일을 덮어쓰므로
     // CollectGizmo 직전에 각 뷰포트 카메라로 적용합니다.
+    FOutlinePostProcessData OutlineData = {};
+
     if (Editor->GetEditorState() == EEditorState::Edit)
     {
         if (UGizmoComponent* Gizmo = Editor->GetGizmo())
@@ -126,12 +133,27 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
                 Gizmo->ApplyScreenSpaceScaling(SceneView.CameraPosition);
         }
         Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, Bus, VC.GetViewportState()->bHovered);
-        Collector.CollectSelection(Editor->GetSelectionManager().GetSelectedActors(), ShowFlags, ViewMode, Bus);
+        Collector.CollectSelection(Editor->GetSelectionManager().GetSelectedActors(), ShowFlags, ViewMode, Bus, OutlineData);
     }
 
     // 4. CPU 배처 데이터 준비 → GPU 드로우 (SetSubViewport 영역에만 출력됨)
     Renderer.PrepareBatchers(Bus);
     Renderer.Render(Bus);
+
+    FPostProcessViewDesc ViewDesc = {};
+    ViewDesc.X = LocalX;
+    ViewDesc.Y = LocalY;
+    ViewDesc.Width = Rect.Width;
+    ViewDesc.Height = Rect.Height;
+    ViewDesc.ViewMode = ViewMode;
+    ViewDesc.ShowFlags = ShowFlags;
+    ViewDesc.View = Bus.GetView();
+    ViewDesc.Proj = Bus.GetProj();
+    ViewDesc.NearPlane = Camera->GetNearPlane();
+    ViewDesc.FarPlane = Camera->GetFarPlane();
+    ViewDesc.Outline = OutlineData;
+
+    OutViews.push_back(ViewDesc);
 }
 
 const FRenderCollector::FCullingStats& FEditorRenderPipeline::GetViewportCullingStats(int32 ViewportIndex) const
