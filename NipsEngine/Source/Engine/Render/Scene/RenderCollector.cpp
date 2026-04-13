@@ -10,6 +10,7 @@
 #include "Component/TextRenderComponent.h"
 #include "Component/SubUVComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "Component/FireBallComponent.h"
 #include "Core/ResourceManager.h"
 #include "Component/DecalComponent.h"
 #include "Engine/Geometry/Frustum.h"
@@ -638,6 +639,12 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		}
 		break;
 	}
+
+	case EPrimitiveType::EPT_FireBall:
+		UFireBallComponent* FireBallComponent = static_cast<UFireBallComponent*>(Primitive);
+		FFireBallInfo FireBallInfo = CollectFireBallInfoFromFireBallComponent(FireBallComponent);
+		RenderBus.GatherFireBallComponentInfo(FireBallInfo);
+
 	default:
 		if (PrimType == EPrimitiveType::EPT_TransGizmo || PrimType == EPrimitiveType::EPT_RotGizmo || PrimType == EPrimitiveType::EPT_ScaleGizmo)
 		{
@@ -739,3 +746,9 @@ void FRenderCollector::CollectAABBCommand(UPrimitiveComponent* PrimitiveComponen
 	const FAABB Box = BuildRenderAABB(PrimitiveComponent, RenderBus);
 	CollectAABBCommand(Box, FColor::White(), RenderBus);
 }
+
+FFireBallInfo FRenderCollector::CollectFireBallInfoFromFireBallComponent(UFireBallComponent* InFireBallComponent)
+{
+	return FFireBallInfo(InFireBallComponent->GetWorldLocation(), InFireBallComponent->GetColor(), InFireBallComponent->GetIntensity(), InFireBallComponent->GetRadius(), InFireBallComponent->GetRadiusFallOff());
+}
+

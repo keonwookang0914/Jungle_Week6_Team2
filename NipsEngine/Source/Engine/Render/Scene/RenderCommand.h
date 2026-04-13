@@ -15,6 +15,7 @@
 #include "Math/Matrix.h"
 #include "Math/Vector.h"
 
+constexpr uint32 MAX_FIREBALL_COUNT = 32;
 
 struct ID3D11ShaderResourceView;
 
@@ -24,7 +25,7 @@ enum class ERenderCommandType
 	Gizmo,
 	SelectionMask,
 	Billboard,
-	DebugBox,
+	DebugBox,	
 	Grid,		// Grid 패스 — LineBatcher 경유
 	Font,		// TextRenderComponent — FontBatcher 경유
 	SubUV,		// SubUVComponent     — SubUVBatcher 경유
@@ -216,9 +217,56 @@ struct FRenderCommand
 
 struct FFireBallInfo
 {
-    FVector4 WorldLocation;
-    FColor   LinearColor;
-    float    Intensity;
-    float    Radius;
-    float    RadiusFalloff;
+	FFireBallInfo() = default;
+
+	FFireBallInfo(const FVector4& InWorldLocation, const FColor& InLinearColor,
+		float InIntensity, float InRadius, float InRadiusFalloff)
+		: WorldLocation(InWorldLocation)
+		, LinearColor(InLinearColor)
+		, Intensity(InIntensity)
+		, Radius(InRadius)
+		, RadiusFalloff(InRadiusFalloff)
+	{
+	}
+
+	// Setters
+	void SetWorldLocation(const FVector4& InWorldLocation) { WorldLocation = InWorldLocation; }
+	void SetLinearColor(const FColor& InLinearColor) { LinearColor = InLinearColor; }
+	void SetIntensity(float InIntensity) { Intensity = InIntensity; }
+	void SetRadius(float InRadius) { Radius = InRadius; }
+	void SetRadiusFalloff(float InRadiusFalloff) { RadiusFalloff = InRadiusFalloff; }
+
+	// Getters
+	const FVector4& GetWorldLocation() const { return WorldLocation; }
+	const FColor& GetLinearColor()   const { return LinearColor; }
+	float           GetIntensity()     const { return Intensity; }
+	float           GetRadius()        const { return Radius; }
+	float           GetRadiusFalloff() const { return RadiusFalloff; }
+
+private:
+	FVector4 WorldLocation;
+	FColor   LinearColor;
+	float    Intensity = 0.f;
+	float    Radius = 0.f;
+	float    RadiusFalloff = 0.f;
+};
+
+
+
+struct FFireBallConstants
+{
+	FVector4 WorldLocation;
+	FVector4 LinearColor;
+	float Intensity;
+	float Radius;
+	float RadiusFalloff;
+	float _padding;
+
+};
+__declspec(align(16)) struct FFireBallCBuffer
+{
+	FMatrix       InvViewProj;                        // 64 bytes
+	FFireBallConstants FireBalls[32];    // 48 * 32 = 1536 bytes
+	int              FireBallCount;                      //  4 bytes
+	float            _cbPadding[3];                      // 12 bytes
 };

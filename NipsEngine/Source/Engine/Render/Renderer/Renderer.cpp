@@ -53,6 +53,8 @@ void FRenderer::Create(HWND hWindow)
 	// 9. 데칼 (ShaderDecal.hlsl)
 	Resources.DecalShader.Create(Device.GetDevice(), L"Shaders/ShaderDecal.hlsl",
 		"VS", "PS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
+	//10. FireBall fireballshader.hlsl
+	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS", "PS", nullptr, 0);
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
@@ -63,6 +65,7 @@ void FRenderer::Create(HWND hWindow)
 	Resources.FxaaConstantBuffer.Create(Device.GetDevice(), sizeof(FFxaaConstantBuffer));
     Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
+	Resources.FireBallConstantBuffer.Create(Device.GetDevice(), sizeof(FFireBallCBuffer));
 
 	// TODO : SamplerState 관리
 	{
@@ -92,7 +95,15 @@ void FRenderer::Create(HWND hWindow)
 		FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 	}
-
+	// Point Sampler (depth 기반 PostProcess 공용)
+	{
+		D3D11_SAMPLER_DESC SampDesc = {};
+		SampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		SampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		SampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.PointSamplerState.ReleaseAndGetAddressOf());
+	}
 	// postprocess manage stack
 	PostProcessArray.push_back(std::make_unique<FDepthScenePostProcess>());
 
@@ -126,6 +137,7 @@ void FRenderer::Release()
 	Resources.FxaaShader.Release();
 	Resources.DepthSceneShader.Release();
 	Resources.DecalShader.Release();
+	Resources.FireBallShader.Release();
 
 	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
@@ -137,6 +149,7 @@ void FRenderer::Release()
 	Resources.FxaaConstantBuffer.Release();
     Resources.DepthSceneConstantBuffer.Release();
 	Resources.DecalConstantBuffer.Release();
+	Resources.FireBallConstantBuffer.Release();
 
 	PostProcessArray.clear();
 
@@ -144,6 +157,7 @@ void FRenderer::Release()
 	Resources.MeshSamplerState.Reset();
     Resources.LinearSamplerState.Reset();
 	Resources.DecalSamplerState.Reset();
+	Resources.PointSamplerState.Reset();
 
 	FGPUProfiler::Get().Shutdown();
 
@@ -164,7 +178,7 @@ void FRenderer::InitializePostProcesses()
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
 	// TODO: DepthScene PostProcess 구현 후 주석 해제
-	// PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	 PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
 	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());

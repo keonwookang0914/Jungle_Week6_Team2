@@ -44,3 +44,13 @@ void FRenderBus::SetRenderSettings(const EViewMode NewViewMode, const FShowFlags
 	ViewMode = NewViewMode;
 	ShowFlags = NewShowFlags;
 }
+
+TArray<FFireBallInfo> FRenderBus::GetFireBallInfoArray()
+{
+	return GatherFireBallInfoArray;
+}
+
+void FRenderBus::GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo)
+{
+	GatherFireBallInfoArray.push_back(std::move(InFireBallInfo));
+}

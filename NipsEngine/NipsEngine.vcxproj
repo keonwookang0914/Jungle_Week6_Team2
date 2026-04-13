@@ -202,6 +202,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Render\PostProcess\FireBallPostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\OutlinePostProcess.cpp" />
     <ClCompile Include="Source\Engine\Render\PostProcess\FXAAPostProcess.cpp" />
     <ClCompile Include="Source\Editor\EditorEngine.cpp" />
@@ -320,6 +321,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Engine\Render\PostProcess\FireBallPostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\OutlinePostProcess.h" />
     <ClInclude Include="Source\Engine\Render\PostProcess\FXAAPostProcess.h" />
     <ClInclude Include="Source\Editor\EditorEngine.h" />
