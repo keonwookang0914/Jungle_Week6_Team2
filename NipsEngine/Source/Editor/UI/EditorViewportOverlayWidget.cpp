@@ -190,7 +190,7 @@ void FEditorViewportOverlayWidget::RenderDebugStats(float DeltaTime)
 	{
 		const FEditorViewportState& VS = Layout.GetViewportState(i);
 
-		if (!VS.bShowStatFPS && !VS.bShowStatMemory) continue;
+		if (!VS.bShowStatFPS && !VS.bShowStatMemory && !VS.bShowStatDecal) continue;
 		if (VS.Rect.Width <= 0 || VS.Rect.Height <= 0) continue; // 비활성 뷰포트 스킵
 
 		// 툴바 바로 아래 좌측에 고정
@@ -207,6 +207,8 @@ void FEditorViewportOverlayWidget::RenderDebugStats(float DeltaTime)
 		{
 			const FRenderCollector::FCullingStats* CullingStats =
 				(RenderPipeline != nullptr) ? &RenderPipeline->GetViewportCullingStats(i) : nullptr;
+			const FRenderCollector::FDecalStats* DecalStats =
+				(RenderPipeline != nullptr) ? &RenderPipeline->GetViewportDecalStats(i) : nullptr;
 
 			// FPS 출력 (초록색 텍스트)
 			if (VS.bShowStatFPS)
@@ -266,9 +268,24 @@ void FEditorViewportOverlayWidget::RenderDebugStats(float DeltaTime)
 				ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "- Mesh: %.2f KB",     MeshMemoryBytes / 1024.f);
 				ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "- Material: %.2f KB", MatMemoryBytes  / 1024.f);
 				ImGui::Separator();
-				
+
 				ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "- Total Allocated Counts: %d", EngineStatics::GetTotalAllocationCount());
 				ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "- Total Allocated Bytes: %.2f KB", EngineStatics::GetTotalAllocationBytes() / 1024.f);
+			}
+
+			if (VS.bShowStatDecal && DecalStats != nullptr)
+			{
+				if (VS.bShowStatMemory || CullingStats != nullptr || VS.bShowStatFPS)
+				{
+					ImGui::Separator();
+				}
+
+				constexpr ImVec4 DecalColor = ImVec4(1.f, 0.6f, 0.1f, 1.f);
+				ImGui::TextColored(DecalColor, "Decal Stat");
+				ImGui::TextColored(DecalColor, "- Active Decals: %d",       DecalStats->ActiveDecals);
+				ImGui::TextColored(DecalColor, "- Culled Candidates: %d",   DecalStats->CulledCandidates);
+				ImGui::TextColored(DecalColor, "- Affected Primitives: %d", DecalStats->AffectedPrimitives);
+				ImGui::TextColored(DecalColor, "- Collect Time: %.4f ms",   DecalStats->CollectTimeMs);
 			}
 		}
 		ImGui::End();

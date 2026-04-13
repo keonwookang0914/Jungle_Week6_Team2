@@ -84,7 +84,7 @@ public:
 	ADecalActor() = default;
 
 	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
-	UDecalComponent* DecalComponent;
+	UDecalComponent* DecalComponent{ nullptr };
 
 	void InitDefaultComponents();
 };

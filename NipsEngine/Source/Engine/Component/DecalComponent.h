@@ -1,49 +1,54 @@
 ﻿#pragma once
 
 #include "PrimitiveComponent.h"
-#include "Core/ResourceTypes.h"
 #include "Core/ResourceManager.h"
-#include "Object/FName.h"
+#include "Core/ResourceTypes.h"
 
 // TODO: 어째서 UTexture2D가 아닐까요?
 struct FTextureResource;
+struct FOBB;
 
 // TODO: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 class UDecalComponent : public UPrimitiveComponent
 {
 public:
-    DECLARE_CLASS(UDecalComponent, UPrimitiveComponent)
+	DECLARE_CLASS(UDecalComponent, UPrimitiveComponent)
 
 	static constexpr EPrimitiveType PrimitiveType = EPrimitiveType::EPT_Decal;
-    EPrimitiveType GetPrimitiveType() const override { return PrimitiveType; }
+	EPrimitiveType GetPrimitiveType() const override { return PrimitiveType; }
 
-    virtual UDecalComponent* Duplicate() override;
-    virtual UDecalComponent* DuplicateSubObjects() override { return this; }
+	UDecalComponent* Duplicate() override;
+	UDecalComponent* DuplicateSubObjects() override { return this; }
 
-    void UpdateWorldAABB() const override;
-    bool RaycastMesh(const FRay& Ray, FHitResult& OutHitResult) override;
+	void GetEditableProperties(TArray<FPropertyDescriptor>& OutProps) override;
+	void PostEditProperty(const char* PropertyName) override;
+
+	void UpdateWorldAABB() const override;
+	bool RaycastMesh(const FRay& Ray, FHitResult& OutHitResult) override;
 
 private:
-    FName DecalTextureName;
-    FTextureResource* CachedDecalTexture = { nullptr };
+	FString DecalTexturePath;
+	FTextureResource* CachedDecalTexture = nullptr;
 
 public:
-    void SetDecalTextureName(FString NewName)
-    {
-        DecalTextureName = NewName;
-        CachedDecalTexture = FResourceManager::Get().FindTexture(NewName);
-    }
-    FString GetDecalTextureName() { return DecalTextureName.ToString(); }
-    FTextureResource* GetCachedDecalTexture()
-    {
-        if (CachedDecalTexture == nullptr) { CachedDecalTexture = FResourceManager::Get().FindTexture(DecalTextureName.ToString()); }
-        return CachedDecalTexture;
-    }
-    FMatrix GetDecalViewProjection() const;
-    // -X축이 Decal의 Forward
-    FVector GetDecalForward() const;
+	void SetDecalTexturePath(const FString& NewPath)
+	{
+		DecalTexturePath = NewPath;
+		CachedDecalTexture = FResourceManager::Get().FindTexture(NewPath);
+	}
 
-    // float GetDepth() const { return GetWorldScale().X; }
-    // float GetWidth() const { return GetWorldScale().Y; }
-    // float GetHeight() const { return GetWorldScale().Z; }
+	const FString& GetDecalTexturePath() const { return DecalTexturePath; }
+
+	FTextureResource* GetCachedDecalTexture()
+	{
+		if (CachedDecalTexture == nullptr)
+		{
+			CachedDecalTexture = FResourceManager::Get().FindTexture(DecalTexturePath);
+		}
+		return CachedDecalTexture;
+	}
+
+	FOBB GetDecalOBB() const;
+
+	FMatrix GetDecalViewProjection() const;
 };

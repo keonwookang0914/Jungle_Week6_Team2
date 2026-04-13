@@ -242,12 +242,19 @@ void FEditorConsoleWidget::CmdStat(const TArray<FString>& Args)
 		bFlag = !bFlag;
 		AddLog("Stat Memory %s (viewport %d)\n", bFlag ? "Enabled" : "Disabled", FocusedIdx);
 	}
+	else if (Target == "decal")
+	{
+		bool& bFlag = Layout.GetViewportState(FocusedIdx).bShowStatDecal;
+		bFlag = !bFlag;
+		AddLog("Stat Decal %s (viewport %d)\n", bFlag ? "Enabled" : "Disabled", FocusedIdx);
+	}
 	else if (Target == "none")
 	{
 		for (int32 i = 0; i < FViewportLayout::MaxViewports; ++i)
 		{
 			Layout.GetViewportState(i).bShowStatFPS    = false;
 			Layout.GetViewportState(i).bShowStatMemory = false;
+			Layout.GetViewportState(i).bShowStatDecal  = false;
 		}
 		AddLog("All Stats Disabled\n");
 	}

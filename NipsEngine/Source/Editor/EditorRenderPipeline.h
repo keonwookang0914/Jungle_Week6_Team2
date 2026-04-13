@@ -16,6 +16,7 @@ public:
 	void Render3DWorld(FRenderer& Renderer);
 	void Render2DOverlay(float DeltaTime, FRenderer& Renderer);
 	const FRenderCollector::FCullingStats& GetViewportCullingStats(int32 ViewportIndex) const;
+	const FRenderCollector::FDecalStats&   GetViewportDecalStats(int32 ViewportIndex) const;
 
 private:
 	/*
@@ -29,4 +30,5 @@ private:
 	FRenderCollector Collector;
 	FRenderBus Bus;
 	TArray<FRenderCollector::FCullingStats> ViewportCullingStats;
+	TArray<FRenderCollector::FDecalStats>   ViewportDecalStats;
 };

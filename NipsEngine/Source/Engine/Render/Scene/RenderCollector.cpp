@@ -13,6 +13,7 @@
 #include "Core/ResourceManager.h"
 #include "Component/DecalComponent.h"
 #include "Engine/Geometry/Frustum.h"
+#include "Engine/Geometry/OBB.h"
 #include "Engine/Asset/StaticMesh.h"
 #include "Render/Resource/Material.h"
 #include "Editor/UI/EditorConsoleWidget.h"
@@ -151,12 +152,14 @@ namespace
 		// 화면에 차지하는 비율이 가장 낮을 경우 최하위 LOD 반환
 		return MaxLOD;
 	}
+
 }
 
 void FRenderCollector::CollectWorld(UWorld* World, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus,
                                     const FFrustum* ViewFrustum)
 {
 	ResetCullingStats();
+	ResetDecalStats();
 
 	if (!World) return;
 
@@ -188,8 +191,12 @@ void FRenderCollector::ResetCullingStats()
 	LastCullingStats = {};
 }
 
-void FRenderCollector::CollectWorldWithFrustum(UWorld* World, const FFrustum& ViewFrustum, const FShowFlags& ShowFlags,
-                                               EViewMode ViewMode, FRenderBus& RenderBus)
+void FRenderCollector::ResetDecalStats()
+{
+	LastDecalStats = {};
+}
+
+void FRenderCollector::CollectWorldWithFrustum(UWorld* World, const FFrustum& ViewFrustum, const FShowFlags& ShowFlags, EViewMode ViewMode, FRenderBus& RenderBus)
 {
 	VisiblePrimitiveScratch.clear();
 	World->GetSpatialIndex().FrustumQueryPrimitives(ViewFrustum, VisiblePrimitiveScratch, FrustumQueryScratch);
@@ -534,7 +541,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		Cmd.Constants.Font.Scale = TextComp->GetFontSize();
 		Cmd.BlendState = EBlendState::AlphaBlend;
 		Cmd.DepthStencilState = EDepthStencilState::Default;
-		
+
 		RenderBus.AddCommand(ERenderPass::Font, Cmd);
 		break;
 	}
@@ -585,6 +592,12 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 
 	case EPrimitiveType::EPT_Decal:
 	{
+		LARGE_INTEGER Freq, TimeStart, TimeEnd;
+		QueryPerformanceFrequency(&Freq);
+		QueryPerformanceCounter(&TimeStart);
+
+		LastDecalStats.ActiveDecals++;
+
 		UDecalComponent* DecalComponent = static_cast<UDecalComponent*>(Primitive);
 		FTextureResource* DecalTexture = DecalComponent->GetCachedDecalTexture();
 		ID3D11ShaderResourceView* SRV = (DecalTexture && DecalTexture->SRV) ? DecalTexture->SRV.Get() : FResourceManager::Get().GetDefaultWhiteSRV();
@@ -593,21 +606,23 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		UWorld* World = DecalOwner ? DecalOwner->GetWorld() : nullptr;
 		if (World == nullptr) { return; }
 
-		TArray<UStaticMeshComponent*> StaticMeshComponents;
-		for (TActorIterator<AActor> Iter(World); Iter; ++Iter)
-		{
-			AActor* Actor = *Iter;
-			if (Actor == nullptr || !Actor->IsVisible()) { continue; }
-			for (UPrimitiveComponent* Component : Actor->GetPrimitiveComponents())
-			{
-				if (Component == nullptr || !Component->IsVisible()) { continue; }
-				if (Component->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
-				StaticMeshComponents.push_back(static_cast<UStaticMeshComponent*>(Component));
-			}
-		}
+		FFrustum DecalFrustum;
+		DecalFrustum.UpdateFromCamera(DecalComponent->GetDecalViewProjection());
+		DecalCandidateScratch.clear();
+		World->GetSpatialIndex().FrustumQueryPrimitives(DecalFrustum, DecalCandidateScratch, DecalQueryScratch);
 
-		for (UStaticMeshComponent* StaticMeshComponent : StaticMeshComponents)
+		for (UPrimitiveComponent* Candidate : DecalCandidateScratch)
 		{
+			if (Candidate == nullptr || !Candidate->IsVisible()) { continue; }
+			if (Candidate->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
+			if (!DecalComponent->GetDecalOBB().IntersectAABBWithSAT(Candidate->GetWorldAABB(), false, false, true))
+			{
+				// TODO: CrossAxes 정상 동작 여부 확인 필요
+				LastDecalStats.CulledCandidates++;
+				continue;
+			}
+
+			UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(Candidate);
 			const UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
 			if (!StaticMesh || !StaticMesh->HasValidMeshData()) { continue; }
 
@@ -631,11 +646,15 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			Cmd.SectionIndexCount = MeshBuffer->GetIndexBuffer().GetIndexCount();
 
 			// Decal Info
-			Cmd.Constants.Decal.DecalForward = DecalComponent->GetDecalForward();
+			Cmd.Constants.Decal.DecalForward = DecalComponent->GetForwardVector();
 			Cmd.Constants.Decal.DecalViewProjection = DecalComponent->GetDecalViewProjection();
 			Cmd.Resources.Decal.DecalTextureSRV = SRV;
 			RenderBus.AddCommand(ERenderPass::Decal, Cmd);
+			LastDecalStats.AffectedPrimitives++;
 		}
+
+		QueryPerformanceCounter(&TimeEnd);
+		LastDecalStats.CollectTimeMs += static_cast<double>(TimeEnd.QuadPart - TimeStart.QuadPart) * 1000.0 / static_cast<double>(Freq.QuadPart);
 		break;
 	}
 	default:
