@@ -17,6 +17,31 @@ namespace
 		QuadMeshData.Indices = { 0, 1, 2, 0, 2, 3 };
 		return QuadMeshData;
 	}
+
+	FMeshData CreateUnitCubeMeshData()
+	{
+		FMeshData CubeMeshData;
+		FColor DefaultColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		CubeMeshData.Vertices.push_back({ FVector(-1.0f, -1.0f, -1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector( 1.0f, -1.0f, -1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector( 1.0f,  1.0f, -1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector(-1.0f,  1.0f, -1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector(-1.0f, -1.0f,  1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector( 1.0f, -1.0f,  1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector( 1.0f,  1.0f,  1.0f), DefaultColor, 0 });
+		CubeMeshData.Vertices.push_back({ FVector(-1.0f,  1.0f,  1.0f), DefaultColor, 0 });
+
+		CubeMeshData.Indices = {
+			0, 2, 1,  0, 3, 2,
+			4, 5, 6,  4, 6, 7,
+			0, 1, 5,  0, 5, 4,
+			3, 6, 2,  3, 7, 6,
+			0, 4, 7,  0, 7, 3,
+			1, 2, 6,  1, 6, 5,
+		};
+		return CubeMeshData;
+	}
 }
 
 void FMeshBufferManager::Create(ID3D11Device* InDevice)
@@ -30,6 +55,9 @@ void FMeshBufferManager::Create(ID3D11Device* InDevice)
 	MeshBufferMap[EPrimitiveType::EPT_Billboard].Create(InDevice, QuadMeshData);
 	MeshBufferMap[EPrimitiveType::EPT_SubUV].Create(InDevice, QuadMeshData);
 	MeshBufferMap[EPrimitiveType::EPT_Text].Create(InDevice, QuadMeshData);
+
+	const FMeshData CubeMeshData = CreateUnitCubeMeshData();
+	MeshBufferMap[EPrimitiveType::EPT_Decal].Create(InDevice, CubeMeshData);
 }
 
 

@@ -214,6 +214,3 @@ public:
 		float XYZW[4];
 	};
 };
-
-
-using FColor = FVector4;

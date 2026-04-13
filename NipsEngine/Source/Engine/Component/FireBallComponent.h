@@ -23,12 +23,12 @@ class UFireBallComponent : public UPrimitiveComponent
 	float    GetIntensity() const { return Intensity; }
 	float    GetRadius() const { return Radius; }
 	float    GetRadiusFallOff() const { return RadiusFallOff; }
-	FVector4 GetColor() const { return Color; }
+	FColor GetColor() const { return Color; }
 
 private:
-// 초기값을 설정해두는 것이 좋습니다.
-float    Intensity = {1.0f};
-float    Radius = {50.0f}; 
-float    RadiusFallOff = {20.0f};
-FVector4 Color = {1.0f, 0.5f, 0.0f, 1.0f}; 
+
+	float    Intensity = {1.0f};
+	float    Radius = {50.0f}; 
+	float    RadiusFallOff = {20.0f};
+	FColor Color = {1.0f, 0.5f, 0.0f, 1.0f}; 
 };

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Render/Renderer/IRenderPipeline.h"
+#include "Render/PostProcess/PostProcessTypes.h"
 #include "Render/Scene/RenderCollector.h"
 #include "Render/Scene/RenderBus.h"
 
@@ -22,7 +23,7 @@ private:
 	 * SetSubViewport → 씬 수집 → PrepareBatchers → Render 순으로 실행합니다.
 	 * Execute 루프에서 4번 호출됩니다.
 	 */
-	void RenderViewport(FRenderer& Renderer, int32 ViewportIndex);
+	void RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews);
 
 	UEditorEngine* Editor = nullptr;
 	FRenderCollector Collector;

@@ -160,6 +160,20 @@ ID3D11RenderTargetView* FD3DDevice::GetPostProcessDestRTV() const
     return ViewportColorTargets[1u - ActiveViewportColorIndex].RTV.Get();
 }
 
+void FD3DDevice::CopyPostProcessSourceToDest()
+{
+    const int32 SourceIndex = ActiveViewportColorIndex;
+    const int32 DestIndex = 1u - ActiveViewportColorIndex;
+
+    if (!ViewportColorTargets[SourceIndex].Texture || !ViewportColorTargets[DestIndex].Texture)
+    {
+        return;
+    }
+
+    DeviceContext->CopyResource(ViewportColorTargets[DestIndex].Texture.Get(),
+                                ViewportColorTargets[SourceIndex].Texture.Get());
+}
+
 bool FD3DDevice::bAllViewportColorTargetRTVIsValid() 
 {
     for (int32 i = 0; i < NumOfViewportColor; ++i)
@@ -200,7 +214,7 @@ FRenderTargetSet FD3DDevice::GetViewportRenderTargets() const
 	Targets.SelectionMaskRTV	= ViewportSelectionMaskRTV.Get();
 	Targets.SelectionMaskSRV	= ViewportSelectionMaskSRV.Get();
 	Targets.DepthStencilView	= ViewportDepthStencilView.Get();
-    Targets.DepthStencilSRV		= ViewportDepthStencilSRV.Get();
+    Targets.DepthSRV			= ViewportDepthSRV.Get();
 
 	Targets.Width = static_cast<float>(ViewportRenderTargetWidth);
 	Targets.Height = static_cast<float>(ViewportRenderTargetHeight);
@@ -275,6 +289,9 @@ void FD3DDevice::SetRasterizerState(ERasterizerState InState)
 		break;
 	case ERasterizerState::WireFrame:
 		DeviceContext->RSSetState(RasterizerStateWireFrame.Get());
+		break;
+	case ERasterizerState::DepthBias:
+		DeviceContext->RSSetState(RasterizerStateDepthBias.Get());
 		break;
 	}
 
@@ -494,12 +511,12 @@ void FD3DDevice::CreateViewportRenderTargets(uint32 Width, uint32 Height)
         depthSRVDesc.Texture2D.MostDetailedMip = 0;
         depthSRVDesc.Texture2D.MipLevels = 1;
     Device->CreateShaderResourceView(ViewportDepthStencilTexture.Get(), &depthSRVDesc,
-		ViewportDepthStencilSRV.ReleaseAndGetAddressOf());
+                                         ViewportDepthSRV.ReleaseAndGetAddressOf());
 }
 
 void FD3DDevice::ReleaseViewportRenderTargets()
 {
-    ViewportDepthStencilSRV.Reset();
+    ViewportDepthSRV.Reset();
 	ViewportDepthStencilView.Reset();
 	ViewportDepthStencilTexture.Reset();
 	ViewportSelectionMaskSRV.Reset();
@@ -545,6 +562,15 @@ void FD3DDevice::CreateRasterizerState()
 	Device->CreateRasterizerState(&wireFrameDesc,
 		RasterizerStateWireFrame.ReleaseAndGetAddressOf());
 
+	D3D11_RASTERIZER_DESC depthBiasDesc = {};
+	depthBiasDesc.FillMode = D3D11_FILL_SOLID;
+	depthBiasDesc.CullMode = D3D11_CULL_BACK;
+	depthBiasDesc.DepthBias = -100; // DXGI_FORMAT_D24_UNORM_S8_UINT 기준
+	depthBiasDesc.DepthBiasClamp = -1.0f;
+	depthBiasDesc.SlopeScaledDepthBias = -0.01f;
+	Device->CreateRasterizerState(&depthBiasDesc,
+		RasterizerStateDepthBias.ReleaseAndGetAddressOf());
+
 	CurrentRasterizerState = ERasterizerState::SolidBackCull;
 }
 
@@ -554,6 +580,7 @@ void FD3DDevice::ReleaseRasterizerState()
 	RasterizerStateFrontCull.Reset();
 	RasterizerStateNoCull.Reset();
 	RasterizerStateWireFrame.Reset();
+	RasterizerStateDepthBias.Reset();
 }
 
 void FD3DDevice::CreateDepthStencilBuffer()

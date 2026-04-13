@@ -6,6 +6,13 @@
 #include "Math/Vector.h"
 #include "Render/Common/ViewTypes.h"
 
+struct FFXAASettings
+{
+	float EdgeThreshold = 1.0f / 8.0f;
+	float EdgeThresholdMin = 1.0f / 16.0f;
+	float Subpix = 0.75f;
+};
+
 class FEditorSettings : public TSingleton<FEditorSettings>
 {
 	friend class TSingleton<FEditorSettings>;
@@ -29,6 +36,9 @@ public:
 	// View
 	EViewMode ViewMode = EViewMode::Lit;
 	FShowFlags ShowFlags;
+
+	// Post Process
+	FFXAASettings FXAA;
 
 	// Grid
 	float GridSpacing = 1.0f;

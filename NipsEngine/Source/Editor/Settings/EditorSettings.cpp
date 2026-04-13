@@ -9,6 +9,7 @@ namespace EditorKey
 {
 	// Section
 	constexpr const char* Viewport = "Viewport";
+	constexpr const char* PostProcess = "PostProcess";
 	constexpr const char* Paths = "Paths";
 
 	// Splitter / Layout
@@ -48,6 +49,15 @@ namespace EditorKey
 	constexpr const char* RotationStructuralChangeThreshold = "RotationStructuralChangeThreshold";
 	constexpr const char* RotationDirtyCountThreshold = "RotationDirtyCountThreshold";
 	constexpr const char* RotationDirtyPercentThreshold = "RotationDirtyPercentThreshold";
+
+	// FXAA
+	constexpr const char* FXAA = "FXAA";
+	constexpr const char* FXAAEnabled = "FXAAEnabled";
+	constexpr const char* EdgeThreshold = "EdgeThreshold";
+	constexpr const char* EdgeThresholdLegacy = "EdgeThreShold";
+	constexpr const char* EdgeThresholdMin = "EdgeThresholdMin";
+	constexpr const char* Subpix = "Subpix";
+	constexpr const char* SubpixLegacy = "SubPix";
 
 	// Paths
 	constexpr const char* DefaultSavePath = "DefaultSavePath";
@@ -105,6 +115,16 @@ void FEditorSettings::SaveToFile(const FString& Path) const
 	SpatialIndexObj[EditorKey::RotationDirtyCountThreshold] = SpatialRotationDirtyCountThreshold;
 	SpatialIndexObj[EditorKey::RotationDirtyPercentThreshold] = SpatialRotationDirtyPercentThreshold;
 	Root[EditorKey::SpatialIndex] = SpatialIndexObj;
+
+	// FXAA
+	JSON PostProcessObj = Object();
+	JSON FXAAObj = Object();
+	FXAAObj[EditorKey::FXAAEnabled] = ShowFlags.bEnableFXAA;
+	FXAAObj[EditorKey::EdgeThreshold] = FXAA.EdgeThreshold;
+	FXAAObj[EditorKey::EdgeThresholdMin] = FXAA.EdgeThresholdMin;
+	FXAAObj[EditorKey::Subpix] = FXAA.Subpix;
+	PostProcessObj[EditorKey::FXAA] = FXAAObj;
+	Root[EditorKey::PostProcess] = PostProcessObj;
 
 	// Paths
 	JSON PathsObj = Object();
@@ -263,6 +283,42 @@ void FEditorSettings::LoadFromFile(const FString& Path)
 				static_cast<int32>(SpatialIndexObj[EditorKey::RotationDirtyPercentThreshold].ToInt());
 			SpatialRotationDirtyPercentThreshold =
 				std::clamp<int32>(Value, 1, 100);
+		}
+	}
+
+	// FXAA
+	if (Root.hasKey(EditorKey::PostProcess))
+	{
+		JSON PostProcessObj = Root[EditorKey::PostProcess];
+		JSON FXAAObj = PostProcessObj;
+		if (PostProcessObj.hasKey(EditorKey::FXAA))
+		{
+			FXAAObj = PostProcessObj[EditorKey::FXAA];
+		}
+
+		if (FXAAObj.hasKey(EditorKey::FXAAEnabled))
+		{
+			ShowFlags.bEnableFXAA = FXAAObj[EditorKey::FXAAEnabled].ToBool();
+		}
+		if (FXAAObj.hasKey(EditorKey::EdgeThreshold))
+		{
+			FXAA.EdgeThreshold = static_cast<float>(FXAAObj[EditorKey::EdgeThreshold].ToFloat());
+		}
+		else if (FXAAObj.hasKey(EditorKey::EdgeThresholdLegacy))
+		{
+			FXAA.EdgeThreshold = static_cast<float>(FXAAObj[EditorKey::EdgeThresholdLegacy].ToFloat());
+		}
+		if (FXAAObj.hasKey(EditorKey::EdgeThresholdMin))
+		{
+			FXAA.EdgeThresholdMin = static_cast<float>(FXAAObj[EditorKey::EdgeThresholdMin].ToFloat());
+		}
+		if (FXAAObj.hasKey(EditorKey::Subpix))
+		{
+			FXAA.Subpix = static_cast<float>(FXAAObj[EditorKey::Subpix].ToFloat());
+		}
+		else if (FXAAObj.hasKey(EditorKey::SubpixLegacy))
+		{
+			FXAA.Subpix = static_cast<float>(FXAAObj[EditorKey::SubpixLegacy].ToFloat());
 		}
 	}
 

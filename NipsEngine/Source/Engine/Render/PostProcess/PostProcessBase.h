@@ -3,7 +3,6 @@
 
 #include "Render/Common/RenderTypes.h"
 #include "Render/Resource/RenderResources.h"
-#include "Render/Scene/RenderBus.h"
 #include "PostProcessTypes.h"
 
 /*
@@ -22,9 +21,13 @@ class IPostProcess
   public:
     virtual ~IPostProcess() = default;
 
+    virtual EBlendState GetBlendState() const { return EBlendState::Opaque; }
+
     virtual bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const = 0;
 
-    virtual void Execute(ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc,
+    virtual void Execute(FD3DDevice* Device,
+						 ID3D11DeviceContext* Context, 
+						 const FPostProcessViewDesc& ViewDesc,
                          FRenderResources&         Resources,
                          const FRenderTargetSet&   RenderTargets, // DepthStencilSRV, SelectionMaskSRV 포함
                          ID3D11ShaderResourceView* SceneColorSRV, // Ping-Pong Source (Color)

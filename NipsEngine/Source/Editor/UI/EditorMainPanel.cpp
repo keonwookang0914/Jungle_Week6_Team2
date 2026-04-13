@@ -240,7 +240,7 @@ void FEditorMainPanel::RenderViewportHostWindow()
 		GuiState.ViewportHostRect = HostRect;
 		EditorEngine->GetViewportLayout().SetHostRect(HostRect);
 
-		if (ID3D11ShaderResourceView* SceneColorSRV = EditorEngine->GetRenderer().GetFD3DDevice().GetViewportSceneColorSRV())
+		if (ID3D11ShaderResourceView* SceneColorSRV = EditorEngine->GetRenderer().GetFD3DDevice().GetFinalColorSRV())
 		{
 			ID3D11DeviceContext* DeviceContext = EditorEngine->GetRenderer().GetFD3DDevice().GetDeviceContext();
 			ImDrawList* DrawList = ImGui::GetWindowDrawList();

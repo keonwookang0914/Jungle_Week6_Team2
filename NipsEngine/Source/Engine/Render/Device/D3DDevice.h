@@ -34,6 +34,7 @@ enum class ERasterizerState
 	SolidFrontCull,
 	SolidNoCull,
 	WireFrame,
+	DepthBias, // For Decal
 };
 
 struct FRenderTargetSet
@@ -43,7 +44,7 @@ struct FRenderTargetSet
 	ID3D11RenderTargetView* SelectionMaskRTV = nullptr;
 	ID3D11ShaderResourceView* SelectionMaskSRV = nullptr;
 	ID3D11DepthStencilView* DepthStencilView = nullptr;
-    ID3D11ShaderResourceView* DepthStencilSRV = nullptr;
+    ID3D11ShaderResourceView* DepthSRV = nullptr;
 
 	float Width = 0.0f;
 	float Height = 0.0f;
@@ -56,8 +57,8 @@ struct FRenderTargetSet
 
 struct FColorTarget
 {
-    TComPtr<ID3D11Texture2D> Texture;
-    TComPtr<ID3D11RenderTargetView> RTV;
+    TComPtr<ID3D11Texture2D>          Texture;
+    TComPtr<ID3D11RenderTargetView>   RTV;
     TComPtr<ID3D11ShaderResourceView> SRV;
 };
 
@@ -94,6 +95,7 @@ private:
 	TComPtr<ID3D11RasterizerState> RasterizerStateFrontCull;
 	TComPtr<ID3D11RasterizerState> RasterizerStateNoCull;
 	TComPtr<ID3D11RasterizerState> RasterizerStateWireFrame;
+	TComPtr<ID3D11RasterizerState> RasterizerStateDepthBias;
 
 	TComPtr<ID3D11Texture2D> DepthStencilBuffer;
 	TComPtr<ID3D11DepthStencilView> DepthStencilView;
@@ -101,7 +103,7 @@ private:
 
 	TComPtr<ID3D11Texture2D> ViewportDepthStencilTexture;
 	TComPtr<ID3D11DepthStencilView> ViewportDepthStencilView;
-    TComPtr<ID3D11ShaderResourceView> ViewportDepthStencilSRV;
+    TComPtr<ID3D11ShaderResourceView> ViewportDepthSRV;
 
 
 	TComPtr<ID3D11DepthStencilState> DepthStencilStateDefault;
@@ -177,7 +179,7 @@ public:
 	ID3D11RenderTargetView* GetSelectionMaskRTV() const { return SelectionMaskRTV.Get(); }
 	ID3D11ShaderResourceView* GetSelectionMaskSRV() const { return SelectionMaskSRV.Get(); }
 	ID3D11DepthStencilView* GetDepthStencilView() const { return DepthStencilView.Get(); }
-    ID3D11ShaderResourceView* GetViewportDepthStencilSRV() const { return ViewportDepthStencilSRV.Get(); }
+    ID3D11ShaderResourceView* GetViewportDepthStencilSRV() const { return ViewportDepthSRV.Get(); }
 
 	// Post Process ping-pong helper function
     ID3D11ShaderResourceView*	GetViewportSceneColorSRV() const;
@@ -185,6 +187,7 @@ public:
     ID3D11RenderTargetView*		GetCurrentColorRTV() const;
     ID3D11ShaderResourceView*	GetPostProcessSourceSRV() const;
     ID3D11RenderTargetView*     GetPostProcessDestRTV() const;
+    void                        CopyPostProcessSourceToDest();
 	// 모든 ViewportColorTarget의 RTV가 valid한지 점검하는 함수.
     bool						bAllViewportColorTargetRTVIsValid();
 	// ViewportColorTarget을 바꾸는 함수

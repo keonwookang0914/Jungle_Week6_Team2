@@ -25,7 +25,7 @@ void UFireBallComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutP
     OutProps.push_back({"Intensity", EPropertyType::Float, &Intensity, 0.0f, 100.0f, 0.1f});
     OutProps.push_back({"Radius", EPropertyType::Float, &Radius, 0.0f, 1000.0f, 1.0f});
     OutProps.push_back({"RadiusFallOff", EPropertyType::Float, &RadiusFallOff, 0.0f, 1000.0f, 1.0f});
-    OutProps.push_back({"Color", EPropertyType::Vector4, &Color});
+    OutProps.push_back({"Color", EPropertyType::Vec4, &Color});
 }
 
 void UFireBallComponent::UpdateWorldAABB() const

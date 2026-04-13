@@ -1,6 +1,5 @@
 /* Constant Buffers */
 
-
 cbuffer FrameBuffer : register(b0)
 {
     row_major float4x4 View;
@@ -12,7 +11,7 @@ cbuffer FrameBuffer : register(b0)
 cbuffer PerObjectBuffer : register(b1)
 {
     row_major float4x4 Model;
-    float4 PrimitiveColor; 
+    float4 PrimitiveColor;
 };
 
 cbuffer GizmoBuffer : register(b2)
@@ -50,6 +49,9 @@ cbuffer OutlineConstants : register(b5)
     float2 OutlineViewportSize;
     float OutlinePadding0;
 };
+
+// cbuffer StaticMeshBuffer : register(b6)
+// cbuffer DecalBuffer : register(b7)
 
 float4 ApplyMVP(float3 pos)
 {
