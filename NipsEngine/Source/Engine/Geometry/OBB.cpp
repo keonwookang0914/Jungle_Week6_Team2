@@ -51,7 +51,7 @@ bool FOBB::IntersectAABB(const FAABB& AABB) const
 	// OBB의 기저벡터에 대해 AABB 투영
 	for (uint32 i = 0; i < 3; ++i)
 	{
-		FVector OBBAxis = Axes[i]; // OBB 축
+		const FVector OBBAxis = Axes[i]; // OBB 축
 
 		// R_B : OBB의 해당 축 방향 반지름
 		float R = OBBExtents[i];
@@ -62,7 +62,7 @@ bool FOBB::IntersectAABB(const FAABB& AABB) const
 		R += std::abs(AABBExtents.Z * OBBAxis.Z);
 
 		// T를 OBB 축에 투영
-		float ProjectedT = std::abs(FVector::DotProduct(T, OBBAxis));
+		const float ProjectedT = std::abs(FVector::DotProduct(T, OBBAxis));
 		if (ProjectedT > R) { return false; }
 	}
 
@@ -71,7 +71,7 @@ bool FOBB::IntersectAABB(const FAABB& AABB) const
 	{
 		for (uint32 j = 0; j < 3; ++j) // OBB의 축
 		{
-			FVector L = FVector::CrossProduct(AABBAxes[i], Axes[j]);
+			const FVector L = FVector::CrossProduct(AABBAxes[i], Axes[j]);
 			// 두 축이 거의 평행하면 이 축은 무시 (이미 AABB와 OBB 축에 대해 검사했으므로)
 			if (L.SizeSquared() < 1e-6f) { continue; }
 
@@ -88,7 +88,7 @@ bool FOBB::IntersectAABB(const FAABB& AABB) const
 			R += std::abs(OBBExtents[2] * FVector::DotProduct(L, Axes[2]));
 
 			// T를 축 L에 투영
-			float ProjectedT = std::abs(FVector::DotProduct(T, L));
+			const float ProjectedT = std::abs(FVector::DotProduct(T, L));
 			if (ProjectedT > R) { return false; }
 		}
 	}
@@ -111,7 +111,7 @@ bool FOBB::IntersectAABBNarrow(const FAABB& AABB) const
 	// OBB의 기저벡터에 대해 AABB 투영
 	for (uint32 i = 0; i < 3; ++i)
 	{
-		FVector OBBAxis = Axes[i]; // OBB 축
+		const FVector OBBAxis = Axes[i]; // OBB 축
 
 		// R_B : OBB의 해당 축 방향 반지름
 		float R = OBBExtents[i];
@@ -122,7 +122,7 @@ bool FOBB::IntersectAABBNarrow(const FAABB& AABB) const
 		R += std::abs(AABBExtents.Z * OBBAxis.Z);
 
 		// T를 OBB 축에 투영
-		float ProjectedT = std::abs(FVector::DotProduct(T, OBBAxis));
+		const float ProjectedT = std::abs(FVector::DotProduct(T, OBBAxis));
 		if (ProjectedT > R) { return false; }
 	}
 
@@ -131,7 +131,7 @@ bool FOBB::IntersectAABBNarrow(const FAABB& AABB) const
 	{
 		for (uint32 j = 0; j < 3; ++j) // OBB의 축
 		{
-			FVector L = FVector::CrossProduct(AABBAxes[i], Axes[j]);
+			const FVector L = FVector::CrossProduct(AABBAxes[i], Axes[j]);
 			// 두 축이 거의 평행하면 이 축은 무시 (이미 AABB와 OBB 축에 대해 검사했으므로)
 			if (L.SizeSquared() < 1e-6f) { continue; }
 
@@ -148,7 +148,46 @@ bool FOBB::IntersectAABBNarrow(const FAABB& AABB) const
 			R += std::abs(OBBExtents[2] * FVector::DotProduct(L, Axes[2]));
 
 			// T를 축 L에 투영
-			float ProjectedT = std::abs(FVector::DotProduct(T, L));
+			const float ProjectedT = std::abs(FVector::DotProduct(T, L));
+			if (ProjectedT > R) { return false; }
+		}
+	}
+
+	return true;
+}
+// Frustum(OBB 6평면) 판별 이후 호출하는 Narrow Phase
+// AABB 축과 OBB 축의 외적 9개 축에 대해서만 검사
+bool FOBB::IntersectAABBCrossAxesOnly(const FAABB& AABB) const
+{
+	const FVector T = AABB.GetCenter() - Center;
+
+	const FVector AABBExtents = AABB.GetExtent();
+	const FVector OBBExtents = Extents;
+
+	const TStaticArray<FVector, 3> AABBAxes = { FVector::UnitX(), FVector::UnitY(), FVector::UnitZ() };
+
+	// AABB 축과 OBB 축의 외적 9개 축에 대해 투영
+	for (uint32 i = 0; i < 3; ++i)
+	{
+		for (uint32 j = 0; j < 3; ++j)
+		{
+			const FVector L = FVector::CrossProduct(AABBAxes[i], Axes[j]);
+			// 두 축이 거의 평행하면 무시 (OBB/AABB 축 검사에서 이미 처리됨)
+			if (L.SizeSquared() < 1e-6f) { continue; }
+
+			float R{ 0.0f };
+			// R_A : AABB를 외적 축 L에 투영
+			R += std::abs(AABBExtents[0] * L[0]);
+			R += std::abs(AABBExtents[1] * L[1]);
+			R += std::abs(AABBExtents[2] * L[2]);
+
+			// R_B : OBB를 외적 축 L에 투영
+			R += std::abs(OBBExtents[0] * FVector::DotProduct(L, Axes[0]));
+			R += std::abs(OBBExtents[1] * FVector::DotProduct(L, Axes[1]));
+			R += std::abs(OBBExtents[2] * FVector::DotProduct(L, Axes[2]));
+
+			// T를 축 L에 투영
+			const float ProjectedT = std::abs(FVector::DotProduct(T, L));
 			if (ProjectedT > R) { return false; }
 		}
 	}

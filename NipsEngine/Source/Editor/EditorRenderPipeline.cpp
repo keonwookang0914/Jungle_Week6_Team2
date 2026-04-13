@@ -14,6 +14,7 @@ FEditorRenderPipeline::FEditorRenderPipeline(UEditorEngine* InEditor, FRenderer&
 {
     Collector.Initialize(InRenderer.GetFD3DDevice().GetDevice());
     ViewportCullingStats.resize(FViewportLayout::MaxViewports);
+    ViewportDecalStats.resize(FViewportLayout::MaxViewports);
 }
 
 FEditorRenderPipeline::~FEditorRenderPipeline() { Collector.Release(); }
@@ -26,6 +27,10 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 #endif
 
     for (FRenderCollector::FCullingStats& Stats : ViewportCullingStats)
+    {
+        Stats = {};
+    }
+    for (FRenderCollector::FDecalStats& Stats : ViewportDecalStats)
     {
         Stats = {};
     }
@@ -105,6 +110,7 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     const FFrustum& ViewFrustum = Camera->GetFrustum();
     Collector.CollectWorld(World, ShowFlags, ViewMode, Bus, &ViewFrustum);
     ViewportCullingStats[ViewportIndex] = Collector.GetLastCullingStats();
+    ViewportDecalStats[ViewportIndex]   = Collector.GetLastDecalStats();
     Collector.CollectGrid(Settings.GridSpacing, Settings.GridHalfLineCount, Bus, Camera->IsOrthographic());
 
     // 뷰포트별 카메라 기준으로 기즈모 스케일 결정
@@ -138,4 +144,16 @@ const FRenderCollector::FCullingStats& FEditorRenderPipeline::GetViewportCulling
     }
 
     return ViewportCullingStats[ViewportIndex];
+}
+
+const FRenderCollector::FDecalStats& FEditorRenderPipeline::GetViewportDecalStats(int32 ViewportIndex) const
+{
+    static const FRenderCollector::FDecalStats EmptyStats{};
+
+    if (ViewportIndex < 0 || ViewportIndex >= static_cast<int32>(ViewportDecalStats.size()))
+    {
+        return EmptyStats;
+    }
+
+    return ViewportDecalStats[ViewportIndex];
 }

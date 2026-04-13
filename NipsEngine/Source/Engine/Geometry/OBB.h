@@ -16,4 +16,5 @@ struct FOBB
 	FAABB ToAABB() const;
 	bool IntersectAABB(const FAABB& AABB) const;
 	bool IntersectAABBNarrow(const FAABB& AABB) const;
+	bool IntersectAABBCrossAxesOnly(const FAABB& AABB) const;
 };

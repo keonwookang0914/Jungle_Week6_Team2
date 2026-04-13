@@ -392,6 +392,7 @@ void FEditorMainPanel::RenderViewportMenuBarForIndex(int32 Index)
 	{
 		ImGui::MenuItem("FPS", nullptr, &State.bShowStatFPS);
 		ImGui::MenuItem("Memory", nullptr, &State.bShowStatMemory);
+		ImGui::MenuItem("Decal", nullptr, &State.bShowStatDecal);
 		ImGui::EndMenu();
 	}
 }

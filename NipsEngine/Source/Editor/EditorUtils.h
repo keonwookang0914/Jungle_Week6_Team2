@@ -14,5 +14,6 @@ struct FEditorViewportState
 	// Stat Overlay (뷰포트별 독립 제어)
 	bool bShowStatFPS    = false;
 	bool bShowStatMemory = false;
+	bool bShowStatDecal  = false;
 };
 
