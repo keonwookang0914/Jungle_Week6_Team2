@@ -64,6 +64,9 @@ public:
 	// DeltaPitch: local right(Y) 기준 pitch 입력값(도)
 	void Rotate(float DeltaYaw, float DeltaPitch);
 
+	// MovementComponent에서 값을 받아 실제로 Component Transform을 적용하는 함수
+	bool MoveComponent(const FVector& Delta, const FQuat& NewRotation);
+
 protected:
     /** @brief Hook fired when this component becomes transform-dirty. */
     virtual void OnTransformDirty() {}
@@ -78,6 +81,10 @@ protected:
 	void AddRelativeYaw(float DeltaYawDegrees);
 	void AddRelativePitch(float DeltaPitchDegrees);
 
+public:
+	// Component Velocity - Unreal 도 public으로 둠
+	FVector ComponentVelocity;
+
 protected:
 	USceneComponent* ParentComponent = nullptr;
 	TArray<USceneComponent*> ChildComponents;
@@ -91,4 +98,5 @@ protected:
 	FVector RelativeLocation{};
 	FVector RelativeRotation{};
 	FVector RelativeScale3D{ 1.0f, 1.0f, 1.0f };
+
 };
