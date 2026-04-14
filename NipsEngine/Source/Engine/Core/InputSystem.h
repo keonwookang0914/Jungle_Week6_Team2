@@ -36,6 +36,11 @@ public:
     int MouseDeltaX() const { return MousePos.x - PrevMousePos.x; }
     int MouseDeltaY() const { return MousePos.y - PrevMousePos.y; }
     bool MouseMoved() const { return MouseDeltaX() != 0 || MouseDeltaY() != 0; }
+    void SyncMousePosition(const POINT& InMousePos)
+    {
+        MousePos = InMousePos;
+        PrevMousePos = InMousePos;
+    }
 
     // Left drag
     bool IsDraggingLeft() const { return GetKey(VK_LBUTTON) && MouseMoved(); }
