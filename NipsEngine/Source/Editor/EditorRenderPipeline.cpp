@@ -82,8 +82,6 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews,
     TArray<FViewportOverlayData>& OutOverlayData)
 {
-    (void)OutOverlayData;
-
     FEditorViewportClient& VC = Editor->GetViewportLayout().GetViewportClient(ViewportIndex);
 
     FViewportCamera* Camera = VC.GetCamera();
@@ -107,21 +105,24 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     Renderer.GetFD3DDevice().SetSubViewport(LocalX, LocalY, Rect.Width, Rect.Height);
 
     // 3. 이 뷰포트용 렌더 데이터 수집
-    Bus.Clear();
+    FRenderBus SceneBus;
+    FRenderBus OverlayBus;
 
     UWorld*                World = Editor->GetWorld();
     const FEditorSettings& Settings = Editor->GetSettings();
     const FShowFlags&      ShowFlags = Settings.ShowFlags;
     const EViewMode        ViewMode = SceneView.ViewMode;
 
-	Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(),Camera->GetFarPlane());
-    Bus.SetRenderSettings(ViewMode, ShowFlags);
+	SceneBus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(), Camera->GetFarPlane());
+    SceneBus.SetRenderSettings(ViewMode, ShowFlags);
+    OverlayBus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(), Camera->GetFarPlane());
+    OverlayBus.SetRenderSettings(ViewMode, ShowFlags);
 
     const FFrustum& ViewFrustum = Camera->GetFrustum();
-    Collector.CollectWorld(World, ShowFlags, ViewMode, Bus, &ViewFrustum);
+    Collector.CollectWorld(World, ShowFlags, ViewMode, SceneBus, &ViewFrustum);
     ViewportCullingStats[ViewportIndex] = Collector.GetLastCullingStats();
     ViewportDecalStats[ViewportIndex]   = Collector.GetLastDecalStats();
-    Collector.CollectGrid(Settings.GridSpacing, Settings.GridHalfLineCount, Bus, Camera->IsOrthographic());
+    Collector.CollectGrid(Settings.GridSpacing, Settings.GridHalfLineCount, SceneBus, Camera->IsOrthographic());
 
     // 뷰포트별 카메라 기준으로 기즈모 스케일 결정
     // TickInteraction 에서 한 번만 처리하면 마지막 뷰포트가 다른 뷰포트의 스케일을 덮어쓰므로
@@ -137,13 +138,15 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
             else
                 Gizmo->ApplyScreenSpaceScaling(SceneView.CameraPosition);
         }
-        Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, Bus, VC.GetViewportState()->bHovered);
-        Collector.CollectSelection(Editor->GetSelectionManager().GetSelectedActors(), ShowFlags, ViewMode, Bus, OutlineData);
+        // 단계적 전환을 위해 현재 scene 경로는 유지하고, overlay 경로에도 별도 수집합니다.
+        Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, SceneBus, VC.GetViewportState()->bHovered);
+        Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, OverlayBus, VC.GetViewportState()->bHovered);
+        Collector.CollectSelection(Editor->GetSelectionManager().GetSelectedActors(), ShowFlags, ViewMode, SceneBus, OutlineData);
     }
 
     // 4. CPU 배처 데이터 준비 → GPU 드로우 (SetSubViewport 영역에만 출력됨)
-    Renderer.PrepareBatchers(Bus);
-    Renderer.Render(Bus);
+    Renderer.PrepareBatchers(SceneBus);
+    Renderer.Render(SceneBus);
 
     FPostProcessViewDesc ViewDesc = {};
     ViewDesc.X = LocalX;
@@ -152,13 +155,18 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     ViewDesc.Height = Rect.Height;
     ViewDesc.ViewMode = ViewMode;
     ViewDesc.ShowFlags = ShowFlags;
-    ViewDesc.View = Bus.GetView();
-    ViewDesc.Proj = Bus.GetProj();
+    ViewDesc.View = SceneBus.GetView();
+    ViewDesc.Proj = SceneBus.GetProj();
     ViewDesc.NearPlane = Camera->GetNearPlane();
     ViewDesc.FarPlane = Camera->GetFarPlane();
     ViewDesc.Outline = OutlineData;
 
     OutViews.push_back(ViewDesc);
+
+    FViewportOverlayData OverlayData = {};
+    OverlayData.ViewDesc = ViewDesc;
+    OverlayData.OverlayBus = std::move(OverlayBus);
+    OutOverlayData.push_back(std::move(OverlayData));
 }
 
 const FRenderCollector::FCullingStats& FEditorRenderPipeline::GetViewportCullingStats(int32 ViewportIndex) const
