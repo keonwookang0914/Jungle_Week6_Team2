@@ -60,11 +60,13 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 
     TArray<FPostProcessViewDesc> PostProcessViews;
     PostProcessViews.reserve(FViewportLayout::MaxViewports);
+    TArray<FViewportOverlayData> OverlayData;
+    OverlayData.reserve(FViewportLayout::MaxViewports);
 
     // 4개 뷰포트를 순서대로 렌더링
     for (int32 i = 0; i < FViewportLayout::MaxViewports; ++i)
     {
-        RenderViewport(Renderer, i, PostProcessViews);
+        RenderViewport(Renderer, i, PostProcessViews, OverlayData);
     }
 
     Renderer.ExecutePostProcessStack(PostProcessViews);
@@ -77,8 +79,11 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     Renderer.EndFrame();
 }
 
-void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews)
+void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews,
+    TArray<FViewportOverlayData>& OutOverlayData)
 {
+    (void)OutOverlayData;
+
     FEditorViewportClient& VC = Editor->GetViewportLayout().GetViewportClient(ViewportIndex);
 
     FViewportCamera* Camera = VC.GetCamera();
