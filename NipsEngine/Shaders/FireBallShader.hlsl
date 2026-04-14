@@ -96,6 +96,7 @@ VSOutput VS_Main(uint VertexID : SV_VertexID)
 // ─────────────────────────────────────────────
 float4 PS_Main(VSOutput Input) : SV_Target
 {
+    
     // 멀티 뷰포트에서는 반드시 전체 render target 기준 UV로 depth/scene을 읽어야 한다.
     float2 uv = ClampPostProcessViewportUV(GetPostProcessFullUV(Input.Position.xy));
 

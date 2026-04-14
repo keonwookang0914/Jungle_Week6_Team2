@@ -761,7 +761,8 @@ void FRenderCollector::CollectAABBCommand(UPrimitiveComponent* PrimitiveComponen
 
 FFireBallInfo FRenderCollector::CollectFireBallInfoFromFireBallComponent(UFireBallComponent* InFireBallComponent)
 {
-	return FFireBallInfo(InFireBallComponent->GetWorldLocation(), InFireBallComponent->GetColor(), InFireBallComponent->GetIntensity(), InFireBallComponent->GetRadius(), InFireBallComponent->GetRadiusFallOff());
+	FVector WorldLoc = InFireBallComponent->GetWorldLocation();
+	return FFireBallInfo(FVector4(WorldLoc.X, WorldLoc.Y, WorldLoc.Z, 1.0f), InFireBallComponent->GetColor(), InFireBallComponent->GetIntensity(), InFireBallComponent->GetRadius(), InFireBallComponent->GetRadiusFallOff());
 }
 
 FHeightFogInfo FRenderCollector::CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent)

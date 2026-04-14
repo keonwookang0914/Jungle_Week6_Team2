@@ -223,8 +223,10 @@ void AFireBallActor::InitDefaultComponents()
 {
 	FireBallComponent = AddComponent<UFireBallComponent>();
 	SetRootComponent(FireBallComponent);
-
+	
 }
+
+
 void AHeightFogActor::InitDefaultComponents()
 {
 	HeightFogComponent = AddComponent<UHeightFogComponent>();
