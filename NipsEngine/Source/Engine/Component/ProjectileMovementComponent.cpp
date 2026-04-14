@@ -19,6 +19,8 @@ UProjectileMovementComponent* UProjectileMovementComponent::Duplicate()
 {
 	UProjectileMovementComponent* NewComp = UObjectManager::Get().CreateObject<UProjectileMovementComponent>();
 	CopyMovementStateTo(NewComp);
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
+
 	NewComp->InitialSpeed = InitialSpeed;
 	NewComp->MaxSpeed = MaxSpeed;
 	NewComp->ProjectileGravityScale = ProjectileGravityScale;

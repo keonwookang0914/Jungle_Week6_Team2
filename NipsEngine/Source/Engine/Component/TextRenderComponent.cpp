@@ -22,6 +22,7 @@ UTextRenderComponent* UTextRenderComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
     
     NewComp->SetVisibility(this->IsVisible());
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
     // 텍스트 및 폰트 리소스 얕은 복사
     NewComp->Text = this->Text;

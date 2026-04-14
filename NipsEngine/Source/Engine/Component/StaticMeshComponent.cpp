@@ -27,6 +27,7 @@ UStaticMeshComponent* UStaticMeshComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
     
     NewComp->SetVisibility(this->IsVisible());
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
 	NewComp->OverrideMaterial = this->OverrideMaterial;
     NewComp->ScrollUV = this->ScrollUV;

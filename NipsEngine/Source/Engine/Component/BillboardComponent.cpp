@@ -22,6 +22,7 @@ UBillboardComponent* UBillboardComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
     
     NewComp->SetVisibility(this->IsVisible());
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
     NewComp->bIsBillboard = this->bIsBillboard;
     NewComp->SetTextureName(this->GetTextureName());
