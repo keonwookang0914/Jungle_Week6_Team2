@@ -766,11 +766,11 @@ FFireBallInfo FRenderCollector::CollectFireBallInfoFromFireBallComponent(UFireBa
 }
 
 FHeightFogInfo FRenderCollector::CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent)
-{
+{	
 	return FHeightFogInfo(InHeightFogComponent->GetWorldLocation() , InHeightFogComponent->GetFogDensity() ,
 					InHeightFogComponent->GetFogHeightFalloff() , InHeightFogComponent->GetStartDistance() ,
 					InHeightFogComponent->GetFogCutoffDistance() , InHeightFogComponent->GetFogMaxOpacity() , 
-					InHeightFogComponent->GetFogInscatteringColor() );
+					InHeightFogComponent->GetFogInscatteringColor() , InHeightFogComponent->GetFogExist() );
 }
 
 

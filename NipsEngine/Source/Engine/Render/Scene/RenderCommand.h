@@ -306,7 +306,7 @@ struct FHeightFogInfo
 	float   StartDistance = 0.f;
 	float   FogCutoffDistance = 0.f;
 	float   FogMaxOpacity = 1.f;
-
+	bool	bIsFog = false;
 	FColor InscatteringColor = FColor(0.78f, 0.86f, 1.f, 1.f);  // 연한 하늘색
 
 	// ------------------------------------------------------------------
@@ -324,7 +324,8 @@ struct FHeightFogInfo
 		float          InStartDistance,
 		float          InFogCutoffDistance,
 		float          InFogMaxOpacity,
-		const FColor& InInscatteringColor
+		const FColor& InInscatteringColor,
+		bool		   InbIsFog
 		)
 		: WorldPosition(InWorldPosition)
 		, FogDensity(InFogDensity)
@@ -333,6 +334,7 @@ struct FHeightFogInfo
 		, FogCutoffDistance(InFogCutoffDistance)
 		, FogMaxOpacity(InFogMaxOpacity)
 		, InscatteringColor(InInscatteringColor)
+		, bIsFog(InbIsFog)
 		
 	{
 	}

@@ -23,4 +23,5 @@ struct FShowFlags
 	bool bBVHBoundingVolume = false;
 	bool bEnableLOD = true;
     bool bEnableFXAA = true;
+	bool bHeightFog = false;
 };

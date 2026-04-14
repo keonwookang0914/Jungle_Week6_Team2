@@ -231,4 +231,5 @@ void AHeightFogActor::InitDefaultComponents()
 {
 	HeightFogComponent = AddComponent<UHeightFogComponent>();
 	SetRootComponent(HeightFogComponent);
+	
 }

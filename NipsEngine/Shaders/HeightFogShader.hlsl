@@ -96,7 +96,7 @@ float ComputeExponentialHeightFog(float3 WorldPos)
 {
     // 1. 높이 기반 로컬 밀도
     float HeightAbove = max(WorldPos.z - FogWorldPosition.z, 0.0f);
-    float LocalDensity = FogDensity * exp(-FogHeightFalloff * HeightAbove);
+    float LocalDensity = (FogDensity * 0.01f) * exp(-FogHeightFalloff * HeightAbove);
 
     // 2. 뷰 거리
     float ViewDist = max(length(WorldPos - CameraWorldPos) - StartDistance, 0.0f);
@@ -125,10 +125,10 @@ float4 PS_Main(FVSOutput Input) : SV_Target
     float Depth = DepthTex.Sample(PointSampler, UV).r;
 
     // 2. Depth == 1.0 이면 스카이박스(무한 원점) → 안개 미적용
-    if (Depth >= 1.0f)
-    {
-        return SceneColor;
-    }
+//    if (Depth >= 1.1f)
+  //  {
+    //    return SceneColor;
+    //}
 
     // 3. World Position 복원
     float3 WorldPos = ReconstructWorldPos(UV, Depth);

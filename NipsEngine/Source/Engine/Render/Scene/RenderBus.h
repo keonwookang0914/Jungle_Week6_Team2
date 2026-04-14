@@ -41,7 +41,7 @@ public:
 	bool IsOrthographic() const { return Proj.M[3][3] == 1.0f; }
 
 	// Need to Copy
-	TArray<FFireBallInfo>& GetFireBallInfoArray();
+	TArray<FFireBallInfo> GetFireBallInfoArray();
 	FHeightFogInfo GetHeightFogInfo();
 
 	void GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo);

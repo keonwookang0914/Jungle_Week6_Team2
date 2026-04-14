@@ -37,7 +37,7 @@ public:
 	EPrimitiveType GetPrimitiveType() const override { return EPrimitiveType::EPT_HeightFog; }
 
 	/** HeightFog는 오브젝트 선택 아웃라인을 그리지 않습니다. */
-	bool SupportsOutline() const override { return false; }
+	bool SupportsOutline() const override { return true; }
 
 	// ---------------------------------------------------------------
 	//  Property window 연동
@@ -103,6 +103,9 @@ public:
 	 */
 	FColor ApplyFog(const FColor& SceneColor, const FVector& WorldPos, const FVector& CameraPos) const;
 
+	bool GetFogExist() { return bIsFog; }
+	void SetFogExist(bool InbIsFog) { bIsFog = InbIsFog; }
+
 private:
 	// ---------------------------------------------------------------
 	//  Fog 파라미터
@@ -125,4 +128,6 @@ private:
 
 	/** Inscattering 색상. */
 	FColor FogInscatteringColor = FColor(200.f, 220.f, 255.f, 255.f);  // 연한 하늘색
+
+	bool bIsFog = { false };
 };

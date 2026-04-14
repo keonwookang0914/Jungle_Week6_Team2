@@ -127,7 +127,7 @@ float4 PS_Main(VSOutput Input) : SV_Target
             continue;
 
         float weight = 1.0f - smoothstep(0.0f, radiusFalloff, dist);
-        float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.05f); // 강도 조절
+        float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.25f); // 강도 조절
         float3 lightColor = FireBalls[i].LinearColor.rgb ;
 
         // HSV 공간에서 H, S만 FireBall 색으로 이동, V는 원본 유지

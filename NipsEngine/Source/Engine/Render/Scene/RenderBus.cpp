@@ -46,7 +46,7 @@ void FRenderBus::SetRenderSettings(const EViewMode NewViewMode, const FShowFlags
 	ShowFlags = NewShowFlags;
 }
 
-TArray<FFireBallInfo>& FRenderBus::GetFireBallInfoArray()
+TArray<FFireBallInfo> FRenderBus::GetFireBallInfoArray()
 {
 	return GatherFireBallInfoArray;
 }
@@ -63,7 +63,7 @@ void FRenderBus::GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo)
 
 void FRenderBus::GatherHeightFogComponentInfo(FHeightFogInfo InHeightFogInfo)
 {
-	GatherFogInfo = (std::move(InHeightFogInfo));
+	GatherFogInfo = (InHeightFogInfo);
 }
 
 void FRenderBus::ClearFireBallInfoArrayClear()

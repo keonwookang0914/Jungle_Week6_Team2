@@ -50,7 +50,7 @@ void UFireBallComponent::UpdateWorldAABB() const
 
     // AABB는 시각적 처리 및 Broadphase 충돌을 커버해야 합니다.
     // 따라서 순수 충돌 반경(Radius)에 특수효과 반경(RadiusFallOff)을 더한 최대 범위를 계산합니다.
-    float MaxExtent = std::max(Radius + RadiusFallOff, MathUtil::Epsilon);
+	float MaxExtent = Radius / 5;
     FVector ExtentVector(MaxExtent, MaxExtent, MaxExtent);
 
     // FAABB의 정의에 따라 Min/Max 또는 Center/Extents를 세팅합니다. (일반적인 Min/Max 구조 기준)

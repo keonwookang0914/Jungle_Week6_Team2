@@ -86,6 +86,7 @@ void UHeightFogComponent::GetEditableProperties(TArray<FPropertyDescriptor>& Out
 	OutProps.push_back({ "FogCutoffDistance",     EPropertyType::Float, &FogCutoffDistance });
 	OutProps.push_back({ "FogMaxOpacity",         EPropertyType::Float, &FogMaxOpacity });
 	OutProps.push_back({ "FogInscatteringColor",  EPropertyType::Vec4, &FogInscatteringColor });
+	OutProps.push_back({ "On/OFF",  EPropertyType::Bool, &bIsFog });
 }
 
 void UHeightFogComponent::PostEditProperty(const char* PropertyName)
