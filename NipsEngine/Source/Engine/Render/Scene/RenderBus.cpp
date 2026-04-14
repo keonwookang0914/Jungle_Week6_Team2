@@ -8,6 +8,7 @@ void FRenderBus::Clear()
 		PassQueues[i].clear();
 	}
 	ClearFireBallInfoArrayClear();
+	GatherFogInfo = FHeightFogInfo();
 }
 
 void FRenderBus::AddCommand(ERenderPass Pass, const FRenderCommand& InCommand)

@@ -15,6 +15,11 @@ UHeightFogComponent::UHeightFogComponent()
 	// 필요하다면 bIsVisible = false 로 초기화해도 됩니다.
 }
 
+UHeightFogComponent::~UHeightFogComponent()
+{
+	bIsFog = false;
+}
+
 // -----------------------------------------------------------------------
 //  Duplicate
 // -----------------------------------------------------------------------

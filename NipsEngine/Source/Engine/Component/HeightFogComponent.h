@@ -24,7 +24,7 @@ public:
 	DECLARE_CLASS(UHeightFogComponent, UPrimitiveComponent)
 
 	UHeightFogComponent();
-
+	virtual ~UHeightFogComponent();
 	// ---------------------------------------------------------------
 	//  UPrimitiveComponent 순수 가상 함수 구현
 	// ---------------------------------------------------------------
