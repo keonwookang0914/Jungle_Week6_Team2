@@ -64,13 +64,16 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
     OverlayData.reserve(FViewportLayout::MaxViewports);
 
     // 4개 뷰포트를 순서대로 렌더링
+	// Scene Rendering에 필요한 정보 먼저 렌더링
     for (int32 i = 0; i < FViewportLayout::MaxViewports; ++i)
     {
         RenderViewport(Renderer, i, PostProcessViews, OverlayData);
     }
 
+	// Post Process 렌더링
     Renderer.ExecutePostProcessStack(PostProcessViews);
 
+	// Overlay Rendering
     for (const FViewportOverlayData& Overlay : OverlayData)
     {
         Renderer.RenderOverlay(Overlay.ViewDesc, Overlay.OverlayBus);
