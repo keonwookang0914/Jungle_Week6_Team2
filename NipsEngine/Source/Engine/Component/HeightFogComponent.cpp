@@ -20,9 +20,31 @@ UHeightFogComponent::UHeightFogComponent()
 // -----------------------------------------------------------------------
 UHeightFogComponent* UHeightFogComponent::Duplicate()
 {
-	UHeightFogComponent* Copy = new UHeightFogComponent(*this);
-	Copy->DuplicateSubObjects();
-	return Copy;
+	UHeightFogComponent* NewComp = UObjectManager::Get().CreateObject<UHeightFogComponent>();
+
+	NewComp->SetActive(this->IsActive());
+	NewComp->SetOwner(nullptr);
+
+	NewComp->SetRelativeLocation(this->GetRelativeLocation());
+	NewComp->SetRelativeRotation(this->GetRelativeRotation());
+	NewComp->SetRelativeScale(this->GetRelativeScale());
+
+	NewComp->SetVisibility(this->IsVisible());
+
+	//NewComp->OverrideMaterial = this->OverrideMaterial;
+	//NewComp->ScrollUV = this->ScrollUV;
+
+	//// 에셋 포인터는 얕은 복사로 동일한 원본 리소스를 참조하게 합니다.
+	//NewComp->StaticMeshAsset = this->StaticMeshAsset;
+	//NewComp->StaticMeshAssetPath = this->StaticMeshAssetPath;
+
+	//// Dirty 플래그를 초기화해 복사 후 상태를 업데이트하도록 합니다.
+	//NewComp->bBoundsDirty = true;
+	//NewComp->bRenderStateDirty = true;
+
+	NewComp->DuplicateSubObjects();
+
+	return NewComp;
 }
 
 // -----------------------------------------------------------------------

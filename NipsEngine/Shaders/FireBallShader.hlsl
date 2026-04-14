@@ -87,8 +87,7 @@ VSOutput VS_Main(uint VertexID : SV_VertexID)
     float2 uv = float2((VertexID << 1) & 2, VertexID & 2);
     Output.Position = float4(uv * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
     return Output;
-    
- 
+   
     
 }
 
@@ -126,9 +125,9 @@ float4 PS_Main(VSOutput Input) : SV_Target
         if (dist > radiusFalloff)
             continue;
 
-        float weight = 1.0f - smoothstep(radius, radiusFalloff, dist);
-        float blendWeight = saturate(weight * FireBalls[i].Intensity);
-        float3 lightColor = FireBalls[i].LinearColor.rgb * FireBalls[i].Intensity;
+        float weight = 1.0f - smoothstep(0.0f, radiusFalloff, dist);
+        float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.05f); // 강도 조절
+        float3 lightColor = FireBalls[i].LinearColor.rgb ;
 
         // HSV 공간에서 H, S만 FireBall 색으로 이동, V는 원본 유지
         float3 sceneHSV = RGBtoHSV(sceneColor.rgb);
@@ -137,9 +136,9 @@ float4 PS_Main(VSOutput Input) : SV_Target
         float3 blendedHSV;
         blendedHSV.x = lerp(sceneHSV.x, lightHSV.x, blendWeight); // H: 색조
         blendedHSV.y = lerp(sceneHSV.y, lightHSV.y, blendWeight); // S: 채도
-        blendedHSV.z = sceneHSV.z; // V: 명도 원본 유지
+        blendedHSV.z = 0.2; // V: 명도 원본 유지 이거 수정해야함
 
-        sceneColor.rgb = HSVtoRGB(blendedHSV);
+        sceneColor.rgb = lerp(sceneColor.rgb, lightColor, blendWeight);
     }
 
     return sceneColor;

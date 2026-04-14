@@ -5,6 +5,7 @@
 #include "Component/DecalComponent.h"
 #include "Component/SubUVComponent.h"
 #include "Component/FireBallComponent.h"
+#include "Component/HeightFogComponent.h"
 #include "Core/ResourceManager.h"
 #include <format>
 
@@ -44,6 +45,10 @@ REGISTER_FACTORY(ADecalActor)
 
 DEFINE_CLASS(AFireBallActor, AActor)
 REGISTER_FACTORY(AFireBallActor)
+
+
+DEFINE_CLASS(AHeightFogActor, AActor)
+REGISTER_FACTORY(AHeightFogActor)
 
 void ACubeActor::InitDefaultComponents()
 {
@@ -219,4 +224,9 @@ void AFireBallActor::InitDefaultComponents()
 	FireBallComponent = AddComponent<UFireBallComponent>();
 	SetRootComponent(FireBallComponent);
 
+}
+void AHeightFogActor::InitDefaultComponents()
+{
+	HeightFogComponent = AddComponent<UHeightFogComponent>();
+	SetRootComponent(HeightFogComponent);
 }
