@@ -11,8 +11,23 @@ UFireBallComponent::UFireBallComponent()
 
 UPrimitiveComponent* UFireBallComponent::Duplicate()
 {
+	UFireBallComponent* NewComp = UObjectManager::Get().CreateObject<UFireBallComponent>();
+	NewComp->SetActive(this->IsActive());
+	NewComp->SetOwner(nullptr);
+
+	NewComp->SetRelativeLocation(this->GetRelativeLocation());
+	NewComp->SetRelativeRotation(this->GetRelativeRotation());
+	NewComp->SetRelativeScale(this->GetRelativeScale());
+
+	NewComp->SetVisibility(this->IsVisible());
+
+	NewComp->Intensity = Intensity;
+	NewComp->Radius = Radius;
+	NewComp->RadiusFallOff = RadiusFallOff;
+	NewComp->Color = Color;
+
     // 자신의 복사본을 생성하여 반환합니다.
-    return new UFireBallComponent(*this);
+	return NewComp;
 }
 
 void UFireBallComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProps)

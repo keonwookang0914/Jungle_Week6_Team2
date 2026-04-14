@@ -307,7 +307,7 @@ struct FHeightFogInfo
 	float   FogCutoffDistance = 0.f;
 	float   FogMaxOpacity = 1.f;
 
-	FColor InscatteringColor = FColor(0.78f, 0.86f, 1.f);  // 연한 하늘색
+	FColor InscatteringColor = FColor(0.78f, 0.86f, 1.f, 1.f);  // 연한 하늘색
 
 	// ------------------------------------------------------------------
 	//  Constructors
