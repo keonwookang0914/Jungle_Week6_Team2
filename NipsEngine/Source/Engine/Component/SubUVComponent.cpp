@@ -30,6 +30,9 @@ USubUVComponent* USubUVComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
     
     NewComp->SetVisibility(this->IsVisible());
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
+
+    NewComp->SetBillboardEnabled(this->bIsBillboard);
 
     // 2. USubUVComponent 고유 리소스 얕은 복사
     NewComp->ParticleName = this->ParticleName;

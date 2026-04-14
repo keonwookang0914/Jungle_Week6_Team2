@@ -22,6 +22,8 @@ UDecalComponent* UDecalComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
 
     NewComp->SetVisibility(this->IsVisible());
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
+
     NewComp->DecalTexturePath = this->DecalTexturePath;
     NewComp->CachedDecalTexture = this->GetCachedDecalTexture();
     NewComp->FadeAlpha = this->FadeAlpha;

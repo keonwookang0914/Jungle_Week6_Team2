@@ -14,6 +14,7 @@ UActorComponent* UActorComponent::Duplicate()
     NewComp->bAutoActivate = this->bAutoActivate;
     NewComp->bCanEverTick = this->bCanEverTick;
     NewComp->Owner = nullptr;
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
 	NewComp->DuplicateSubObjects();
 

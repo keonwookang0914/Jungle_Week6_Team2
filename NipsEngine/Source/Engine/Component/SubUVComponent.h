@@ -26,6 +26,8 @@ public:
 	virtual USubUVComponent* Duplicate() override;
 	virtual USubUVComponent* DuplicateSubObjects() override { return this; }
 
+	void SetBillboardEnabled(bool bEnable) { bIsBillboard = bEnable; }
+
 	// --- Particle Resource ---
 	// FName 키로 ResourceManager에서 FParticleResource*를 찾아 캐싱
 	void SetParticle(const FName& InParticleName);
@@ -81,6 +83,7 @@ private:
 	float  PlayRate = 30.0f; // 초당 프레임 수
 	float  TimeAccumulator = 0.0f;
 
+	bool bIsBillboard = true;
 	bool bLoop = true;
 	bool bIsExecute = false;
 };

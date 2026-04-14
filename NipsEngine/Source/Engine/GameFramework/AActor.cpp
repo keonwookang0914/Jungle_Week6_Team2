@@ -30,6 +30,7 @@ AActor* AActor::Duplicate()
 {
 	AActor* NewActor = UObjectManager::Get().CreateObject<AActor>();
 	NewActor->SetVisible(this->IsVisible());
+	NewActor->SetFName(this->GetFName());
 	NewActor->PendingActorLocation = this->PendingActorLocation;
 	NewActor->bIsActive = this->bIsActive;
 	NewActor->bTickInEditor = this->bTickInEditor;
@@ -121,6 +122,7 @@ void AActor::RegisterComponent(UActorComponent* Comp) {
 
 void AActor::RemoveComponent(UActorComponent* Component) {
 	if (!Component) return;
+	if (RootComponent == Component) return; // Root Component는 절대 삭제 불가능	
 
 	NotifyComponentUnregistered(Component);
 
@@ -130,11 +132,8 @@ void AActor::RemoveComponent(UActorComponent* Component) {
 		bPrimitiveCacheDirty = true;
 	}
 
-	// RootComponent가 제거되면 nullptr로
-	if (RootComponent == Component)
-		RootComponent = nullptr;
-
 	UObjectManager::Get().DestroyObject(Component);
+
 }
 
 void AActor::SetVisible(bool Visible)

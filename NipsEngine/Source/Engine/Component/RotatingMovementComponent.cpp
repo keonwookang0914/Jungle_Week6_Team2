@@ -10,6 +10,8 @@ REGISTER_FACTORY(URotatingMovementComponent)
 URotatingMovementComponent* URotatingMovementComponent::Duplicate()
 {
 	URotatingMovementComponent* NewComp = UObjectManager::Get().CreateObject<URotatingMovementComponent>();
+	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
+
 	CopyMovementStateTo(NewComp);
 	NewComp->RotationRate = RotationRate;
 	NewComp->PivotTranslation = PivotTranslation;

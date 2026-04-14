@@ -206,9 +206,9 @@ void FEditorPropertyWidget::Render(float DeltaTime)
 					continue;
 
 				UActorComponent* NewComp = Entry.CreateAndInitFunc(PrimaryActor);
-
 				if (!NewComp) 
 					continue;
+				NewComp->SetCreatedInEditorInstance(true);
 
 				if (NewComp->IsA<USceneComponent>())
 				{
@@ -407,6 +407,32 @@ void FEditorPropertyWidget::RenderComponentProperties()
 	ImGui::Text("Component: %s", SelectedComponent->GetTypeInfo()->name);
 	ImGui::Text("Name: %s", SelectedComponent->GetFName().ToString().c_str());
 	ImGui::Separator();
+
+	if (SelectedComponent->CanRemoveFromInstance())
+	{
+		if (ImGui::Button("Remove Component"))
+		{
+			AActor* Owner = SelectedComponent->GetOwner();
+			UActorComponent* ComponentToRemove = SelectedComponent;
+
+			SelectedComponent = nullptr;
+			bActorSelected = true;
+
+			if (Owner != nullptr)
+			{
+				Owner->RemoveComponent(ComponentToRemove);
+			}
+
+			if (SelectionManager && SelectionManager->GetGizmo())
+			{
+				SelectionManager->GetGizmo()->UpdateGizmoTransform();
+			}
+
+			return;
+		}
+
+		ImGui::Separator();
+	}
 
 	// PropertyDescriptor 기반 자동 위젯 렌더링
 	TArray<FPropertyDescriptor> Props;

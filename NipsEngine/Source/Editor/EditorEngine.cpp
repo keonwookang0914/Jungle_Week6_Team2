@@ -75,9 +75,11 @@ void UEditorEngine::OnWindowResized(uint32 Width, uint32 Height)
 
 void UEditorEngine::Tick(float DeltaTime)
 {
-	// hover/focus 상태를 먼저 갱신한 뒤 ActiveCamera 를 업데이트합니다.
-	// 이렇게 해야 같은 프레임의 첫 클릭에서도 올바른 카메라로 피킹할 수 있습니다.
+	// hover/focus 상태를 먼저 갱신한 뒤 ActiveCamera 를 업데이트합니다
+	// 이렇게 해야 같은 프레임의 첫 클릭에서도 올바른 카메라로 피킹할 수 있습니다
 	// ViewportLayout.UpdateHoverStates();
+	InputSystem::Get().Tick();
+	MainPanel.Update();
 	ViewportLayout.Tick(DeltaTime);
 
 	if (UWorld* World = GetWorld())
@@ -88,8 +90,6 @@ void UEditorEngine::Tick(float DeltaTime)
 			World->SetActiveCamera(FocusedCam);
 	}
 
-	MainPanel.Update();
-	InputSystem::Get().Tick();
 	if (GetEditorState() == EEditorState::Play)
 	{
 		WorldTick(DeltaTime);
@@ -144,6 +144,7 @@ void UEditorEngine::StartPlaySession()
     }
 
 	ViewportLayout.SetLastFocusedViewportIndex(0);
+	ViewportLayout.GetViewportClient(0).SyncNavigationStateFromCamera();
 
     PIEWorld->SetActiveCamera(GetCamera());
 
