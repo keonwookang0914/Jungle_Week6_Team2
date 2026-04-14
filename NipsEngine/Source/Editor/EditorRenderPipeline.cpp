@@ -168,7 +168,9 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     ViewDesc.Proj = SceneBus.GetProj();
     ViewDesc.NearPlane = Camera->GetNearPlane();
     ViewDesc.FarPlane = Camera->GetFarPlane();
-    ViewDesc.Outline = OutlineData;
+    ViewDesc.FireBallInfoArray = SceneBus.GetFireBallInfoArray(); // 복사했는데 왜 안될까?
+	ViewDesc.HeightFogInfo = SceneBus.GetHeightFogInfo();
+	ViewDesc.Outline = OutlineData;
 
     OutViews.push_back(ViewDesc);
 

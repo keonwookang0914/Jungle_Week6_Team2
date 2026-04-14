@@ -11,6 +11,10 @@ class UPrimitiveComponent;
 class UGizmoComponent;
 struct FFrustum;
 
+class UFireBallComponent;
+class UHeightFogComponent;
+
+
 class FRenderCollector {
 public:
 	struct FCullingStats
@@ -61,4 +65,8 @@ private:
 	                                 std::unordered_set<int32>& SeenNodeIndices);
 	void CollectAABBCommand(const FAABB& Box, const FColor& Color, FRenderBus& RenderBus);
 	void CollectAABBCommand(UPrimitiveComponent* PrimitiveComponent, const FShowFlags& ShowFlags, FRenderBus& RenderBus);
+
+	FFireBallInfo CollectFireBallInfoFromFireBallComponent(UFireBallComponent* InFireBallComponent);
+
+	FHeightFogInfo CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent);
 };

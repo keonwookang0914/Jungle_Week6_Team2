@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -27,5 +27,5 @@ struct FPropertyDescriptor
 	// float 범위 힌트 (DragFloat 등에서 사용)
 	float Min = 0.0f;
 	float Max = 0.0f;
-	float Speed = 0.1f;
+	float Speed = 0.005f;
 };

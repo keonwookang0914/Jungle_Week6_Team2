@@ -1,5 +1,4 @@
 ﻿#include "Renderer.h"
-#include "Renderer.h"
 
 #include <iostream>
 #include <algorithm>
@@ -56,6 +55,11 @@ void FRenderer::Create(HWND hWindow)
 	// 9. 데칼 (ShaderDecal.hlsl)
 	Resources.DecalShader.Create(Device.GetDevice(), L"Shaders/ShaderDecal.hlsl",
 		"VS", "PS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
+	//10. FireBall fireballshader.hlsl
+	Resources.FireBallShader.Create(Device.GetDevice(), L"Shaders/FireBallShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
+
+	// 11. Fog Shader
+	Resources.HeightFogShader.Create(Device.GetDevice(), L"Shaders/HeightFogShader.hlsl", "VS_Main", "PS_Main", nullptr, 0);
 
 	Resources.PerObjectConstantBuffer.Create(Device.GetDevice(), sizeof(FPerObjectConstants));
 	Resources.FrameBuffer.Create(Device.GetDevice(), sizeof(FFrameConstants));
@@ -66,6 +70,10 @@ void FRenderer::Create(HWND hWindow)
 	Resources.FxaaConstantBuffer.Create(Device.GetDevice(), sizeof(FFxaaConstantBuffer));
     Resources.DepthSceneConstantBuffer.Create(Device.GetDevice(), sizeof(FDepthSceneConstants));
 	Resources.DecalConstantBuffer.Create(Device.GetDevice(), sizeof(FDecalConstants));
+	Resources.FireBallConstantBuffer.Create(Device.GetDevice(), sizeof(FFireBallCBuffer));
+	Resources.ViewportInfoConstantBuffer.Create(Device.GetDevice(), sizeof(FViewportInfoConstants));
+	Resources.HeightFogConstantBuffer.Create(Device.GetDevice(), sizeof(FHeightFogCBuffer));
+
 
 	// TODO : SamplerState 관리
 	{
@@ -95,7 +103,15 @@ void FRenderer::Create(HWND hWindow)
 		FxaaSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		Device.GetDevice()->CreateSamplerState(&FxaaSampDesc, Resources.LinearSamplerState.ReleaseAndGetAddressOf());
 	}
-
+	// Point Sampler (depth 기반 PostProcess 공용)
+	{
+		D3D11_SAMPLER_DESC SampDesc = {};
+		SampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+		SampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		SampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		SampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		Device.GetDevice()->CreateSamplerState(&SampDesc, Resources.PointSamplerState.ReleaseAndGetAddressOf());
+	}
 	//	MeshManager init
 	FMeshManager::Initialize();
 
@@ -127,6 +143,8 @@ void FRenderer::Release()
 	Resources.FxaaShader.Release();
 	Resources.DepthSceneShader.Release();
 	Resources.DecalShader.Release();
+	Resources.FireBallShader.Release();
+	Resources.HeightFogShader.Release();
 
 	// Release Constant Buffer
 	Resources.PerObjectConstantBuffer.Release();
@@ -138,11 +156,15 @@ void FRenderer::Release()
 	Resources.FxaaConstantBuffer.Release();
     Resources.DepthSceneConstantBuffer.Release();
 	Resources.DecalConstantBuffer.Release();
+	Resources.FireBallConstantBuffer.Release();
+	Resources.ViewportInfoConstantBuffer.Release();
+	Resources.HeightFogConstantBuffer.Release();
 
 	// Reset Sampler State
 	Resources.MeshSamplerState.Reset();
     Resources.LinearSamplerState.Reset();
 	Resources.DecalSamplerState.Reset();
+	Resources.PointSamplerState.Reset();
 
 	FGPUProfiler::Get().Shutdown();
 
@@ -162,9 +184,9 @@ void FRenderer::InitializePostProcesses()
 	PostProcesses.clear();
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
-	// TODO: DepthScene PostProcess 구현 후 주석 해제
-	// PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
-	// PostProcess.push_back(std::make_unique<FFogPostProcess>());
+	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
+	PostProcesses.push_back(std::make_unique<UHeightFogPostProcess>());
+	PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }
@@ -263,6 +285,7 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 			ExecuteDefaultPass(CurPass, Commands, InRenderBus, Context);
 		}
 	}
+
 }
 
 void FRenderer::RenderOverlay(const FPostProcessViewDesc& ViewDesc, const FRenderBus& InOverlayBus)
@@ -500,6 +523,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
         return;
 
     ID3D11DeviceContext* Context = Device.GetDeviceContext();
+    constexpr UINT ViewportInfoSlot = 12;
 
     for (const auto& PostProcess : PostProcesses)
     {
@@ -535,6 +559,21 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
                 continue;
 
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
+
+            FViewportInfoConstants ViewportInfo = {};
+            if (CurrentRenderTargets.Width > 0.0f && CurrentRenderTargets.Height > 0.0f)
+            {
+                ViewportInfo.InvFullRenderTargetSize =
+                    FVector2(1.0f / CurrentRenderTargets.Width, 1.0f / CurrentRenderTargets.Height);
+            }
+            ViewportInfo.ViewportOriginPixels = FVector2(static_cast<float>(View.X), static_cast<float>(View.Y));
+            ViewportInfo.ViewportSizePixels = FVector2(static_cast<float>(View.Width), static_cast<float>(View.Height));
+
+            Resources.ViewportInfoConstantBuffer.Update(Context, &ViewportInfo, sizeof(FViewportInfoConstants));
+            ID3D11Buffer* ViewportCB = Resources.ViewportInfoConstantBuffer.GetBuffer();
+            Context->VSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+            Context->PSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+
             PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }
 

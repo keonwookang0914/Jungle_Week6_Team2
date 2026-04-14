@@ -10,6 +10,8 @@
 #include "Component/TextRenderComponent.h"
 #include "Component/SubUVComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "Component/FireBallComponent.h"
+#include "Component/HeightFogComponent.h"
 #include "Core/ResourceManager.h"
 #include "Component/DecalComponent.h"
 #include "Engine/Geometry/Frustum.h"
@@ -700,6 +702,23 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		LastDecalStats.CollectTimeMs += static_cast<double>(TimeEnd.QuadPart - TimeStart.QuadPart) * 1000.0 / static_cast<double>(Freq.QuadPart);
 		break;
 	}
+
+	case EPrimitiveType::EPT_FireBall:
+	{
+		UFireBallComponent* FireBallComponent = static_cast<UFireBallComponent*>(Primitive);
+		FFireBallInfo FireBallInfo = CollectFireBallInfoFromFireBallComponent(FireBallComponent);
+		RenderBus.GatherFireBallComponentInfo(FireBallInfo);
+		break;
+
+	}
+	case EPrimitiveType::EPT_HeightFog:
+	{
+		UHeightFogComponent* HeightFogCompoent = static_cast<UHeightFogComponent*>(Primitive);
+		FHeightFogInfo HeightFogInfo = CollectHeightFogInfoFromFogComponent(HeightFogCompoent);
+		RenderBus.GatherHeightFogComponentInfo(HeightFogInfo);
+		break;
+	}
+
 	default:
 		if (PrimType == EPrimitiveType::EPT_TransGizmo || PrimType == EPrimitiveType::EPT_RotGizmo || PrimType == EPrimitiveType::EPT_ScaleGizmo)
 		{
@@ -826,3 +845,19 @@ void FRenderCollector::CollectAABBCommand(UPrimitiveComponent* PrimitiveComponen
 	const FAABB Box = BuildRenderAABB(PrimitiveComponent, RenderBus);
 	CollectAABBCommand(Box, FColor::White(), RenderBus);
 }
+
+FFireBallInfo FRenderCollector::CollectFireBallInfoFromFireBallComponent(UFireBallComponent* InFireBallComponent)
+{
+	FVector WorldLoc = InFireBallComponent->GetWorldLocation();
+	return FFireBallInfo(FVector4(WorldLoc.X, WorldLoc.Y, WorldLoc.Z, 1.0f), InFireBallComponent->GetColor(), InFireBallComponent->GetIntensity(), InFireBallComponent->GetRadius(), InFireBallComponent->GetRadiusFallOff());
+}
+
+FHeightFogInfo FRenderCollector::CollectHeightFogInfoFromFogComponent(UHeightFogComponent* InHeightFogComponent)
+{	
+	return FHeightFogInfo(InHeightFogComponent->GetWorldLocation() , InHeightFogComponent->GetFogDensity() ,
+					InHeightFogComponent->GetFogHeightFalloff() , InHeightFogComponent->GetStartDistance() ,
+					InHeightFogComponent->GetFogCutoffDistance() , InHeightFogComponent->GetFogMaxOpacity() , 
+					InHeightFogComponent->GetFogInscatteringColor() , InHeightFogComponent->GetFogExist() );
+}
+
+

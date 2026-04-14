@@ -40,8 +40,19 @@ public:
 	void SetWireframeColor(const FVector& InColor) { WireframeColor = InColor; }
 	bool IsOrthographic() const { return Proj.M[3][3] == 1.0f; }
 
+	// Need to Copy
+	TArray<FFireBallInfo> GetFireBallInfoArray();
+	FHeightFogInfo GetHeightFogInfo();
+
+	void GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo);
+	void GatherHeightFogComponentInfo(FHeightFogInfo InHeightFogInfo);
+
+	void ClearFireBallInfoArrayClear();
+
 private:
 	TArray<FRenderCommand> PassQueues[(uint32)ERenderPass::MAX];
+	TArray< FFireBallInfo> GatherFireBallInfoArray;
+	FHeightFogInfo GatherFogInfo;
 
 	FMatrix View;
 	FMatrix Proj;

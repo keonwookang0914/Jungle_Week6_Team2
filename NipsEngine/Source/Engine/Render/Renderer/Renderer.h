@@ -15,8 +15,10 @@
 #include "Render/SubUVBatcher.h"
 #include "Render/PostProcess/FXAAPostProcess.h"
 #include "Render/PostProcess/DepthScenePostProcess.h"
+#include "Render/PostProcess/FireBallPostProcess.h"
 #include "Render/PostProcess/OutlinePostProcess.h"
 #include "Render/PostProcess/PostProcessTypes.h"
+#include "Render/PostProcess/HeightFogPostProcess.h"
 
 #include <cstddef>
 #include <functional>
@@ -98,6 +100,7 @@ private:
 	FPassRenderState    PassRenderStates[(uint32)ERenderPass::MAX];
 	FPassBatcherBinding PassBatchers[(uint32)ERenderPass::MAX];
 	ID3D11ShaderResourceView* SubUVCachedSRV = nullptr;
+
 
 	//	Primitive and Gizmo Input Layout
 	D3D11_INPUT_ELEMENT_DESC PrimitiveInputLayout[2] =

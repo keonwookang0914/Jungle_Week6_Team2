@@ -7,6 +7,8 @@ void FRenderBus::Clear()
 	{
 		PassQueues[i].clear();
 	}
+	ClearFireBallInfoArrayClear();
+	GatherFogInfo = FHeightFogInfo();
 }
 
 void FRenderBus::AddCommand(ERenderPass Pass, const FRenderCommand& InCommand)
@@ -44,3 +46,29 @@ void FRenderBus::SetRenderSettings(const EViewMode NewViewMode, const FShowFlags
 	ViewMode = NewViewMode;
 	ShowFlags = NewShowFlags;
 }
+
+TArray<FFireBallInfo> FRenderBus::GetFireBallInfoArray()
+{
+	return GatherFireBallInfoArray;
+}
+
+FHeightFogInfo FRenderBus::GetHeightFogInfo()
+{
+	return GatherFogInfo;
+}
+
+void FRenderBus::GatherFireBallComponentInfo(FFireBallInfo InFireBallInfo)
+{
+	GatherFireBallInfoArray.push_back(std::move(InFireBallInfo));
+}
+
+void FRenderBus::GatherHeightFogComponentInfo(FHeightFogInfo InHeightFogInfo)
+{
+	GatherFogInfo = (InHeightFogInfo);
+}
+
+void FRenderBus::ClearFireBallInfoArrayClear()
+{
+	GatherFireBallInfoArray.clear();
+}
+

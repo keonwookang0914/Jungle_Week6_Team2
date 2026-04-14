@@ -86,7 +86,24 @@ void FEditorControlWidget::Render(float DeltaTime)
 				Actor->SetActorLocation(CurSpawnPoint);
 				break;
 			}
-			case 5: // Spotlight
+
+			case 5: // fireball
+			{
+				AFireBallActor* Actor = World->SpawnActor<AFireBallActor>();
+				Actor->InitDefaultComponents();
+				Actor->SetActorLocation(CurSpawnPoint);
+				break;
+
+			}
+			case 6: // HeightFog
+			{
+				AHeightFogActor* Actor = World->SpawnActor<AHeightFogActor>();
+				Actor->InitDefaultComponents();
+				Actor->SetActorLocation(CurSpawnPoint);
+				break;
+
+			}
+			case 7: // Spotlight
 			{
 				ASpotLightActor* Actor = World->SpawnActor<ASpotLightActor>();
 				Actor->InitDefaultComponents();

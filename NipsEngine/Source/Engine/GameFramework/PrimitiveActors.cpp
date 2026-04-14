@@ -5,6 +5,8 @@
 #include "Component/TextRenderComponent.h"
 #include "Component/DecalComponent.h"
 #include "Component/SubUVComponent.h"
+#include "Component/FireBallComponent.h"
+#include "Component/HeightFogComponent.h"
 #include "Core/ResourceManager.h"
 #include <format>
 
@@ -27,6 +29,76 @@ REGISTER_FACTORY(ABillboardActor)
 DEFINE_CLASS(ADecalActor, AActor)
 REGISTER_FACTORY(ADecalActor)
 
+DEFINE_CLASS(AFireBallActor, AActor)
+REGISTER_FACTORY(AFireBallActor)
+
+
+DEFINE_CLASS(AHeightFogActor, AActor)
+REGISTER_FACTORY(AHeightFogActor)
+
+//void ACubeActor::InitDefaultComponents()
+//{
+//	auto* Cube = AddComponent<UStaticMeshComponent>();
+//	Cube->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(CubeMeshPath));
+//	SetRootComponent(Cube);
+//
+//	// Text
+//	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
+//	Text->SetFont(FName("Default"));
+//	Text->AttachToComponent(Cube);
+//	Text->SetText("UUID: " + std::to_string(GetUUID()));
+//	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
+//
+//	// SubUV
+//	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
+//	SubUV->AttachToComponent(Cube);
+//	SubUV->SetParticle(FName("Explosion"));
+//	SubUV->SetSpriteSize(2.0f, 2.0f);
+//	SubUV->SetFrameRate(30.f);
+//	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
+//}
+//
+//void ASphereActor::InitDefaultComponents()
+//{
+//	auto* Sphere = AddComponent<UStaticMeshComponent>();
+//	Sphere->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(SphereMeshPath));
+//	SetRootComponent(Sphere);
+//
+//	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
+//	Text->SetFont(FName("Default"));
+//	Text->AttachToComponent(Sphere);
+//	Text->SetText("UUID: " + std::to_string(GetUUID()));
+//	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
+//
+//	// SubUV
+//	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
+//	SubUV->AttachToComponent(Sphere);
+//	SubUV->SetParticle(FName("Explosion"));
+//	SubUV->SetSpriteSize(2.0f, 2.0f);
+//	SubUV->SetFrameRate(30.f);
+//	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
+//}
+//
+//void APlaneActor::InitDefaultComponents()
+//{
+//	auto* Plane = AddComponent<UStaticMeshComponent>();
+//	Plane->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(PlaneMeshPath));
+//	SetRootComponent(Plane);
+//
+//	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
+//	Text->SetFont(FName("Default"));
+//	Text->SetText(std::format("UUID: {}", GetUUID()));
+//	Text->AttachToComponent(Plane);
+//	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
+//
+//	// SubUV
+//	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
+//	SubUV->AttachToComponent(Plane);
+//	SubUV->SetParticle(FName("Explosion"));
+//	SubUV->SetSpriteSize(2.0f, 2.0f);
+//	SubUV->SetFrameRate(30.f);
+//	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
+//}
 DEFINE_CLASS(ASpotLightActor, AActor)
 REGISTER_FACTORY(ASpotLightActor)
 
@@ -138,4 +210,19 @@ void ASpotLightActor::InitDefaultComponents()
 	}
 
 	SetActorRotation(FVector(0.0f, 90.0f, 0.0f));
+}
+
+void AFireBallActor::InitDefaultComponents()
+{
+	FireBallComponent = AddComponent<UFireBallComponent>();
+	SetRootComponent(FireBallComponent);
+	
+}
+
+
+void AHeightFogActor::InitDefaultComponents()
+{
+	HeightFogComponent = AddComponent<UHeightFogComponent>();
+	SetRootComponent(HeightFogComponent);
+	
 }

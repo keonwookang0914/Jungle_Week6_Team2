@@ -2,12 +2,6 @@
 
 #include "Render/PostProcess/PostProcessBase.h"
 
-
-// PostProcessDepthScene.h
-#pragma once
-
-#include "Render/PostProcess/PostProcessBase.h"
-
 class FDepthScenePostProcess : public IPostProcess
 {
   public:

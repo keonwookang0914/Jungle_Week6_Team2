@@ -4,7 +4,25 @@
 
 class UTextRenderComponent;
 class UDecalComponent;
+class UFireBallComponent;
+class UHeightFogComponent;
 class UBillboardComponent;
+
+//class ACubeActor : public AActor
+//{
+//public:
+//	DECLARE_CLASS(ACubeActor, AActor)
+//	ACubeActor() = default;
+//
+//	void InitDefaultComponents();
+//};
+//
+//class ASphereActor : public AActor
+//{
+//public:
+//	DECLARE_CLASS(ASphereActor, AActor)
+//	ASphereActor() = default;
+//};
 
 class AStaticMeshActor : public AActor
 {
@@ -62,6 +80,28 @@ public:
 	ASpotLightActor() = default;
 
 	UBillboardComponent* IconBillboardComponent{ nullptr };
+
+	void InitDefaultComponents();
+};
+class AFireBallActor : public AActor
+{
+public:
+	DECLARE_CLASS(AFireBallActor, AActor)
+	AFireBallActor() = default;
+
+	UFireBallComponent* FireBallComponent;
+
+	void InitDefaultComponents();
+};
+
+class AHeightFogActor : public AActor
+{
+public:
+	DECLARE_CLASS(AHeightFogActor, AActor)
+	AHeightFogActor() = default;
+
+	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
+	UHeightFogComponent* HeightFogComponent;
 
 	void InitDefaultComponents();
 };
