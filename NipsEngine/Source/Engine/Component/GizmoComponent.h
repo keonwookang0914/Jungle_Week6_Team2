@@ -94,6 +94,7 @@ public:
 	EPrimitiveType GetPrimitiveType() const override;
 
 private:
+	static constexpr float ScreenSpaceScaleFactor = 0.20f;
 	const FMeshData* GizmoMeshData = nullptr;
 	FVector LocalExtents = FVector(1.5f, 1.5f, 1.5f);
 };
