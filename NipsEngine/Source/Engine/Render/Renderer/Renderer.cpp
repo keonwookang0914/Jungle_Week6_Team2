@@ -261,6 +261,63 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 	}
 }
 
+void FRenderer::RenderOverlay(const FPostProcessViewDesc& ViewDesc, const FRenderBus& InOverlayBus)
+{
+	ID3D11DeviceContext* Context = Device.GetDeviceContext();
+	if (Context == nullptr)
+	{
+		return;
+	}
+
+	const auto& Commands = InOverlayBus.GetCommands(ERenderPass::DepthLess);
+	if (Commands.empty())
+	{
+		return;
+	}
+
+	UpdateFrameBuffer(Context, InOverlayBus);
+	Device.SetSubViewport(ViewDesc.X, ViewDesc.Y, ViewDesc.Width, ViewDesc.Height);
+
+	ID3D11RenderTargetView* RTV = Device.GetCurrentColorRTV();
+	ID3D11DepthStencilView* DSV = CurrentRenderTargets.DepthStencilView;
+	Context->OMSetRenderTargets(1, &RTV, DSV);
+
+	const FPassRenderState& State = PassRenderStates[(uint32)ERenderPass::DepthLess];
+	ERasterizerState Rasterizer = State.Rasterizer;
+	if (State.bWireframeAware && InOverlayBus.GetViewMode() == EViewMode::Wireframe)
+	{
+		Rasterizer = ERasterizerState::WireFrame;
+	}
+
+	Device.SetDepthStencilState(State.DepthStencil);
+	Device.SetBlendState(State.Blend);
+	Device.SetRasterizerState(Rasterizer);
+	Context->IASetPrimitiveTopology(State.Topology);
+
+	if (State.Shader)
+	{
+		State.Shader->Bind(Context);
+	}
+
+	ERenderCommandType LastCommandType = static_cast<ERenderCommandType>(-1);
+	for (const auto& Cmd : Commands)
+	{
+		EDepthStencilState TargetDepth = (Cmd.DepthStencilState != static_cast<EDepthStencilState>(-1))
+			? Cmd.DepthStencilState
+			: State.DepthStencil;
+
+		EBlendState TargetBlend = (Cmd.BlendState != static_cast<EBlendState>(-1))
+			? Cmd.BlendState
+			: State.Blend;
+
+		Device.SetDepthStencilState(TargetDepth);
+		Device.SetBlendState(TargetBlend);
+
+		BindShaderByType(Cmd, Context, LastCommandType);
+		DrawCommand(Context, Cmd);
+	}
+}
+
 // ============================================================
 // 패스별 기본 렌더 상태 테이블 초기화
 // ============================================================

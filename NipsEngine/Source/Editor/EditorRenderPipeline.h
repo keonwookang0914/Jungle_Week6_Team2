@@ -6,6 +6,12 @@
 
 class UEditorEngine;
 
+struct FViewportOverlayData
+{
+	FPostProcessViewDesc ViewDesc;
+	FRenderBus OverlayBus;
+};
+
 class FEditorRenderPipeline : public IRenderPipeline
 {
 public:
@@ -24,11 +30,11 @@ private:
 	 * SetSubViewport → 씬 수집 → PrepareBatchers → Render 순으로 실행합니다.
 	 * Execute 루프에서 4번 호출됩니다.
 	 */
-	void RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews);
+	void RenderViewport(FRenderer& Renderer, int32 ViewportIndex, TArray<FPostProcessViewDesc>& OutViews,
+		TArray<FViewportOverlayData>& OutOverlayData);
 
 	UEditorEngine* Editor = nullptr;
 	FRenderCollector Collector;
-	FRenderBus Bus;
 	TArray<FRenderCollector::FCullingStats> ViewportCullingStats;
 	TArray<FRenderCollector::FDecalStats>   ViewportDecalStats;
 };
