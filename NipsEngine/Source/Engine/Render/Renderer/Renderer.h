@@ -51,6 +51,7 @@ public:
 	void PrepareBatchers(const FRenderBus& InRenderBus);
 	void BeginFrame();
 	void Render(const FRenderBus& InRenderBus);
+	void RenderOverlay(const FPostProcessViewDesc& ViewDesc, const FRenderBus& InOverlayBus);
 	void EndFrame();
 	void UseBackBufferRenderTargets();
 	void UseViewportRenderTargets();

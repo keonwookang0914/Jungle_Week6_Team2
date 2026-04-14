@@ -105,7 +105,10 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
     Renderer.GetFD3DDevice().SetSubViewport(LocalX, LocalY, Rect.Width, Rect.Height);
 
     // 3. 이 뷰포트용 렌더 데이터 수집
+	// 
+	// PostProcess 전에 RTV에 그리기 위해 필요한 Render Data 수집
     FRenderBus SceneBus;
+	// PostProcess 후에 RTV에 그리기 위해 필요한 Render Data 수집
     FRenderBus OverlayBus;
 
     UWorld*                World = Editor->GetWorld();
