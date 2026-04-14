@@ -30,6 +30,7 @@ AActor* AActor::Duplicate()
 {
 	AActor* NewActor = UObjectManager::Get().CreateObject<AActor>();
 	NewActor->SetVisible(this->IsVisible());
+	NewActor->SetFName(this->GetFName());
 	NewActor->PendingActorLocation = this->PendingActorLocation;
 	NewActor->bIsActive = this->bIsActive;
 	NewActor->bTickInEditor = this->bTickInEditor;
