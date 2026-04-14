@@ -109,6 +109,8 @@ public:
 private:
 	void TickInput(float DeltaTime);
 	void TickInteraction(float DeltaTime);
+	bool TryGetViewportScreenRect(RECT& OutRect) const;
+	void RecenterCursorToViewport();
 	void HandleDragStart(const FRay& Ray);
 	void HandleBoxSelection();
 	bool TryProjectWorldToViewport(const FVector& WorldPos, float& OutViewportX, float& OutViewportY, float& OutDepth) const;

@@ -247,6 +247,14 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 	const bool bAltDown = InputSystem::Get().GetKey(VK_MENU);
 	const bool bCtrlDown = InputSystem::Get().GetKey(VK_CONTROL);
 	const bool bShiftDown = InputSystem::Get().GetKey(VK_SHIFT);
+	const bool bIsPIE = (World != nullptr && World->GetWorldType() == EWorldType::PIE);
+	const bool bPIECameraCaptured = bIsPIE && !bIsCursorVisible;
+	const bool bCursorShouldRemainHidden = bRightMouseRotating || bRightMousePanning || bMiddleMousePanning || bAltRightMouseDollying || bPIECameraCaptured;
+
+	if (!bCursorShouldRemainHidden && !bIsCursorVisible)
+	{
+		UnlockCursor();
+	}
 
 	//	Alt가 눌렸을 때도 동일하게 해제
 	if (!bAltDown)
@@ -258,26 +266,40 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 		}
 	}
 
-	if (World != nullptr &&  World->GetWorldType() == EWorldType::PIE && Editor != nullptr)
+	if (bIsPIE && Editor != nullptr)
 	{
 		if (bShiftDown && InputSystem::Get().GetKeyDown(VK_F1))
 		{
 			UnlockCursor();
-			while (ShowCursor(TRUE) < 0);
+			bRightMouseRotating = false;
+			bRightMousePanning = false;
+			bAltRightMouseDollying = false;
+			NavigationController.EndPanning();
+			NavigationController.ResetTargetLocation();
 		}
 
 		if (InputSystem::Get().GetKeyDown(VK_ESCAPE))
 		{
 			UnlockCursor();
-			while (ShowCursor(TRUE) < 0);
 			Editor->StopPlaySession();
+			return;
 		}
 
-		return;
+		// PIE에서는 우클릭 홀드가 아니라 "캡처 상태"가 프리룩 조건입니다.
+		// Shift+F1로 커서를 풀어둔 상태에서 우클릭하면 다시 캡처만 복구합니다.
+		if (bIsCursorVisible && InputSystem::Get().GetKeyDown(VK_RBUTTON))
+		{
+			LockCursorToViewport();
+			bFirstMouseMoveAfterRotateStart = true;
+			if (!Camera.IsOrthographic())
+			{
+				NavigationController.SetRotating(true);
+			}
+		}
 	}
 
 	// Mouse button begin/end state bridge
-	if (InputSystem::Get().GetKeyDown(VK_RBUTTON) && !bCtrlDown && !bAltDown && !bShiftDown)
+	if (!bIsPIE && InputSystem::Get().GetKeyDown(VK_RBUTTON) && !bCtrlDown && !bAltDown && !bShiftDown)
 	{
 		if (Camera.IsOrthographic())
 		{
@@ -294,33 +316,23 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 			NavigationController.SetRotating(true);
 		}
 
-		if (bIsCursorVisible)
-		{	
-			// 무한루프 방지용
-			for (int32 Cnt = 0; ShowCursor(FALSE) >= 0 && Cnt < 10; ++Cnt) {}
-			bIsCursorVisible = false;
-		}
+		LockCursorToViewport();
 	}
 
-	if (InputSystem::Get().GetKeyDown(VK_RBUTTON) && bAltDown && !bCtrlDown && !bShiftDown)
+	if (!bIsPIE && InputSystem::Get().GetKeyDown(VK_RBUTTON) && bAltDown && !bCtrlDown && !bShiftDown)
 	{
 		bAltRightMouseDollying = true;
 		bFirstMouseMoveAfterDollyStart = true;
 
-		if (bIsCursorVisible)
-		{
-			for (int32 Cnt = 0; ShowCursor(FALSE) >= 0 && Cnt < 10; ++Cnt) {}
-			bIsCursorVisible = false;
-		}
+		LockCursorToViewport();
 	}
 
 	// 마우스 우클릭을 뗄 경우 드래그 관련 변수들 false 처리
-	if (InputSystem::Get().GetKeyUp(VK_RBUTTON))
+	if (!bIsPIE && InputSystem::Get().GetKeyUp(VK_RBUTTON))
 	{
 		if (bRightMouseRotating)
 		{
 			bRightMouseRotating = false;
-			NavigationController.SetRotating(false);
 		}
 		if (bRightMousePanning)
 		{
@@ -334,11 +346,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 			NavigationController.ResetTargetLocation();
 		}
 
-		if (!bIsCursorVisible)
-		{
-			for (int32 Cnt = 0; ShowCursor(TRUE) < 0 && Cnt < 10; ++Cnt) {}
-			bIsCursorVisible = true;
-		}
+		UnlockCursor();
 	}
 	
 
@@ -352,11 +360,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 			bFirstMouseMoveAfterPanStart = true;
 			NavigationController.BeginPanning();
 
-			if (bIsCursorVisible)
-			{
-				for (int32 Cnt = 0; ShowCursor(FALSE) >= 0 && Cnt < 10; ++Cnt) {}
-				bIsCursorVisible = false;
-			}
+			LockCursorToViewport();
 		}
 	}
 
@@ -368,11 +372,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 			NavigationController.EndPanning();
 			NavigationController.ResetTargetLocation();
 
-			if (!bIsCursorVisible)
-			{
-				for (int32 Cnt = 0; ShowCursor(TRUE) < 0 && Cnt < 10; ++Cnt) {}
-				bIsCursorVisible = true;
-			}
+			UnlockCursor();
 		}
 	}
 		
@@ -380,7 +380,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 	const float RotateSensitivity = Settings ? Settings->CameraRotateSensitivity : 1.0f;
 
 	// Keyboard movement while rotating
-	if (bRightMouseRotating)
+	if (bRightMouseRotating || bPIECameraCaptured)
 	{
 		float ForwardValue = 0.f;
 		float RightValue = 0.f;
@@ -416,7 +416,7 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 	const float ScaledPanX = MouseDeltaX * MoveSensitivity;
 	const float ScaledPanY = MouseDeltaY * MoveSensitivity;
 
-	if (bRightMouseRotating)
+	if (bRightMouseRotating || bPIECameraCaptured)
 	{
 		if (bFirstMouseMoveAfterRotateStart)
 		{
@@ -466,11 +466,16 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 		}
 	}
 
+	if (bRightMouseRotating || bRightMousePanning || bMiddleMousePanning || bAltRightMouseDollying || bPIECameraCaptured)
+	{
+		RecenterCursorToViewport();
+	}
+
 	// Zoom / speed
 	const float ScrollNotches = InputSystem::Get().GetScrollNotches();
 	if (!MathUtil::IsNearlyZero(ScrollNotches))
 	{
-		if (bRightMouseRotating)
+		if (bRightMouseRotating || bPIECameraCaptured)
 		{
 			const float SpeedStep = (ScrollNotches > 0.f) ? 5.0f : -5.0f;
 			NavigationController.AdjustMoveSpeed(SpeedStep);
@@ -481,22 +486,22 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 		}
 	}
 
-	if (InputSystem::Get().GetKeyUp(VK_SPACE) && Gizmo)
+	if (!bIsPIE && InputSystem::Get().GetKeyUp(VK_SPACE) && Gizmo)
 	{
 		Gizmo->SetNextMode();
 	}
 
-	if (InputSystem::Get().GetKeyUp('X') && Gizmo)
+	if (!bIsPIE && InputSystem::Get().GetKeyUp('X') && Gizmo)
 	{
 		Gizmo->SetWorldSpace(!Gizmo->IsWorldSpace());
 	}
 
-	if (InputSystem::Get().GetKeyUp(VK_DELETE))
+	if (!bIsPIE && InputSystem::Get().GetKeyUp(VK_DELETE))
 	{
 		DeleteSelectedActors();
 	}
 
-	if (InputSystem::Get().GetKeyDown('A') && bCtrlDown && !bAltDown)
+	if (!bIsPIE && InputSystem::Get().GetKeyDown('A') && bCtrlDown && !bAltDown)
 	{
 		SelectAllActors();
 	}
@@ -720,41 +725,75 @@ FVector FEditorViewportClient::ResolveOrbitPivot() const
 
 void FEditorViewportClient::LockCursorToViewport()
 {
-	if (!Window)
+	if (!Window || !State)
 	{
 		return;
 	}
-
-	if(World != nullptr && World->GetWorldType() != EWorldType::PIE)
-	{
-		return;
-	}
-
-	while (ShowCursor(FALSE) >= 0);
 
 	HWND hWnd = Window->GetHWND();
 	SetForegroundWindow(hWnd);
 
-	// 1. 뷰포트의 윈도우 내 위치와 크기
-	const int x = State->Rect.X;
-	const int y = State->Rect.Y;
-	const int w = State->Rect.Width;
-	const int h = State->Rect.Height;
+	if (bIsCursorVisible)
+	{
+		for (int32 Cnt = 0; ShowCursor(FALSE) >= 0 && Cnt < 10; ++Cnt) {}
+		bIsCursorVisible = false;
+	}
 
-	// 2. 윈도우 기준 좌표 → 스크린 좌표 변환
-	POINT ul = { x, y };
-	POINT lr = { x + w, y + h };
-	ClientToScreen(hWnd, &ul);
-	ClientToScreen(hWnd, &lr);
-	RECT clipRect = { ul.x, ul.y, lr.x, lr.y };
-
-	SetCursorPos((ul.x + lr.x) / 2, (ul.y + lr.y) / 2);
-	ClipCursor(&clipRect);
+	RECT ClipRect;
+	if (TryGetViewportScreenRect(ClipRect))
+	{
+		ClipCursor(&ClipRect);
+	}
 }
 
 void FEditorViewportClient::UnlockCursor()
 {
 	ClipCursor(nullptr);
+	NavigationController.SetRotating(false);
+
+	if (!bIsCursorVisible)
+	{
+		for (int32 Cnt = 0; ShowCursor(TRUE) < 0 && Cnt < 10; ++Cnt) {}
+		bIsCursorVisible = true;
+	}
+}
+
+bool FEditorViewportClient::TryGetViewportScreenRect(RECT& OutRect) const
+{
+	if (!Window || !State)
+	{
+		return false;
+	}
+
+	HWND hWnd = Window->GetHWND();
+	POINT UpperLeft = { State->Rect.X, State->Rect.Y };
+	POINT LowerRight = { State->Rect.X + State->Rect.Width, State->Rect.Y + State->Rect.Height };
+	ClientToScreen(hWnd, &UpperLeft);
+	ClientToScreen(hWnd, &LowerRight);
+
+	OutRect.left = UpperLeft.x;
+	OutRect.top = UpperLeft.y;
+	OutRect.right = LowerRight.x;
+	OutRect.bottom = LowerRight.y;
+	return true;
+}
+
+void FEditorViewportClient::RecenterCursorToViewport()
+{
+	RECT ClipRect;
+	if (!TryGetViewportScreenRect(ClipRect))
+	{
+		return;
+	}
+
+	const POINT CenterPos =
+	{
+		(ClipRect.left + ClipRect.right) / 2,
+		(ClipRect.top + ClipRect.bottom) / 2
+	};
+
+	SetCursorPos(CenterPos.x, CenterPos.y);
+	InputSystem::Get().SyncMousePosition(CenterPos);
 }
 
 bool FEditorViewportClient::TryProjectWorldToViewport(const FVector& WorldPos, float& OutViewportX, float& OutViewportY, float& OutDepth) const
