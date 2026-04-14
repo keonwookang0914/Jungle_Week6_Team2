@@ -31,6 +31,7 @@ namespace EditorKey
 	constexpr const char* View = "View";
 	constexpr const char* ViewMode = "ViewMode";
 	constexpr const char* bPrimitives = "bPrimitives";
+	constexpr const char* bDecal = "bDecal";
 	constexpr const char* bGrid = "bGrid";
 	constexpr const char* bGizmo = "bGizmo";
 	constexpr const char* bBillboardText = "bBillboardText";
@@ -94,6 +95,7 @@ void FEditorSettings::SaveToFile(const FString& Path) const
 	JSON ViewObj = Object();
 	ViewObj[EditorKey::ViewMode] = static_cast<int32>(ViewMode);
 	ViewObj[EditorKey::bPrimitives] = ShowFlags.bPrimitives;
+	ViewObj[EditorKey::bDecal] = ShowFlags.bDecal;
 	ViewObj[EditorKey::bGrid] = ShowFlags.bGrid;
 	ViewObj[EditorKey::bGizmo] = ShowFlags.bGizmo;
 	ViewObj[EditorKey::bBillboardText] = ShowFlags.bBillboardText;
@@ -224,6 +226,8 @@ void FEditorSettings::LoadFromFile(const FString& Path)
 		}
 		if (ViewObj.hasKey(EditorKey::bPrimitives))
 			ShowFlags.bPrimitives = ViewObj[EditorKey::bPrimitives].ToBool();
+		if (ViewObj.hasKey(EditorKey::bDecal))
+			ShowFlags.bDecal = ViewObj[EditorKey::bDecal].ToBool();
 		if (ViewObj.hasKey(EditorKey::bGrid))
 			ShowFlags.bGrid = ViewObj[EditorKey::bGrid].ToBool();
 		if (ViewObj.hasKey(EditorKey::bGizmo))

@@ -77,6 +77,7 @@ void FEditorViewportOverlayWidget::RenderViewportSettings(float DeltaTime)
     // Show Flags
     ImGui::Text("Show");
     ImGui::Checkbox("Primitives", &Settings.ShowFlags.bPrimitives);
+    ImGui::Checkbox("Decal", &Settings.ShowFlags.bDecal);
     ImGui::Checkbox("BillboardText", &Settings.ShowFlags.bBillboardText);
     ImGui::Checkbox("Grid", &Settings.ShowFlags.bGrid);
     ImGui::Checkbox("Gizmo", &Settings.ShowFlags.bGizmo);

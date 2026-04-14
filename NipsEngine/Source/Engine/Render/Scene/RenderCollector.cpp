@@ -592,6 +592,8 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 
 	case EPrimitiveType::EPT_Decal:
 	{
+		if (!ShowFlags.bDecal) { return; }
+
 		LARGE_INTEGER Freq, TimeStart, TimeEnd;
 		QueryPerformanceFrequency(&Freq);
 		QueryPerformanceCounter(&TimeStart);
