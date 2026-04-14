@@ -5,6 +5,7 @@
 
 #include "Core/ResourceManager.h"
 #include "Engine/Geometry/OBB.h"
+#include "Engine/GameFramework/AActor.h"
 
 DEFINE_CLASS(UDecalComponent, UPrimitiveComponent)
 REGISTER_FACTORY(UDecalComponent)
@@ -23,6 +24,10 @@ UDecalComponent* UDecalComponent::Duplicate()
     NewComp->SetVisibility(this->IsVisible());
     NewComp->DecalTexturePath = this->DecalTexturePath;
     NewComp->CachedDecalTexture = this->GetCachedDecalTexture();
+    NewComp->FadeStartDelay = this->FadeStartDelay;
+    NewComp->FadeInDuration = this->FadeInDuration;
+    NewComp->FadeStartDelay = this->FadeStartDelay;
+    NewComp->FadeDuration = this->FadeDuration;
 
     NewComp->DuplicateSubObjects();
 
@@ -33,6 +38,10 @@ void UDecalComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProp
 {
     UPrimitiveComponent::GetEditableProperties(OutProps);
     OutProps.push_back({ "Decal Texture Path", EPropertyType::String, &DecalTexturePath });
+    OutProps.push_back({ "Fade In Start Delay", EPropertyType::Float, &FadeInStartDelay });
+    OutProps.push_back({ "Fade In Duration", EPropertyType::Float, &FadeInDuration });
+    OutProps.push_back({ "Fade Start Delay", EPropertyType::Float, &FadeStartDelay });
+    OutProps.push_back({ "Fade Duration", EPropertyType::Float, &FadeDuration });
 }
 
 void UDecalComponent::PostEditProperty(const char* PropertyName)
@@ -42,6 +51,66 @@ void UDecalComponent::PostEditProperty(const char* PropertyName)
     if (strcmp(PropertyName, "Decal Texture Path") == 0)
     {
         SetDecalTexturePath(DecalTexturePath);
+    }
+    if (strcmp(PropertyName, "Fade In Start Delay") == 0)
+    {
+        if (FadeInStartDelay < 0.0f) { FadeInStartDelay = 0.0f; }
+    }
+    if (strcmp(PropertyName, "Fade In Duration") == 0)
+    {
+        if (FadeInDuration < 0.0f) { FadeInDuration = 0.0f; }
+    }
+    if (strcmp(PropertyName, "Fade Start Delay") == 0)
+    {
+        if (FadeStartDelay < 0.0f) { FadeStartDelay = 0.0f; }
+    }
+    if (strcmp(PropertyName, "Fade Duration") == 0)
+    {
+        if (FadeDuration < 0.0f) { FadeDuration = 0.0f; }
+    }
+}
+
+void UDecalComponent::TickComponent(float DeltaTime)
+{
+    UpdateWorldAABB();
+
+    FadeElapsedTime += DeltaTime;
+
+    if (FadeElapsedTime < FadeInStartDelay)
+    {
+        FadeAlpha = 0.0f;
+        return;
+    }
+    if (FadeElapsedTime < (FadeInStartDelay + FadeInDuration))
+    {
+        FadeAlpha = (FadeElapsedTime - FadeInStartDelay) / FadeInDuration;
+        return;
+    }
+
+    // Persistent Decal
+    if (FadeStartDelay == 0.0f && FadeDuration == 0.0f)
+    {
+        FadeAlpha = 1.0f;
+        return;
+    }
+
+    if (FadeElapsedTime < (FadeInStartDelay + FadeInDuration + FadeStartDelay))
+    {
+        FadeAlpha = 1.0f;
+        return;
+    }
+    if (FadeElapsedTime < (FadeInStartDelay + FadeInDuration + FadeStartDelay + FadeDuration))
+    {
+        FadeAlpha = 1.0f - ((FadeElapsedTime - (FadeInStartDelay + FadeInDuration + FadeStartDelay)) / FadeDuration);
+        return;
+    }
+
+    FadeAlpha = 0.0f;
+
+    if (AActor* Owner = GetOwner())
+    {
+        Owner->SetVisible(false);
+        Owner->SetActive(false);
     }
 }
 

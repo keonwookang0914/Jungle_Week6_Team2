@@ -648,6 +648,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			// Decal Info
 			Cmd.Constants.Decal.DecalForward = DecalComponent->GetForwardVector();
 			Cmd.Constants.Decal.DecalViewProjection = DecalComponent->GetDecalViewProjection();
+			Cmd.Constants.Decal.FadeAlpha = DecalComponent->FadeAlpha;
 			Cmd.Resources.Decal.DecalTextureSRV = SRV;
 			RenderBus.AddCommand(ERenderPass::Decal, Cmd);
 			LastDecalStats.AffectedPrimitives++;

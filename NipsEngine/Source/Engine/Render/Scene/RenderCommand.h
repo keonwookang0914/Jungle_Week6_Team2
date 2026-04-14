@@ -170,7 +170,7 @@ struct FDecalConstants
 {
 	FMatrix DecalViewProjection;
 	FVector DecalForward;
-	float padding0;
+	float FadeAlpha;
 };
 
 struct FDecalResources

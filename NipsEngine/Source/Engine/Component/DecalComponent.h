@@ -23,14 +23,11 @@ public:
 	void GetEditableProperties(TArray<FPropertyDescriptor>& OutProps) override;
 	void PostEditProperty(const char* PropertyName) override;
 
+	void TickComponent(float DeltaTime) override;
+
 	void UpdateWorldAABB() const override;
 	bool RaycastMesh(const FRay& Ray, FHitResult& OutHitResult) override;
 
-private:
-	FString DecalTexturePath;
-	FTextureResource* CachedDecalTexture = nullptr;
-
-public:
 	void SetDecalTexturePath(const FString& NewPath)
 	{
 		DecalTexturePath = NewPath;
@@ -51,4 +48,21 @@ public:
 	FOBB GetDecalOBB() const;
 
 	FMatrix GetDecalViewProjection() const;
+
+private:
+	FString DecalTexturePath;
+	FTextureResource* CachedDecalTexture = nullptr;
+	float FadeElapsedTime = 0.0f;
+
+public:
+	float FadeAlpha = 1.0f;
+	// Fade In을 시작하기 전까지 대기하는 시간
+	float FadeInStartDelay = 0.0f;
+	// Fade In이 완료되는 데 걸리는 시간
+	float FadeInDuration = 1.0f;
+	// Fade Out을 시작하기 전까지 대기하는 시간
+	float FadeStartDelay = 1.0f;
+	// Fade Out이 완료되는 데 걸리는 시간
+	float FadeDuration = 1.0f;
+	// Set fade duration and start delay to 0 to make persistent.
 };
