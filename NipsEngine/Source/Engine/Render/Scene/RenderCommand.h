@@ -72,12 +72,9 @@ struct FOutlineConstants
 
 struct FAABBConstants
 {
-	FVector Min;
-	float Padding0;
-
-	FVector Max;
-	float Padding1;
-
+	static constexpr int32 MaxVertices = 24;
+	FVector Vertices[MaxVertices] = {};
+	int32 VertexCount = 0;
 	FColor Color;
 };
 

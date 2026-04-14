@@ -9,7 +9,7 @@
 #include "Component/CameraComponent.h"
 #include "Math/Utils.h"
 
-DEFINE_CLASS(USubUVComponent, UBillboardComponent)
+DEFINE_CLASS(USubUVComponent, UPrimitiveComponent)
 REGISTER_FACTORY(USubUVComponent)
 
 USubUVComponent::USubUVComponent()
@@ -30,8 +30,6 @@ USubUVComponent* USubUVComponent::Duplicate()
     NewComp->SetRelativeScale(this->GetRelativeScale());
     
     NewComp->SetVisibility(this->IsVisible());
-	
-    NewComp->SetBillboardEnabled(this->bIsBillboard);
 
     // 2. USubUVComponent 고유 리소스 얕은 복사
     NewComp->ParticleName = this->ParticleName;
@@ -51,6 +49,56 @@ USubUVComponent* USubUVComponent::Duplicate()
 	NewComp->DuplicateSubObjects();
 
     return NewComp;
+}
+
+bool USubUVComponent::TryGetActiveCamera(const FViewportCamera*& OutCamera) const
+{
+	OutCamera = nullptr;
+
+	if (GetOwner() == nullptr || GetOwner()->GetWorld() == nullptr)
+	{
+		return false;
+	}
+
+	OutCamera = GetOwner()->GetWorld()->GetActiveCamera();
+	return OutCamera != nullptr;
+}
+
+FMatrix USubUVComponent::MakeBillboardWorldMatrix(
+	const FVector& WorldLocation,
+	const FVector& WorldScale,
+	const FVector& CameraForward,
+	const FVector& CameraRight,
+	const FVector& CameraUp)
+{
+	FVector Forward = CameraForward.GetSafeNormal();
+	FVector Right = (-CameraRight).GetSafeNormal();
+	FVector Up = CameraUp.GetSafeNormal();
+
+	if (Forward.IsNearlyZero())
+	{
+		Forward = FVector(-1.0f, 0.0f, 0.0f);
+	}
+
+	if (Right.IsNearlyZero() || Up.IsNearlyZero())
+	{
+		FVector FallbackUp = FVector::UpVector;
+		if (std::abs(FVector::DotProduct(Forward, FallbackUp)) > 0.99f)
+		{
+			FallbackUp = FVector::RightVector;
+		}
+
+		Right = FVector::CrossProduct(FallbackUp, Forward).GetSafeNormal();
+		Up = FVector::CrossProduct(Forward, Right).GetSafeNormal();
+	}
+
+	FMatrix BillboardMatrix = FMatrix::Identity;
+	BillboardMatrix.SetAxes(
+		Forward * WorldScale.X,
+		Right * WorldScale.Y,
+		Up * WorldScale.Z,
+		WorldLocation);
+	return BillboardMatrix;
 }
 
 void USubUVComponent::SetParticle(const FName& InParticleName)
@@ -177,7 +225,7 @@ bool USubUVComponent::RaycastMesh(const FRay& Ray, FHitResult& OutHitResult)
 
 void USubUVComponent::TickComponent(float DeltaTime)
 {
-	UBillboardComponent::TickComponent(DeltaTime);
+	UpdateWorldAABB();
 
 	if (!CachedParticle) return;
 	if (!bLoop && bIsExecute) return; // 단발 재생 완료 후 정지

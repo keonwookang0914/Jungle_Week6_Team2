@@ -52,10 +52,18 @@ namespace
 
 	FMatrix MakeViewBillboardMatrix(const UPrimitiveComponent* Primitive, const FRenderBus& RenderBus)
 	{
+		FVector BillboardScale = Primitive->GetWorldScale();
+		if (Primitive->GetPrimitiveType() == EPrimitiveType::EPT_Billboard)
+		{
+			const UBillboardComponent* BillboardComp = static_cast<const UBillboardComponent*>(Primitive);
+			BillboardScale.Y *= BillboardComp->GetWidth();
+			BillboardScale.Z *= BillboardComp->GetHeight();
+		}
+
 		const FMatrix WorldMatrix = Primitive->GetWorldMatrix();
 		return UBillboardComponent::MakeBillboardWorldMatrix(
 			WorldMatrix.GetOrigin(),
-			WorldMatrix.GetScaleVector(),
+			BillboardScale,
 			RenderBus.GetCameraForward(),
 			RenderBus.GetCameraRight(),
 			RenderBus.GetCameraUp());
@@ -64,7 +72,7 @@ namespace
 	FMatrix MakeViewSubUVSelectionMatrix(const USubUVComponent* SubUVComp, const FRenderBus& RenderBus)
 	{
 		const FVector WorldScale = SubUVComp->GetWorldScale();
-		return UBillboardComponent::MakeBillboardWorldMatrix(
+		return USubUVComponent::MakeBillboardWorldMatrix(
 			SubUVComp->GetWorldLocation(),
 			FVector(
 				WorldScale.X > 0.01f ? WorldScale.X : 0.01f,
@@ -351,6 +359,13 @@ bool FRenderCollector::CollectFromSelectedActor(AActor* Actor, const FShowFlags&
 
 		if (!primitiveComponent->IsVisible()) continue;
 
+		if (primitiveComponent->GetPrimitiveType() == EPrimitiveType::EPT_Decal)
+		{
+			CollectAABBCommand(primitiveComponent, ShowFlags, RenderBus);
+			CollectBVHInternalNodeAABBs(primitiveComponent, ShowFlags, RenderBus, SeenBVHNodeIndices);
+			continue;
+		}
+
 		FMeshBuffer* MeshBuffer = nullptr;
 		if (primitiveComponent->GetPrimitiveType() == EPrimitiveType::EPT_StaticMesh)
 		{
@@ -554,7 +569,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 
 		FRenderCommand Cmd = {};
 		Cmd.PerObjectConstants = FPerObjectConstants{
-			MakeViewBillboardMatrix(Primitive, RenderBus),
+			MakeViewSubUVSelectionMatrix(SubUVComp, RenderBus),
 			FColor::White().ToVector4() };
 		Cmd.Type = ERenderCommandType::SubUV;
 		Cmd.Constants.SubUV.Particle = Particle;
@@ -572,11 +587,15 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 	{
 		UBillboardComponent* BillboardComp = static_cast<UBillboardComponent*>(Primitive);
 		FMaterialResource* Sprite = BillboardComp->GetCachedSprite();
+		FMeshBuffer* MeshBuffer = &MeshBufferManager.GetMeshBuffer(EPrimitiveType::EPT_Billboard);
 
 		ID3D11ShaderResourceView* SRV = (Sprite && Sprite->SRV)	? Sprite->SRV.Get() : FResourceManager::Get().GetDefaultWhiteSRV();
 
 		FRenderCommand Cmd = {};
 		Cmd.Type = ERenderCommandType::Billboard;
+		Cmd.MeshBuffer = MeshBuffer;
+		Cmd.SectionIndexStart = 0;
+		Cmd.SectionIndexCount = MeshBuffer->GetIndexBuffer().GetIndexCount();
 		Cmd.PerObjectConstants = FPerObjectConstants{
 			MakeViewBillboardMatrix(Primitive, RenderBus),
 			FColor::White().ToVector4() };
@@ -586,7 +605,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		Cmd.BlendState = EBlendState::AlphaBlend;
 		Cmd.DepthStencilState = EDepthStencilState::Default;
 
-		RenderBus.AddCommand(ERenderPass::SubUV, Cmd);  // SubUV 패스 재사용
+		RenderBus.AddCommand(ERenderPass::Billboard, Cmd);
 		break;
 	}
 
@@ -655,6 +674,27 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			RenderBus.AddCommand(ERenderPass::Decal, Cmd);
 			LastDecalStats.AffectedPrimitives++;
 		}
+
+		FRenderCommand OBBCmd = {};
+		OBBCmd.Type = ERenderCommandType::DebugBox;
+		OBBCmd.Constants.AABB.Color = FColor(0, 128, 0);
+
+		const FOBB DecalOBB = DecalComponent->GetDecalOBB();
+		TStaticArray<FVector, 8> Corners;
+		DecalOBB.GetCorners(Corners);
+
+		static constexpr int32 EdgeIndices[24] = {
+			0, 1, 1, 3, 3, 2, 2, 0,
+			4, 5, 5, 7, 7, 6, 6, 4,
+			0, 4, 1, 5, 2, 6, 3, 7
+		};
+
+		OBBCmd.Constants.AABB.VertexCount = 24;
+		for (int32 EdgeIndex = 0; EdgeIndex < 24; ++EdgeIndex)
+		{
+			OBBCmd.Constants.AABB.Vertices[EdgeIndex] = Corners[EdgeIndices[EdgeIndex]];
+		}
+		RenderBus.AddCommand(ERenderPass::Editor, OBBCmd);
 
 		QueryPerformanceCounter(&TimeEnd);
 		LastDecalStats.CollectTimeMs += static_cast<double>(TimeEnd.QuadPart - TimeStart.QuadPart) * 1000.0 / static_cast<double>(Freq.QuadPart);
@@ -746,11 +786,36 @@ void FRenderCollector::CollectBVHInternalNodeAABBs(UPrimitiveComponent* Primitiv
 
 void FRenderCollector::CollectAABBCommand(const FAABB& Box, const FColor& Color, FRenderBus& RenderBus)
 {
+	static constexpr FVector UnitCorners[8] = {
+		FVector(0.0f, 0.0f, 0.0f),
+		FVector(0.0f, 0.0f, 1.0f),
+		FVector(0.0f, 1.0f, 0.0f),
+		FVector(0.0f, 1.0f, 1.0f),
+		FVector(1.0f, 0.0f, 0.0f),
+		FVector(1.0f, 0.0f, 1.0f),
+		FVector(1.0f, 1.0f, 0.0f),
+		FVector(1.0f, 1.0f, 1.0f)
+	};
+	static constexpr int32 EdgeIndices[24] = {
+		0, 1, 1, 3, 3, 2, 2, 0,
+		4, 5, 5, 7, 7, 6, 6, 4,
+		0, 4, 1, 5, 2, 6, 3, 7
+	};
+
 	FRenderCommand AABBCmd = {};
 	AABBCmd.Type = ERenderCommandType::DebugBox;
-	AABBCmd.Constants.AABB.Min = Box.Min;
-	AABBCmd.Constants.AABB.Max = Box.Max;
 	AABBCmd.Constants.AABB.Color = Color;
+	AABBCmd.Constants.AABB.VertexCount = 24;
+
+	const FVector Extents = Box.Max - Box.Min;
+	for (int32 VertexIndex = 0; VertexIndex < 24; ++VertexIndex)
+	{
+		const FVector& Corner = UnitCorners[EdgeIndices[VertexIndex]];
+		AABBCmd.Constants.AABB.Vertices[VertexIndex] = FVector(
+			Box.Min.X + (Corner.X * Extents.X),
+			Box.Min.Y + (Corner.Y * Extents.Y),
+			Box.Min.Z + (Corner.Z * Extents.Z));
+	}
 	RenderBus.AddCommand(ERenderPass::Editor, AABBCmd);
 }
 

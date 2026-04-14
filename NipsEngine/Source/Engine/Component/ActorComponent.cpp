@@ -5,6 +5,9 @@ DEFINE_CLASS(UActorComponent, UObject)
 // 기본 상태 변수를 복사하되, Owner에 대한 정보는 복사하지 않는다.
 UActorComponent* UActorComponent::Duplicate()
 {
+    if (bIsEditorOnly)
+        return nullptr;
+
     UActorComponent* NewComp = UObjectManager::Get().CreateObject<UActorComponent>();
 
     NewComp->bIsActive = this->bIsActive;

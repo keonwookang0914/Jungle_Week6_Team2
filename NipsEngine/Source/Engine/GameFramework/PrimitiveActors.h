@@ -50,6 +50,7 @@ public:
 
 	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 	UDecalComponent* DecalComponent{ nullptr };
+	UBillboardComponent* IconBillboardComponent{ nullptr };
 
 	void InitDefaultComponents();
 };
@@ -60,7 +61,7 @@ public:
 	DECLARE_CLASS(ASpotLightActor, AActor)
 	ASpotLightActor() = default;
 
-	UBillboardComponent* BillboardComponent{ nullptr };
+	UBillboardComponent* IconBillboardComponent{ nullptr };
 
 	void InitDefaultComponents();
 };

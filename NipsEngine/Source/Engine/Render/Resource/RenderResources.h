@@ -20,7 +20,8 @@ struct FRenderResources
     FConstantBuffer DepthSceneConstantBuffer;		// b8
     FConstantBuffer DecalConstantBuffer;			// b9
 
-    FShader PrimitiveShader;
+	FShader PrimitiveShader;
+	FShader BillboardShader;
     FShader GizmoShader;
     FShader EditorShader;
 	FShader SelectionMaskShader;

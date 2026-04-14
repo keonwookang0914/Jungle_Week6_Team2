@@ -26,6 +26,8 @@ public:
 
 	inline bool IsActive() const { return bIsActive; }
 	inline bool IsComponentTickEnabled() const { return bCanEverTick; }
+	inline bool IsEditorOnly() const { return bIsEditorOnly; }
+	inline void SetEditorOnly(bool bValue) { bIsEditorOnly = bValue; }
 
 	void SetOwner(AActor* Actor) { Owner = Actor; }
 	AActor* GetOwner() const { return Owner; }
@@ -41,6 +43,7 @@ protected:
 
 protected:
 	AActor* Owner = nullptr;
+	bool bIsEditorOnly = false;
 
 private:
 	bool bIsActive = true;

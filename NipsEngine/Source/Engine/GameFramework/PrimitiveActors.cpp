@@ -97,8 +97,13 @@ void ABillboardActor::InitDefaultComponents()
 void ADecalActor::InitDefaultComponents()
 {
 	DecalComponent = AddComponent<UDecalComponent>();
+	DecalComponent->SetDecalTexturePath("Asset\\Texture\\milky way.png");
 	SetRootComponent(DecalComponent);
-	DecalComponent->SetDecalTexturePath("Asset\\Texture\\Pawn_64x.png");
+
+	IconBillboardComponent = AddComponent<UBillboardComponent>();
+	IconBillboardComponent->SetEditorOnly(true);
+	IconBillboardComponent->SetTextureName(("Asset\\Texture\\S_DecalActorIcon.png"));
+	IconBillboardComponent->AttachToComponent(DecalComponent);
 }
 
 void ASpotLightActor::InitDefaultComponents()
@@ -110,15 +115,15 @@ void ASpotLightActor::InitDefaultComponents()
 	constexpr float SpotLightNearHalfSize = 0.1f;
 	constexpr float SpotLightFarHalfSize = 2.0f;
 
-	BillboardComponent = AddComponent<UBillboardComponent>();
-	BillboardComponent->SetTextureName(("Asset\\Texture\\SpotLight_64x.png"));
-	SetRootComponent(BillboardComponent);
+	IconBillboardComponent = AddComponent<UBillboardComponent>();
+	IconBillboardComponent->SetTextureName(("Asset\\Texture\\SpotLight_64x.png"));
+	SetRootComponent(IconBillboardComponent);
 
 	for (int32 StepIndex = 0; StepIndex < SpotLightDecalStepCount; ++StepIndex)
 	{
 		UDecalComponent* StepDecalComponent = AddComponent<UDecalComponent>();
 		StepDecalComponent->SetDecalTexturePath("Asset\\Texture\\SpotLightDecal.png");
-		StepDecalComponent->AttachToComponent(BillboardComponent);
+		StepDecalComponent->AttachToComponent(IconBillboardComponent);
 
 		const float StepAlpha = (SpotLightDecalStepCount > 1)
 			? static_cast<float>(StepIndex) / static_cast<float>(SpotLightDecalStepCount - 1)
