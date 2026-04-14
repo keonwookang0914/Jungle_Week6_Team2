@@ -105,6 +105,7 @@ public:
 	POINT GetBoxSelectEnd() const { return BoxSelectEnd; }
 
 	void LockCursorToViewport();
+	void SyncNavigationStateFromCamera();
 
 private:
 	void TickInput(float DeltaTime);

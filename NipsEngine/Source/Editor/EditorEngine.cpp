@@ -144,6 +144,7 @@ void UEditorEngine::StartPlaySession()
     }
 
 	ViewportLayout.SetLastFocusedViewportIndex(0);
+	ViewportLayout.GetViewportClient(0).SyncNavigationStateFromCamera();
 
     PIEWorld->SetActiveCamera(GetCamera());
 

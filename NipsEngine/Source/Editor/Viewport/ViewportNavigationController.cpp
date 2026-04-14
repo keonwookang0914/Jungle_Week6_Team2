@@ -35,10 +35,20 @@ void FViewportNavigationController::SetRotating(bool bInRotating)
 
 	if (bRotating && ViewportCamera != nullptr)
 	{
-		const FVector Forward = ViewportCamera->GetForwardVector().GetSafeNormal();
-		Pitch = MathUtil::RadiansToDegrees(std::asin(MathUtil::Clamp(Forward.Z, -1.0f, 1.0f)));
-		Yaw = MathUtil::RadiansToDegrees(std::atan2(Forward.Y, Forward.X));
+		SyncRotationFromCamera();
 	}
+}
+
+void FViewportNavigationController::SyncRotationFromCamera()
+{
+	if (ViewportCamera == nullptr)
+	{
+		return;
+	}
+
+	const FVector Forward = ViewportCamera->GetForwardVector().GetSafeNormal();
+	Pitch = MathUtil::RadiansToDegrees(std::asin(MathUtil::Clamp(Forward.Z, -1.0f, 1.0f)));
+	Yaw = MathUtil::RadiansToDegrees(std::atan2(Forward.Y, Forward.X));
 }
 
 void FViewportNavigationController::ModifyFOVorOrthoHeight(float Delta)

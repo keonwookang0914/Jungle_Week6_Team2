@@ -746,6 +746,12 @@ void FEditorViewportClient::LockCursorToViewport()
 	}
 }
 
+void FEditorViewportClient::SyncNavigationStateFromCamera()
+{
+	NavigationController.SyncRotationFromCamera();
+	NavigationController.ResetTargetLocation();
+}
+
 void FEditorViewportClient::UnlockCursor()
 {
 	ClipCursor(nullptr);

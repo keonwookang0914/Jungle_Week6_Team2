@@ -23,6 +23,7 @@ public:
 	void AddPitchInput(float Value);
 
 	void SetRotating(bool bInRotating);
+	void SyncRotationFromCamera();
 	bool IsRotating() const { return bRotating; }
 
 	void ModifyFOVorOrthoHeight(float Delta);
