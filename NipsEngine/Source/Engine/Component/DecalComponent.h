@@ -4,11 +4,9 @@
 #include "Core/ResourceManager.h"
 #include "Core/ResourceTypes.h"
 
-// TODO: 어째서 UTexture2D가 아닐까요?
 struct FTextureResource;
 struct FOBB;
 
-// TODO: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 class UDecalComponent : public UPrimitiveComponent
 {
 public:
@@ -59,10 +57,10 @@ public:
 	// Fade In을 시작하기 전까지 대기하는 시간
 	float FadeInStartDelay = 0.0f;
 	// Fade In이 완료되는 데 걸리는 시간
-	float FadeInDuration = 1.0f;
+	float FadeInDuration = 0.0f;
 	// Fade Out을 시작하기 전까지 대기하는 시간
-	float FadeStartDelay = 1.0f;
+	float FadeStartDelay = 0.0f;
 	// Fade Out이 완료되는 데 걸리는 시간
-	float FadeDuration = 1.0f;
+	float FadeDuration = 0.0f;
 	// Set fade duration and start delay to 0 to make persistent.
 };

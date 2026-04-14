@@ -12,25 +12,6 @@
 #define NO_UUID 1
 #endif
 
-namespace
-{
-	constexpr const char* CubeMeshPath = "Asset/Mesh/Cube.obj";
-	constexpr const char* SphereMeshPath = "Asset/Mesh/Sphere.obj";
-	constexpr const char* PlaneMeshPath = "Asset/Mesh/Plane.obj";
-}
-
-DEFINE_CLASS(ACubeActor, AActor)
-REGISTER_FACTORY(ACubeActor)
-
-DEFINE_CLASS(ASphereActor, AActor)
-REGISTER_FACTORY(ASphereActor)
-
-DEFINE_CLASS(APlaneActor, AActor)
-REGISTER_FACTORY(APlaneActor)
-
-DEFINE_CLASS(AAttachTestActor, AActor)
-REGISTER_FACTORY(AAttachTestActor)
-
 DEFINE_CLASS(AStaticMeshActor, AActor)
 REGISTER_FACTORY(AStaticMeshActor)
 
@@ -46,102 +27,8 @@ REGISTER_FACTORY(ABillboardActor)
 DEFINE_CLASS(ADecalActor, AActor)
 REGISTER_FACTORY(ADecalActor)
 
-void ACubeActor::InitDefaultComponents()
-{
-	auto* Cube = AddComponent<UStaticMeshComponent>();
-	Cube->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(CubeMeshPath));
-	SetRootComponent(Cube);
-
-	// Text
-	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
-	Text->SetFont(FName("Default"));
-	Text->AttachToComponent(Cube);
-	Text->SetText("UUID: " + std::to_string(GetUUID()));
-	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
-
-	// SubUV
-	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
-	SubUV->AttachToComponent(Cube);
-	SubUV->SetParticle(FName("Explosion"));
-	SubUV->SetSpriteSize(2.0f, 2.0f);
-	SubUV->SetFrameRate(30.f);
-	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
-}
-
-void ASphereActor::InitDefaultComponents()
-{
-	auto* Sphere = AddComponent<UStaticMeshComponent>();
-	Sphere->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(SphereMeshPath));
-	SetRootComponent(Sphere);
-
-	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
-	Text->SetFont(FName("Default"));
-	Text->AttachToComponent(Sphere);
-	Text->SetText("UUID: " + std::to_string(GetUUID()));
-	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
-
-	// SubUV
-	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
-	SubUV->AttachToComponent(Sphere);
-	SubUV->SetParticle(FName("Explosion"));
-	SubUV->SetSpriteSize(2.0f, 2.0f);
-	SubUV->SetFrameRate(30.f);
-	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
-}
-
-void APlaneActor::InitDefaultComponents()
-{
-	auto* Plane = AddComponent<UStaticMeshComponent>();
-	Plane->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(PlaneMeshPath));
-	SetRootComponent(Plane);
-
-	UTextRenderComponent* Text = AddComponent<UTextRenderComponent>();
-	Text->SetFont(FName("Default"));
-	Text->SetText(std::format("UUID: {}", GetUUID()));
-	Text->AttachToComponent(Plane);
-	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
-
-	// SubUV
-	USubUVComponent* SubUV = AddComponent<USubUVComponent>();
-	SubUV->AttachToComponent(Plane);
-	SubUV->SetParticle(FName("Explosion"));
-	SubUV->SetSpriteSize(2.0f, 2.0f);
-	SubUV->SetFrameRate(30.f);
-	SubUV->SetRelativeLocation(FVector(0.0f, 0.0f, 2.3f));
-}
-
-void AAttachTestActor::InitDefaultComponents()
-{
-	// Root: Cube
-	auto* Cube = AddComponent<UStaticMeshComponent>();
-	Cube->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(CubeMeshPath));
-	SetRootComponent(Cube);
-
-	// Grouping node for spheres
-	auto* Primitives = AddComponent<USceneComponent>();
-	Primitives->AttachToComponent(Cube);
-
-	// 4 Spheres in a square pattern
-	constexpr float Offset = 2.0f;
-	const FVector Positions[4] = {
-		{ -Offset, -Offset, 0.0f },
-		{  Offset, -Offset, 0.0f },
-		{  Offset,  Offset, 0.0f },
-		{ -Offset,  Offset, 0.0f },
-	};
-	for (int i = 0; i < 4; ++i)
-	{
-		auto* Sphere = AddComponent<UStaticMeshComponent>();
-		Sphere->SetStaticMesh(FResourceManager::Get().LoadStaticMesh(SphereMeshPath));
-		Sphere->AttachToComponent(Primitives);
-		Sphere->SetRelativeLocation(Positions[i]);
-	}
-
-	auto* Text = AddComponent<UTextRenderComponent>();
-	Text->AttachToComponent(Cube);
-	Text->SetText("UUID: " + std::to_string(GetUUID()));
-	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 1.5f));
-}
+DEFINE_CLASS(ASpotLightActor, AActor)
+REGISTER_FACTORY(ASpotLightActor)
 
 void AStaticMeshActor::InitDefaultComponents()
 {
@@ -212,4 +99,38 @@ void ADecalActor::InitDefaultComponents()
 	DecalComponent = AddComponent<UDecalComponent>();
 	SetRootComponent(DecalComponent);
 	DecalComponent->SetDecalTexturePath("Asset\\Texture\\Pawn_64x.png");
+}
+
+void ASpotLightActor::InitDefaultComponents()
+{
+	constexpr int32 SpotLightDecalStepCount = 10;
+	constexpr float SpotLightMaxDistance = 4.0f;
+	constexpr float SpotLightDecalStepLength = SpotLightMaxDistance / SpotLightDecalStepCount;
+	constexpr float SpotLightDecalHalfDepth = SpotLightDecalStepLength * 0.5f;
+	constexpr float SpotLightNearHalfSize = 0.1f;
+	constexpr float SpotLightFarHalfSize = 2.0f;
+
+	BillboardComponent = AddComponent<UBillboardComponent>();
+	BillboardComponent->SetTextureName(("Asset\\Texture\\SpotLight_64x.png"));
+	SetRootComponent(BillboardComponent);
+
+	for (int32 StepIndex = 0; StepIndex < SpotLightDecalStepCount; ++StepIndex)
+	{
+		UDecalComponent* StepDecalComponent = AddComponent<UDecalComponent>();
+		StepDecalComponent->SetDecalTexturePath("Asset\\Texture\\SpotLightDecal.png");
+		StepDecalComponent->AttachToComponent(BillboardComponent);
+
+		const float StepAlpha = (SpotLightDecalStepCount > 1)
+			? static_cast<float>(StepIndex) / static_cast<float>(SpotLightDecalStepCount - 1)
+			: 0.0f;
+		const float HalfWidth = SpotLightNearHalfSize + ((SpotLightFarHalfSize - SpotLightNearHalfSize) * StepAlpha);
+		const float Distance = SpotLightDecalHalfDepth + (SpotLightDecalStepLength * static_cast<float>(StepIndex));
+		const float DecalAlpha = 1.0f - (0.5f * StepAlpha);
+
+		StepDecalComponent->SetRelativeScale(FVector(SpotLightDecalHalfDepth, HalfWidth, HalfWidth));
+		StepDecalComponent->SetRelativeLocation(FVector(Distance, 0.0f, 0.0f));
+		StepDecalComponent->FadeAlpha = DecalAlpha;
+	}
+
+	SetActorRotation(FVector(0.0f, 90.0f, 0.0f));
 }

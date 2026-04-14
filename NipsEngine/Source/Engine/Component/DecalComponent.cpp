@@ -24,6 +24,7 @@ UDecalComponent* UDecalComponent::Duplicate()
     NewComp->SetVisibility(this->IsVisible());
     NewComp->DecalTexturePath = this->DecalTexturePath;
     NewComp->CachedDecalTexture = this->GetCachedDecalTexture();
+    NewComp->FadeAlpha = this->FadeAlpha;
     NewComp->FadeStartDelay = this->FadeStartDelay;
     NewComp->FadeInDuration = this->FadeInDuration;
     NewComp->FadeStartDelay = this->FadeStartDelay;
@@ -75,6 +76,11 @@ void UDecalComponent::TickComponent(float DeltaTime)
     UpdateWorldAABB();
 
     FadeElapsedTime += DeltaTime;
+
+    if (FadeInStartDelay == 0.0f && FadeInDuration == 0.0f)
+    {
+        return;
+    }
 
     if (FadeElapsedTime < FadeInStartDelay)
     {
