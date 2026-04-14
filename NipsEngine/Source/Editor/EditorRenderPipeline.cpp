@@ -71,6 +71,11 @@ void FEditorRenderPipeline::Execute(float DeltaTime, FRenderer& Renderer)
 
     Renderer.ExecutePostProcessStack(PostProcessViews);
 
+    for (const FViewportOverlayData& Overlay : OverlayData)
+    {
+        Renderer.RenderOverlay(Overlay.ViewDesc, Overlay.OverlayBus);
+    }
+
     Renderer.UseBackBufferRenderTargets();
 
     // ImGui UI 오버레이
@@ -141,8 +146,6 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
             else
                 Gizmo->ApplyScreenSpaceScaling(SceneView.CameraPosition);
         }
-        // 단계적 전환을 위해 현재 scene 경로는 유지하고, overlay 경로에도 별도 수집합니다.
-        Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, SceneBus, VC.GetViewportState()->bHovered);
         Collector.CollectGizmo(Editor->GetGizmo(), ShowFlags, OverlayBus, VC.GetViewportState()->bHovered);
         Collector.CollectSelection(Editor->GetSelectionManager().GetSelectedActors(), ShowFlags, ViewMode, SceneBus, OutlineData);
     }
