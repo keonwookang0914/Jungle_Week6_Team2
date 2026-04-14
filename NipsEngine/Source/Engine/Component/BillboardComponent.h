@@ -34,30 +34,27 @@ public:
 		const FVector& CameraUp);
 
 	EPrimitiveType GetPrimitiveType() const override { return PrimitiveType; }
+	bool SupportsOutline() const override { return false; }
 
 	void SetTextureName(FString InName);
-	FString GetTextureName();
+	FString GetTexturePath();
 	FMaterialResource* GetCachedSprite();
+	void PostEditProperty(const char* PropertyName) override;
 
 	//////////////////// override ////////////////////////////
 	void UpdateWorldAABB() const override;
 	bool RaycastMesh(const FRay& Ray, FHitResult& OutHitResult) override;
 	void GetEditableProperties(TArray<FPropertyDescriptor>& OutProps) override;
+	void SetSpriteSize(float InWidth, float InHeight) { Width = InWidth; Height = InHeight; }
 	float GetWidth()  const { return Width; }
 	float GetHeight() const { return Height; }
-	// Billboard는 outline 미지원 (Batcher 계열)
-	//void SetSpriteSize(float InWidth, float InHeight) { Width = InWidth; Height = InHeight; }
 
 	///////////////////////////////////////////////////////////
 
 private:
-	FName TextureName;
+	FString BillboardTexturePath;
 	FMaterialResource* CachedSprite = { nullptr }; // ResourceManager 소유, 여기선 참조만
-	uint32 FrameIndex = 0;
 	float  Width = 1.0f;
 	float  Height = 1.0f;
-	float  PlayRate = 30.0f; // 초당 프레임 수
-	float  TimeAccumulator = 0.0f;
-	bool bLoop = true;
 };
 

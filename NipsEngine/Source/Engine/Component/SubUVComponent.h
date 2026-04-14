@@ -1,8 +1,10 @@
 ﻿#pragma once
 
-#include "BillboardComponent.h"
+#include "PrimitiveComponent.h"
 #include "Core/ResourceTypes.h"
 #include "Object/FName.h"
+
+class FViewportCamera;
 
 // SubUV 파티클 스프라이트를 월드 공간에 빌보드로 렌더링하는 컴포넌트.
 // PrimitiveComponent를 상속받아 RenderCollector에 자동으로 감지됩니다.
@@ -13,16 +15,18 @@
 //   Comp->SetParticle(FName("Explosion"));
 //   Comp->SetFrameIndex(CurrentFrame);
 //   Comp->SetSpriteSize(2.0f, 2.0f);
-class USubUVComponent : public UBillboardComponent
+class USubUVComponent : public UPrimitiveComponent
 {
 public:
-	DECLARE_CLASS(USubUVComponent, UBillboardComponent)
+	DECLARE_CLASS(USubUVComponent, UPrimitiveComponent)
 
 	USubUVComponent();
 	~USubUVComponent() override = default;
 	
 	virtual USubUVComponent* Duplicate() override;
 	virtual USubUVComponent* DuplicateSubObjects() override { return this; }
+
+	void SetBillboardEnabled(bool bEnable) { bIsBillboard = bEnable; }
 
 	// --- Particle Resource ---
 	// FName 키로 ResourceManager에서 FParticleResource*를 찾아 캐싱
@@ -46,6 +50,13 @@ public:
 	float GetWidth()  const { return Width; }
 	float GetHeight() const { return Height; }
 
+	static FMatrix MakeBillboardWorldMatrix(
+		const FVector& WorldLocation,
+		const FVector& WorldScale,
+		const FVector& CameraForward,
+		const FVector& CameraRight,
+		const FVector& CameraUp);
+
 	// --- Property / Serialization ---
 	void GetEditableProperties(TArray<FPropertyDescriptor>& OutProps) override;
 	void PostEditProperty(const char* PropertyName) override;
@@ -61,6 +72,8 @@ protected:
 	void TickComponent(float DeltaTime) override;
 
 private:
+	bool TryGetActiveCamera(const FViewportCamera*& OutCamera) const;
+
 	FName ParticleName;
 	FParticleResource* CachedParticle = nullptr; // ResourceManager 소유, 여기선 참조만
 
@@ -70,6 +83,7 @@ private:
 	float  PlayRate = 30.0f; // 초당 프레임 수
 	float  TimeAccumulator = 0.0f;
 
+	bool bIsBillboard = true;
 	bool bLoop = true;
 	bool bIsExecute = false;
 };

@@ -4,7 +4,7 @@ cbuffer DecalBuffer : register(b9)
 {
     row_major float4x4 DecalViewProjection;
     float3 DecalForward;
-    float Padding7_0;
+    float FadeAlpha;
 };
 
 Texture2D DecalTexture : register(t4);
@@ -59,14 +59,13 @@ float4 PS(PSInput input) : SV_TARGET
     decalUV.y = 1.0f - decalUV.y; // Texture 좌표계는 Y축이 반대
 
     float4 decalColor = DecalTexture.Sample(DecalSampler, decalUV);
+
     if (decalColor.a <= 0.01f)
     {
         return float4(0, 0, 0, 0);
     }
 
-    const float fadeStart = 0.8f;
-    const float depthFade = smoothstep(1.0f, fadeStart, decalNDC.z);
-    decalColor.a *= depthFade;
+    decalColor.a *= FadeAlpha;
 
     return decalColor;
 }

@@ -24,6 +24,9 @@ void FRenderer::Create(HWND hWindow)
 	Resources.PrimitiveShader.Create(Device.GetDevice(), L"Shaders/Primitive.hlsl",
 		"VS", "PS", PrimitiveInputLayout, ARRAYSIZE(PrimitiveInputLayout));
 
+	Resources.BillboardShader.Create(Device.GetDevice(), L"Shaders/ShaderBillboard.hlsl",
+		"VS", "PS", NormalVertexInputLayout, ARRAYSIZE(NormalVertexInputLayout));
+
 	// 2. 기즈모 (Gizmo.hlsl)
 	Resources.GizmoShader.Create(Device.GetDevice(), L"Shaders/Gizmo.hlsl",
 		"VS", "PS", PrimitiveInputLayout, ARRAYSIZE(PrimitiveInputLayout));
@@ -115,6 +118,7 @@ void FRenderer::Release()
 {
 	// Release Shader
 	Resources.PrimitiveShader.Release();
+	Resources.BillboardShader.Release();
 	Resources.GizmoShader.Release();
 	Resources.EditorShader.Release();
 	Resources.SelectionMaskShader.Release();
@@ -330,6 +334,7 @@ void FRenderer::InitializePassRenderStates()
 	S[(uint32)E::Opaque]             = { EDepthStencilState::Default,      EBlendState::Opaque,         ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.PrimitiveShader,      true  };
 	S[(uint32)E::Translucent]        = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.PrimitiveShader,      false };
 	S[(uint32)E::Decal]              = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend,     ERasterizerState::DepthBias,      D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.DecalShader,          true  };
+	S[(uint32)E::Billboard]          = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.BillboardShader,      true  };
 	S[(uint32)E::SelectionMask]      = { EDepthStencilState::StencilWrite, EBlendState::Opaque,         ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.SelectionMaskShader,  false };
 	S[(uint32)E::Editor]             = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         true  };
 	S[(uint32)E::Grid]               = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         false };
@@ -349,7 +354,14 @@ void FRenderer::InitializePassBatchers()
 		/*.Collect =*/ [this](const FRenderCommand& Cmd, const FRenderBus&) {
 			if (Cmd.Type == ERenderCommandType::DebugBox)
 			{
-				EditorLineBatcher.AddAABB(FBoundingBox{ Cmd.Constants.AABB.Min, Cmd.Constants.AABB.Max }, Cmd.Constants.AABB.Color);
+				const FVector4 LineColor = Cmd.Constants.AABB.Color.ToVector4();
+				for (int32 VertexIndex = 0; VertexIndex + 1 < Cmd.Constants.AABB.VertexCount; VertexIndex += 2)
+				{
+					EditorLineBatcher.AddLine(
+						Cmd.Constants.AABB.Vertices[VertexIndex],
+						Cmd.Constants.AABB.Vertices[VertexIndex + 1],
+						LineColor);
+				}
 			}
 		},
 		/*.Flush   =*/ [this](ERenderPass Pass, const FRenderBus& Bus, ID3D11DeviceContext* Ctx) {
@@ -425,22 +437,6 @@ void FRenderer::InitializePassBatchers()
 					SubUV.Particle->Rows,
 					SubUV.Width,
 					SubUV.Height
-				);
-			}
-			// 기존 SubUV 분기 아래에
-			else if (Cmd.Type == ERenderCommandType::Billboard && Cmd.Constants.Billboard.SRV)
-			{
-				SubUVBatcher.AddSprite(
-					Cmd.Constants.Billboard.SRV,
-					Cmd.PerObjectConstants.Model.GetOrigin(),
-					Bus.GetCameraRight(),
-					Bus.GetCameraUp(),
-					Cmd.PerObjectConstants.Model.GetScaleVector(),
-					0,   // FrameIndex 고정
-					1,   // Columns 고정
-					1,   // Rows 고정
-					Cmd.Constants.Billboard.Width,
-					Cmd.Constants.Billboard.Height
 				);
 			}
 		},
@@ -580,8 +576,27 @@ void FRenderer::BindShaderByType(const FRenderCommand& InCmd, ID3D11DeviceContex
     Resources.PerObjectConstantBuffer.Update(Context, &InCmd.PerObjectConstants, sizeof(FPerObjectConstants));
 
 	// 데이터 Update는 항상 수행하지만, 셰이더/상수 버퍼 바인딩은 타입이 변경된 경우에만 수행
-    switch (InCmd.Type)
-    {
+	switch (InCmd.Type)
+	{
+	case ERenderCommandType::Billboard:
+		if (bTypeChanged)
+		{
+			Resources.BillboardShader.Bind(Context);
+
+			ID3D11Buffer* cb1 = Resources.PerObjectConstantBuffer.GetBuffer();
+			Context->VSSetConstantBuffers(1, 1, &cb1);
+			Context->PSSetConstantBuffers(1, 1, &cb1);
+
+			ID3D11SamplerState* Samplers[] = { Resources.MeshSamplerState.Get() };
+			Context->PSSetSamplers(0, 1, Samplers);
+		}
+
+		{
+			ID3D11ShaderResourceView* BillboardSRV = InCmd.Constants.Billboard.SRV;
+			Context->PSSetShaderResources(0, 1, &BillboardSRV);
+		}
+		break;
+
     case ERenderCommandType::Gizmo:
         Resources.GizmoPerObjectConstantBuffer.Update(Context, &InCmd.Constants.Gizmo, sizeof(FGizmoConstants));
         

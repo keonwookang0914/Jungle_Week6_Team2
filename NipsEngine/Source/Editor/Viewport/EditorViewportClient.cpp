@@ -482,7 +482,8 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 		}
 		else
 		{
-			NavigationController.ModifyFOVorOrthoHeight(-ScrollNotches);
+			const float WheelMoveDistance = ScrollNotches * NavigationController.GetWheelMoveStep();
+			NavigationController.MoveAlongView(WheelMoveDistance);
 		}
 	}
 

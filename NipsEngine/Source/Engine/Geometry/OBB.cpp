@@ -1,4 +1,4 @@
-#include "OBB.h"
+﻿#include "OBB.h"
 #include "Engine/Math/Matrix.h"
 
 constexpr float SATParallelAxisEpsilonSq = 1e-6f;
@@ -93,6 +93,22 @@ FAABB FOBB::ToAABB() const
 	}
 
 	return FAABB(Center - WorldExtents, Center + WorldExtents);
+}
+
+void FOBB::GetCorners(TStaticArray<FVector, 8>& OutCorners) const
+{
+	const FVector AxisX = Axes[0] * Extents.X;
+	const FVector AxisY = Axes[1] * Extents.Y;
+	const FVector AxisZ = Axes[2] * Extents.Z;
+
+	OutCorners[0] = Center + AxisX + AxisY + AxisZ;
+	OutCorners[1] = Center + AxisX + AxisY - AxisZ;
+	OutCorners[2] = Center + AxisX - AxisY + AxisZ;
+	OutCorners[3] = Center + AxisX - AxisY - AxisZ;
+	OutCorners[4] = Center - AxisX + AxisY + AxisZ;
+	OutCorners[5] = Center - AxisX + AxisY - AxisZ;
+	OutCorners[6] = Center - AxisX - AxisY + AxisZ;
+	OutCorners[7] = Center - AxisX - AxisY - AxisZ;
 }
 
 // 교차 시 True, 분리 가능 축이 존재하면 False 반환

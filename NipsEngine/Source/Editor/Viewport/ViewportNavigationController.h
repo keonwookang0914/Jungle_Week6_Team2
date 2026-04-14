@@ -18,6 +18,7 @@ public:
 	void MoveForward(float Value, float DeltaTime);
 	void MoveRight(float Value, float DeltaTime);
 	void MoveUp(float Value, float DeltaTime);
+	void MoveAlongView(float Distance);
 
 	void AddYawInput(float Value);
 	void AddPitchInput(float Value);
@@ -33,6 +34,7 @@ public:
 	void AdjustMoveSpeed(float Step) { MoveSpeed = MathUtil::Clamp<float>(MoveSpeed + Step, 10.0f, 2000.0f); }
 	float GetMoveSpeed() const { return MoveSpeed; }
 	void SetMoveSpeed(float InMoveSpeed) { MoveSpeed = MathUtil::Clamp<float>(InMoveSpeed, 10.0f, 2000.0f); }
+	float GetWheelMoveStep() const { return WheelMoveStep; }
 
 	float GetRotationSpeed() const { return RotationSpeed; }
 	void SetRotationSpeed(float InRotationSpeed)
@@ -103,4 +105,5 @@ private:
 	float PanSpeed = 0.1f;
 
 	float GizmoFollowSpeedScale = 0.5f;
+	const float WheelMoveStep = 2.0f;
 };

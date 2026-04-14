@@ -18,6 +18,22 @@ namespace
 		return QuadMeshData;
 	}
 
+	void CreateBillboardQuadNormalMeshData(TArray<FNormalVertex>& OutVertices, TArray<uint32>& OutIndices)
+	{
+		OutVertices.clear();
+		OutIndices.clear();
+
+		const FColor DefaultColor(1.0f, 1.0f, 1.0f, 1.0f);
+		const FVector DefaultNormal(1.0f, 0.0f, 0.0f);
+
+		OutVertices.push_back({ FVector(0.0f, -0.5f,  0.5f), DefaultColor, DefaultNormal, FVector2(0.0f, 0.0f) });
+		OutVertices.push_back({ FVector(0.0f,  0.5f,  0.5f), DefaultColor, DefaultNormal, FVector2(1.0f, 0.0f) });
+		OutVertices.push_back({ FVector(0.0f,  0.5f, -0.5f), DefaultColor, DefaultNormal, FVector2(1.0f, 1.0f) });
+		OutVertices.push_back({ FVector(0.0f, -0.5f, -0.5f), DefaultColor, DefaultNormal, FVector2(0.0f, 1.0f) });
+
+		OutIndices = { 0, 1, 2, 0, 2, 3 };
+	}
+
 	FMeshData CreateUnitCubeMeshData()
 	{
 		FMeshData CubeMeshData;
@@ -48,11 +64,14 @@ void FMeshBufferManager::Create(ID3D11Device* InDevice)
 {
 	Device = InDevice;
 	const FMeshData QuadMeshData = CreateBillboardQuadMeshData();
+	TArray<FNormalVertex> BillboardVertices;
+	TArray<uint32> BillboardIndices;
+	CreateBillboardQuadNormalMeshData(BillboardVertices, BillboardIndices);
 
 	MeshBufferMap[EPrimitiveType::EPT_TransGizmo].Create(InDevice, FEditorMeshLibrary::GetTranslationGizmo());
 	MeshBufferMap[EPrimitiveType::EPT_RotGizmo].Create(InDevice, FEditorMeshLibrary::GetRotationGizmo()); 
 	MeshBufferMap[EPrimitiveType::EPT_ScaleGizmo].Create(InDevice, FEditorMeshLibrary::GetScaleGizmo());
-	MeshBufferMap[EPrimitiveType::EPT_Billboard].Create(InDevice, QuadMeshData);
+	MeshBufferMap[EPrimitiveType::EPT_Billboard].CreateForStaticMesh(InDevice, BillboardVertices, BillboardIndices);
 	MeshBufferMap[EPrimitiveType::EPT_SubUV].Create(InDevice, QuadMeshData);
 	MeshBufferMap[EPrimitiveType::EPT_Text].Create(InDevice, QuadMeshData);
 

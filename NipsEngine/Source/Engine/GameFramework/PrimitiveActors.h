@@ -4,42 +4,7 @@
 
 class UTextRenderComponent;
 class UDecalComponent;
-
-class ACubeActor : public AActor
-{
-public:
-	DECLARE_CLASS(ACubeActor, AActor)
-	ACubeActor() = default;
-
-	void InitDefaultComponents();
-};
-
-class ASphereActor : public AActor
-{
-public:
-	DECLARE_CLASS(ASphereActor, AActor)
-	ASphereActor() = default;
-
-	void InitDefaultComponents();
-};
-
-class APlaneActor : public AActor
-{
-public:
-	DECLARE_CLASS(APlaneActor, AActor)
-	APlaneActor() = default;
-
-	void InitDefaultComponents();
-};
-
-class AAttachTestActor : public AActor
-{
-public:
-	DECLARE_CLASS(AAttachTestActor, AActor)
-	AAttachTestActor() = default;
-
-	void InitDefaultComponents();
-};
+class UBillboardComponent;
 
 class AStaticMeshActor : public AActor
 {
@@ -85,6 +50,18 @@ public:
 
 	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 	UDecalComponent* DecalComponent{ nullptr };
+	UBillboardComponent* IconBillboardComponent{ nullptr };
+
+	void InitDefaultComponents();
+};
+
+class ASpotLightActor : public AActor
+{
+public:
+	DECLARE_CLASS(ASpotLightActor, AActor)
+	ASpotLightActor() = default;
+
+	UBillboardComponent* IconBillboardComponent{ nullptr };
 
 	void InitDefaultComponents();
 };

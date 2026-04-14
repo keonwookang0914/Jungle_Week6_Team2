@@ -1,5 +1,6 @@
 ﻿#include "BillboardComponent.h"
 #include <cmath>
+#include <cstring>
 #include "GameFramework/World.h"
 #include "Editor/Viewport/ViewportCamera.h"
 #include "Core/ResourceManager.h"
@@ -12,20 +13,24 @@ DEFINE_CLASS(UBillboardComponent, UPrimitiveComponent)
 // 객체를 동적 생성한 뒤, 부모 클래스의 프로퍼티부터 내려오며 깊은 복사합니다.
 UBillboardComponent* UBillboardComponent::Duplicate()
 {
+    if (bIsEditorOnly)
+        return nullptr;
+
     UBillboardComponent* NewComp = UObjectManager::Get().CreateObject<UBillboardComponent>();
 
 	NewComp->SetActive(this->IsActive());
     NewComp->SetOwner(nullptr);
-    
+
     NewComp->SetRelativeLocation(this->GetRelativeLocation());
     NewComp->SetRelativeRotation(this->GetRelativeRotation());
     NewComp->SetRelativeScale(this->GetRelativeScale());
-    
+
     NewComp->SetVisibility(this->IsVisible());
 	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
     NewComp->bIsBillboard = this->bIsBillboard;
-    NewComp->SetTextureName(this->GetTextureName());
+    NewComp->SetTextureName(this->GetTexturePath());
+    NewComp->SetSpriteSize(this->GetWidth(), this->GetHeight());
 
     return NewComp;
 }
@@ -84,22 +89,40 @@ FMatrix UBillboardComponent::MakeBillboardWorldMatrix(
 
 void UBillboardComponent::SetTextureName(FString InName)
 {
-	TextureName = InName;
-	CachedSprite = FResourceManager::Get().FindTexture(InName);
+	BillboardTexturePath = InName;
+	CachedSprite = nullptr;
 }
 
-FString UBillboardComponent::GetTextureName()
+FString UBillboardComponent::GetTexturePath()
 {
-	return TextureName.ToString();
+	return BillboardTexturePath;
 }
 
 FMaterialResource* UBillboardComponent::GetCachedSprite()
 {	
 	if (CachedSprite == nullptr)
 	{
-		CachedSprite = FResourceManager::Get().FindTexture(TextureName.ToString());
+		CachedSprite = FResourceManager::Get().FindTexture(BillboardTexturePath);
 	}
 	return CachedSprite;
+}
+
+void UBillboardComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProps)
+{
+	UPrimitiveComponent::GetEditableProperties(OutProps);
+	OutProps.push_back({ "Billboard Texture Path", EPropertyType::String, &BillboardTexturePath });
+	OutProps.push_back({ "Width", EPropertyType::Float, &Width, 0.1f, 100.0f, 0.1f });
+	OutProps.push_back({ "Height", EPropertyType::Float, &Height, 0.1f, 100.0f, 0.1f });
+}
+
+void UBillboardComponent::PostEditProperty(const char* PropertyName)
+{
+	UPrimitiveComponent::PostEditProperty(PropertyName);
+
+	if (strcmp(PropertyName, "Billboard Texture Path") == 0)
+	{
+		SetTextureName(BillboardTexturePath);
+	}
 }
 
 void UBillboardComponent::UpdateWorldAABB() const
@@ -201,16 +224,6 @@ bool UBillboardComponent::RaycastMesh(const FRay& Ray, FHitResult& OutHitResult)
 	OutHitResult.Normal = BillboardWorldMatrix.GetForwardVector();
 	OutHitResult.FaceIndex = 0;
 	return true;
-}
-
-void UBillboardComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProps)
-{
-	UPrimitiveComponent::GetEditableProperties(OutProps);
-	OutProps.push_back({ "Particle", EPropertyType::Name, &TextureName });
-	OutProps.push_back({ "Width", EPropertyType::Float, &Width, 0.1f, 100.0f, 0.1f });
-	OutProps.push_back({ "Height", EPropertyType::Float, &Height, 0.1f, 100.0f, 0.1f });
-	OutProps.push_back({ "Play Rate", EPropertyType::Float, &PlayRate, 1.0f, 120.0f, 1.0f });
-	OutProps.push_back({ "bLoop", EPropertyType::Bool, &bLoop });
 }
 
 void UBillboardComponent::TickComponent(float DeltaTime)

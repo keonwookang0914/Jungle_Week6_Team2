@@ -14,6 +14,7 @@ struct FOBB
 	FOBB(const FVector& InCenter, const FVector& InExtents, const TStaticArray<FVector, 3>& InAxes);
 
 	FAABB ToAABB() const;
+	void GetCorners(TStaticArray<FVector, 8>& OutCorners) const;
 	bool IntersectAABBWithSAT(const FAABB& AABB, bool bTestAABBAxes, bool bTestOBBAxes, bool bTestCrossAxes) const;
 
 private:

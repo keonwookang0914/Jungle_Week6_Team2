@@ -110,7 +110,23 @@ void FViewportNavigationController::MoveForward(float Value, float DeltaTime)
 	}
 
 	EnsureTargetLocationInitialized();
-	TargetLocation += ViewportCamera->GetForwardVector() * (Value * MoveSpeed * DeltaTime);
+	TargetLocation += ViewportCamera->GetEffectiveForward() * (Value * MoveSpeed * DeltaTime);
+}
+
+void FViewportNavigationController::MoveAlongView(float Distance)
+{
+	if (ViewportCamera == nullptr || MathUtil::IsNearlyZero(Distance))
+	{
+		return;
+	}
+
+	if (bOrbiting)
+	{
+		return;
+	}
+
+	EnsureTargetLocationInitialized();
+	TargetLocation += ViewportCamera->GetEffectiveForward() * Distance;
 }
 
 void FViewportNavigationController::MoveRight(float Value, float DeltaTime)

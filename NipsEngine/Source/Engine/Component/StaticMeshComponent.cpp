@@ -11,7 +11,7 @@ REGISTER_FACTORY(UStaticMeshComponent)
 UStaticMeshComponent::UStaticMeshComponent()
 {
 	//	기본 도형은 Cube로 설정
-	SetStaticMesh(FResourceManager::Get().LoadStaticMesh("Asset/Mesh/Dice/Dice.obj"));
+	SetStaticMesh(FResourceManager::Get().LoadStaticMesh("Asset/Mesh/Cube.obj"));
 }
 
 // 객체를 동적 생성한 뒤, 부모 클래스의 프로퍼티부터 내려오며 깊은 복사합니다.

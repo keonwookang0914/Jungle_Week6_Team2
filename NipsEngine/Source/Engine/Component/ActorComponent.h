@@ -26,6 +26,8 @@ public:
 
 	inline bool IsActive() const { return bIsActive; }
 	inline bool IsComponentTickEnabled() const { return bCanEverTick; }
+	inline bool IsEditorOnly() const { return bIsEditorOnly; }
+	inline void SetEditorOnly(bool bValue) { bIsEditorOnly = bValue; }
 
 	void SetOwner(AActor* Actor) { Owner = Actor; }
 	AActor* GetOwner() const { return Owner; }
@@ -45,6 +47,7 @@ protected:
 
 protected:
 	AActor* Owner = nullptr;
+	bool bIsEditorOnly = false;
 
 	// 해당 Component가 Editor에서 생성된건지, Spawn할때 이미 붙어있는건지 판별하는 함수
 	// default를 fasle로 해서 EditorProperty에서 Add 할때만 true로 변경
