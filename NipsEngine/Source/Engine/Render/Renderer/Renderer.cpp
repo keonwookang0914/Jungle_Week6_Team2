@@ -264,7 +264,7 @@ void FRenderer::UseViewportRenderTargets()
 }
 
 //	RenderBus에 담긴 모든 RenderCommand에 대해서 Draw Call 수행 (GPU)
-void FRenderer::Render(const FRenderBus& InRenderBus)
+void FRenderer::Render(const FRenderBus& InRenderBus, const FPostProcessViewDesc* InPostProcessViewDesc)
 {
 	ID3D11DeviceContext* Context = Device.GetDeviceContext();
 	UpdateFrameBuffer(Context, InRenderBus);
@@ -272,6 +272,25 @@ void FRenderer::Render(const FRenderBus& InRenderBus)
 	for (uint32 i = 0; i < (uint32)ERenderPass::MAX; ++i)
 	{
 		ERenderPass CurPass = static_cast<ERenderPass>(i);
+
+		// Post Process 특수 처리 (임시)
+		if (CurPass == ERenderPass::PostProcess)
+		{
+			if (InPostProcessViewDesc != nullptr)
+			{
+				TArray<FPostProcessViewDesc> SingleView;
+				SingleView.push_back(*InPostProcessViewDesc);
+				ExecutePostProcessStack(SingleView);
+
+				CurrentRenderTargets = Device.GetViewportRenderTargets();
+
+				// TODO: 굳이 필요한가 싶지만, 
+				Device.SetSubViewport(InPostProcessViewDesc->X, InPostProcessViewDesc->Y,
+					InPostProcessViewDesc->Width, InPostProcessViewDesc->Height);
+			}
+			continue;
+		}
+
 		const auto& Commands = InRenderBus.GetCommands(CurPass);
 		if (Commands.empty()) continue;
 
@@ -355,15 +374,16 @@ void FRenderer::InitializePassRenderStates()
 
 	// Pass                              DepthStencil                      Blend                        Rasterizer                        Topology                               Shader                           WireframeAware
 	S[(uint32)E::Opaque]             = { EDepthStencilState::Default,      EBlendState::Opaque,         ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.PrimitiveShader,      true  };
-	S[(uint32)E::Translucent]        = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.PrimitiveShader,      false };
 	S[(uint32)E::Decal]              = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend,     ERasterizerState::DepthBias,      D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.DecalShader,          true  };
 	S[(uint32)E::Billboard]          = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.BillboardShader,      true  };
-	S[(uint32)E::SelectionMask]      = { EDepthStencilState::StencilWrite, EBlendState::Opaque,         ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.SelectionMaskShader,  false };
-	S[(uint32)E::Editor]             = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         true  };
-	S[(uint32)E::Grid]               = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         false };
-	S[(uint32)E::DepthLess]          = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.GizmoShader,          false };
 	S[(uint32)E::Font]               = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                         true  };
 	S[(uint32)E::SubUV]              = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                         true  };
+	S[(uint32)E::Translucent]        = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.PrimitiveShader,      false };
+	S[(uint32)E::SelectionMask]      = { EDepthStencilState::StencilWrite, EBlendState::Opaque,         ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.SelectionMaskShader,  false };
+	S[(uint32)E::PostProcess]        = { EDepthStencilState::Default,      EBlendState::Opaque,         ERasterizerState::SolidNoCull,    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, nullptr,                         false };
+	S[(uint32)E::Editor]             = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         true  };
+	S[(uint32)E::DepthLess]          = { EDepthStencilState::DepthReadOnly,EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, &Resources.GizmoShader,          false };
+	S[(uint32)E::Grid]               = { EDepthStencilState::Default,      EBlendState::AlphaBlend,     ERasterizerState::SolidBackCull,  D3D11_PRIMITIVE_TOPOLOGY_LINELIST,     &Resources.EditorShader,         false };
 }
 
 // ============================================================
@@ -558,8 +578,10 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
             if (!PostProcess->IsEnabled(View))
                 continue;
 
+			// SubViewport 영역 지정
             Device.SetSubViewport(View.X, View.Y, View.Width, View.Height);
 
+			// 상수 버퍼 Update
             FViewportInfoConstants ViewportInfo = {};
             if (CurrentRenderTargets.Width > 0.0f && CurrentRenderTargets.Height > 0.0f)
             {
@@ -573,6 +595,7 @@ void FRenderer::ExecutePostProcessStack(const TArray<FPostProcessViewDesc>& View
             ID3D11Buffer* ViewportCB = Resources.ViewportInfoConstantBuffer.GetBuffer();
             Context->VSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
             Context->PSSetConstantBuffers(ViewportInfoSlot, 1, &ViewportCB);
+
 
             PostProcess->Execute(&Device, Context, View, Resources, CurrentRenderTargets, SourceSRV, DestRTV);
         }

@@ -209,8 +209,8 @@ FRenderTargetSet FD3DDevice::GetBackBufferRenderTargets() const
 FRenderTargetSet FD3DDevice::GetViewportRenderTargets() const
 {
 	FRenderTargetSet Targets;
-    Targets.SceneColorRTV		= ViewportColorTargets[0].RTV.Get();
-    Targets.SceneColorSRV		= ViewportColorTargets[0].SRV.Get();
+    Targets.SceneColorRTV		= ViewportColorTargets[ActiveViewportColorIndex].RTV.Get();
+    Targets.SceneColorSRV		= ViewportColorTargets[ActiveViewportColorIndex].SRV.Get();
 	Targets.SelectionMaskRTV	= ViewportSelectionMaskRTV.Get();
 	Targets.SelectionMaskSRV	= ViewportSelectionMaskSRV.Get();
 	Targets.DepthStencilView	= ViewportDepthStencilView.Get();
@@ -268,6 +268,10 @@ void FD3DDevice::SetBlendState(EBlendState InState)
 
 	case EBlendState::NoColor:
 		DeviceContext->OMSetBlendState(BlendStateNoColorWrite.Get(), BlendFactor, 0xFFFFFFFF);
+		break;
+
+	case EBlendState::Additive:
+		DeviceContext->OMSetBlendState(BlendStateAdditive.Get(), BlendFactor, 0xFFFFFFFF);
 		break;
 	}
 }
@@ -731,6 +735,21 @@ void FD3DDevice::CreateBlendState()
 	noColorWriteDesc.RenderTarget[0].RenderTargetWriteMask = 0;
 
 	Device->CreateBlendState(&noColorWriteDesc, BlendStateNoColorWrite.ReleaseAndGetAddressOf());
+
+	// Additive
+	D3D11_BLEND_DESC AdditiveDesc = {};
+	AdditiveDesc.AlphaToCoverageEnable = FALSE;
+	AdditiveDesc.IndependentBlendEnable = FALSE;
+	AdditiveDesc.RenderTarget[0].BlendEnable = TRUE;
+	AdditiveDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	AdditiveDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	AdditiveDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	AdditiveDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	AdditiveDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	AdditiveDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	AdditiveDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Device->CreateBlendState(&AdditiveDesc, BlendStateAdditive.ReleaseAndGetAddressOf());
 }
 
 void FD3DDevice::ReleaseDepthStencilBuffer()
@@ -749,6 +768,7 @@ void FD3DDevice::ReleaseBlendState()
 {
 	BlendStateAlpha.Reset();
 	BlendStateNoColorWrite.Reset();
+	BlendStateAdditive.Reset();
 }
 
 void FD3DDevice::ReportLiveObjects()
