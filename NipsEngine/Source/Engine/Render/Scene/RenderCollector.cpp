@@ -23,6 +23,29 @@
 
 namespace
 {
+	struct FScopedMsAccumulator
+	{
+		FScopedMsAccumulator(const LARGE_INTEGER& InFrequency, double& InAccumulatedMs)
+			: Frequency(InFrequency), AccumulatedMs(InAccumulatedMs)
+		{
+			QueryPerformanceCounter(&StartTime);
+		}
+
+		~FScopedMsAccumulator()
+		{
+			LARGE_INTEGER EndTime{};
+			QueryPerformanceCounter(&EndTime);
+
+			AccumulatedMs += static_cast<double>(EndTime.QuadPart - StartTime.QuadPart) * 1000.0 /
+				static_cast<double>(Frequency.QuadPart);
+		}
+
+	private:
+		LARGE_INTEGER StartTime{};
+		const LARGE_INTEGER& Frequency;
+		double& AccumulatedMs;
+	};
+
 	FColor MakeBVHInternalNodeColor(int32 PathIndexFromLeaf, int32 PathLength)
 	{
 		if (PathLength <= 1)
@@ -46,6 +69,8 @@ namespace
 		case EPrimitiveType::EPT_Billboard:
 		case EPrimitiveType::EPT_Text:
 		case EPrimitiveType::EPT_SubUV:
+		// HACK: Decal을 Frustum Query에서 제외했기 때문에 땜빵으로 추가 ㅠ
+		case EPrimitiveType::EPT_Decal:
 			return true;
 		default:
 			return false;
@@ -615,9 +640,12 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 	{
 		if (!ShowFlags.bDecal) { return; }
 
-		LARGE_INTEGER Freq, TimeStart, TimeEnd;
-		QueryPerformanceFrequency(&Freq);
-		QueryPerformanceCounter(&TimeStart);
+		static LARGE_INTEGER PerfFrequency = []()
+		{
+			LARGE_INTEGER Frequency{};
+			QueryPerformanceFrequency(&Frequency);
+			return Frequency;
+		}();
 
 		LastDecalStats.ActiveDecals++;
 
@@ -629,23 +657,44 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		UWorld* World = DecalOwner ? DecalOwner->GetWorld() : nullptr;
 		if (World == nullptr) { return; }
 
-		FFrustum DecalFrustum;
-		DecalFrustum.UpdateFromCamera(DecalComponent->GetDecalViewProjection());
-		DecalCandidateScratch.clear();
-		World->GetSpatialIndex().FrustumQueryPrimitives(DecalFrustum, DecalCandidateScratch, DecalQueryScratch);
-
-		for (UPrimitiveComponent* Candidate : DecalCandidateScratch)
+		const FMatrix DecalViewProjection = DecalComponent->GetDecalViewProjection();
+		const FOBB DecalOBB = DecalComponent->GetDecalOBB();
 		{
-			if (Candidate == nullptr || !Candidate->IsVisible()) { continue; }
-			if (Candidate->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
-			if (!DecalComponent->GetDecalOBB().IntersectAABBWithSAT(Candidate->GetWorldAABB(), false, false, true))
-			{
-				// TODO: CrossAxes 정상 동작 여부 확인 필요
-				LastDecalStats.CulledCandidates++;
-				continue;
-			}
+			FScopedMsAccumulator QueryTimer(PerfFrequency, LastDecalStats.QueryTimeMs);
+			FScopedMsAccumulator CollectTimer(PerfFrequency, LastDecalStats.CollectTimeMs);
 
-			UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(Candidate);
+			FFrustum DecalFrustum;
+			DecalFrustum.UpdateFromCamera(DecalViewProjection);
+
+			DecalCandidateScratch.clear();
+			DecalAffectedMeshScratch.clear();
+			World->GetSpatialIndex().FrustumQueryPrimitives(DecalFrustum, DecalCandidateScratch, DecalQueryScratch);
+			LastDecalStats.QueryCandidates += static_cast<int32>(DecalCandidateScratch.size());
+		}
+
+		{
+			FScopedMsAccumulator SATTimer(PerfFrequency, LastDecalStats.SATTimeMs);
+			FScopedMsAccumulator CollectTimer(PerfFrequency, LastDecalStats.CollectTimeMs);
+
+			for (UPrimitiveComponent* Candidate : DecalCandidateScratch)
+			{
+				if (Candidate == nullptr || !Candidate->IsVisible()) { continue; }
+				if (Candidate->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
+
+				LastDecalStats.StaticMeshCandidates++;
+				if (!DecalOBB.IntersectAABBWithSAT(Candidate->GetWorldAABB(), false, false, true))
+				{
+					LastDecalStats.CulledCandidates++;
+					continue;
+				}
+
+				UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(Candidate);
+				DecalAffectedMeshScratch.push_back(StaticMeshComponent);
+			}
+		}
+
+		for (UStaticMeshComponent* StaticMeshComponent : DecalAffectedMeshScratch)
+		{
 			const UStaticMesh* StaticMesh = StaticMeshComponent->GetStaticMesh();
 			if (!StaticMesh || !StaticMesh->HasValidMeshData()) { continue; }
 
@@ -654,8 +703,6 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 
 			const FStaticMesh* MeshData = StaticMesh->GetMeshData(0);
 			if (MeshData == nullptr) { continue; }
-
-			const TArray<FStaticMeshSection>& Sections = MeshData->Sections;
 
 			FRenderCommand Cmd = {};
 			Cmd.Type = ERenderCommandType::Decal;
@@ -670,36 +717,35 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 
 			// Decal Info
 			Cmd.Constants.Decal.DecalForward = DecalComponent->GetForwardVector();
-			Cmd.Constants.Decal.DecalViewProjection = DecalComponent->GetDecalViewProjection();
+			Cmd.Constants.Decal.DecalViewProjection = DecalViewProjection;
 			Cmd.Constants.Decal.FadeAlpha = DecalComponent->FadeAlpha;
 			Cmd.Resources.Decal.DecalTextureSRV = SRV;
 			RenderBus.AddCommand(ERenderPass::Decal, Cmd);
 			LastDecalStats.AffectedPrimitives++;
 		}
 
-		FRenderCommand OBBCmd = {};
-		OBBCmd.Type = ERenderCommandType::DebugBox;
-		OBBCmd.Constants.AABB.Color = FColor(0, 128, 0);
-
-		const FOBB DecalOBB = DecalComponent->GetDecalOBB();
-		TStaticArray<FVector, 8> Corners;
-		DecalOBB.GetCorners(Corners);
-
-		static constexpr int32 EdgeIndices[24] = {
-			0, 1, 1, 3, 3, 2, 2, 0,
-			4, 5, 5, 7, 7, 6, 6, 4,
-			0, 4, 1, 5, 2, 6, 3, 7
-		};
-
-		OBBCmd.Constants.AABB.VertexCount = 24;
-		for (int32 EdgeIndex = 0; EdgeIndex < 24; ++EdgeIndex)
+		if (ShowFlags.bBoundingVolume)
 		{
-			OBBCmd.Constants.AABB.Vertices[EdgeIndex] = Corners[EdgeIndices[EdgeIndex]];
-		}
-		RenderBus.AddCommand(ERenderPass::Editor, OBBCmd);
+			FRenderCommand OBBCmd = {};
+			OBBCmd.Type = ERenderCommandType::DebugBox;
+			OBBCmd.Constants.AABB.Color = FColor(0, 128, 0);
 
-		QueryPerformanceCounter(&TimeEnd);
-		LastDecalStats.CollectTimeMs += static_cast<double>(TimeEnd.QuadPart - TimeStart.QuadPart) * 1000.0 / static_cast<double>(Freq.QuadPart);
+			TStaticArray<FVector, 8> Corners;
+			DecalOBB.GetCorners(Corners);
+
+			static constexpr int32 EdgeIndices[24] = {
+				0, 1, 1, 3, 3, 2, 2, 0,
+				4, 5, 5, 7, 7, 6, 6, 4,
+				0, 4, 1, 5, 2, 6, 3, 7
+			};
+
+			OBBCmd.Constants.AABB.VertexCount = 24;
+			for (int32 EdgeIndex = 0; EdgeIndex < 24; ++EdgeIndex)
+			{
+				OBBCmd.Constants.AABB.Vertices[EdgeIndex] = Corners[EdgeIndices[EdgeIndex]];
+			}
+			RenderBus.AddCommand(ERenderPass::Editor, OBBCmd);
+		}
 		break;
 	}
 
