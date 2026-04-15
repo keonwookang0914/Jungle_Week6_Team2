@@ -14,6 +14,7 @@ USceneComponent* USceneComponent::Duplicate()
 
     NewComp->RelativeLocation = this->RelativeLocation;
     NewComp->RelativeRotation = this->RelativeRotation;
+    NewComp->RelativeRotationQuat = this->RelativeRotationQuat;
     NewComp->RelativeScale3D  = this->RelativeScale3D;
 
     // 캐시된 데이터는 복사하지만, 새 부모에 붙을 때 다시 계산되도록 Dirty 플래그를 켭니다.
@@ -142,19 +143,26 @@ void USceneComponent::GetEditableProperties(TArray<FPropertyDescriptor>& OutProp
 void USceneComponent::PostEditProperty(const char* PropertyName)
 {
 	UActorComponent::PostEditProperty(PropertyName);
+
+	if (PropertyName != nullptr && std::strcmp(PropertyName, "Rotation") == 0)
+	{
+		SyncRelativeRotationQuatFromShadow();
+		return;
+	}
+
 	MarkTransformDirty();
 }
 
 FRotator USceneComponent::GetRelativeRotator() const
 {
-	FRotator Rot = FRotator::MakeFromEuler(RelativeRotation);
+	FRotator Rot = RelativeRotationQuat.Rotator();
 	Rot.Normalize();
 	return Rot;
 }
 
 FQuat USceneComponent::GetRelativeQuat() const
 {
-	return GetRelativeRotator().Quaternion();
+	return RelativeRotationQuat.GetNormalized();
 }
 
 void USceneComponent::SetRelativeRotationRotator(const FRotator& NewRotation)
@@ -168,6 +176,7 @@ void USceneComponent::SetRelativeRotationRotator(const FRotator& NewRotation)
 		Normalized.Roll = 0.0f;
 	}
 
+	RelativeRotationQuat = Normalized.Quaternion();
 	RelativeRotation = Normalized.Euler();
 	MarkTransformDirty();
 }
@@ -185,6 +194,35 @@ void USceneComponent::SetRelativeRotationQuat(const FQuat& NewRotationQuat)
 		Rot.Roll = 0.0f;
 	}
 
+	RelativeRotationQuat = NormalizedQuat;
+	RelativeRotation = Rot.Euler();
+	MarkTransformDirty();
+}
+
+void USceneComponent::SyncRelativeRotationShadowFromQuat()
+{
+	FRotator Rot = RelativeRotationQuat.Rotator();
+	Rot.Normalize();
+
+	if (MathUtil::Abs(Rot.Roll) < 1e-6f)
+	{
+		Rot.Roll = 0.0f;
+	}
+
+	RelativeRotation = Rot.Euler();
+}
+
+void USceneComponent::SyncRelativeRotationQuatFromShadow()
+{
+	FRotator Rot = FRotator::MakeFromEuler(RelativeRotation);
+	Rot.Normalize();
+
+	if (MathUtil::Abs(Rot.Roll) < 1e-6f)
+	{
+		Rot.Roll = 0.0f;
+	}
+
+	RelativeRotationQuat = Rot.Quaternion();
 	RelativeRotation = Rot.Euler();
 	MarkTransformDirty();
 }
@@ -201,6 +239,13 @@ void USceneComponent::SetRelativeRotation(const FVector& NewRotation)
 	// 외부에서 Euler 벡터를 넣으면 내부에서 rotator normalize 후 다시 저장
 	FRotator Rot = FRotator::MakeFromEuler(NewRotation);
 	Rot.Normalize();
+
+	if (MathUtil::Abs(Rot.Roll) < 1e-6f)
+	{
+		Rot.Roll = 0.0f;
+	}
+
+	RelativeRotationQuat = Rot.Quaternion();
 	RelativeRotation = Rot.Euler();
 	MarkTransformDirty();
 }
@@ -227,7 +272,7 @@ void USceneComponent::MarkTransformDirty()
 
 FTransform USceneComponent::GetRelativeTransform() const
 {
-	return FTransform(GetRelativeRotator(), RelativeLocation, RelativeScale3D);
+	return FTransform(GetRelativeQuat(), RelativeLocation, RelativeScale3D);
 }
 
 FMatrix USceneComponent::GetRelativeMatrix() const
