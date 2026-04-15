@@ -728,7 +728,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		{
 			FRenderCommand OBBCmd = {};
 			OBBCmd.Type = ERenderCommandType::DebugBox;
-			OBBCmd.Constants.AABB.Color = FColor(0, 128, 0);
+			OBBCmd.Constants.AABB.Color = FColor(0, 160, 0);
 
 			TStaticArray<FVector, 8> Corners;
 			DecalOBB.GetCorners(Corners);

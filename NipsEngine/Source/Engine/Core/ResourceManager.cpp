@@ -775,11 +775,31 @@ FMaterialResource* FResourceManager::LoadTexture(const FString& Path, ID3D11Devi
 	HRESULT hr;
 	if (FullPath.size() >= 4 && FullPath.substr(FullPath.size() - 4) == L".dds")
 	{
-		hr = DirectX::CreateDDSTextureFromFile(Device, FullPath.c_str(), nullptr, Resource.SRV.ReleaseAndGetAddressOf());
+		hr = DirectX::CreateDDSTextureFromFileEx(
+			Device,
+			FullPath.c_str(),
+			0,
+			D3D11_USAGE_IMMUTABLE,
+			D3D11_BIND_SHADER_RESOURCE,
+			0,
+			0,
+			DirectX::DDS_LOADER_IGNORE_SRGB,
+			nullptr,
+			Resource.SRV.ReleaseAndGetAddressOf());
 	}
 	else
 	{
-		hr = DirectX::CreateWICTextureFromFile(Device, FullPath.c_str(), nullptr, Resource.SRV.ReleaseAndGetAddressOf());
+		hr = DirectX::CreateWICTextureFromFileEx(
+			Device,
+			FullPath.c_str(),
+			0,
+			D3D11_USAGE_IMMUTABLE,
+			D3D11_BIND_SHADER_RESOURCE,
+			0,
+			0,
+			DirectX::WIC_LOADER_IGNORE_SRGB,
+			nullptr,
+			Resource.SRV.ReleaseAndGetAddressOf());
 	}
 
 	if (FAILED(hr))
