@@ -89,6 +89,8 @@ public:
 	// --- Material Texture (SRV) ---
 	FMaterialResource* FindTexture(const FString& Path) const;
 	FMaterialResource* LoadTexture(const FString& Path, ID3D11Device* Device);
+	// CachedDevice를 사용하는 편의 오버로드 (씬 로드 등 Device 포인터가 없는 컨텍스트에서 사용)
+	FMaterialResource* LoadTexture(const FString& Path);
 	// 모든 GPU 리소스 해제
 	void ReleaseGPUResources();
 

@@ -35,7 +35,7 @@ FStaticMesh* FObjLoader::Load(const FString& Path, const FStaticMeshLoadOptions&
 	else
 	{
 		/* 중점 좌표를 AABB 기준 가운데로 고정 */
-		NormalizeRawPositionsToUnitCube();
+		NormalizeRawSizeToUnitCube();
 	}
 	
 	/* Build Cooked Data from Raw Data */

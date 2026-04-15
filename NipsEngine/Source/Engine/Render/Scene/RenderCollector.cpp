@@ -724,7 +724,7 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 			LastDecalStats.AffectedPrimitives++;
 		}
 
-		if (ShowFlags.bBoundingVolume)
+		if (ShowFlags.bBoundingVolume && !RenderBus.bIsPIE)
 		{
 			FRenderCommand OBBCmd = {};
 			OBBCmd.Type = ERenderCommandType::DebugBox;
