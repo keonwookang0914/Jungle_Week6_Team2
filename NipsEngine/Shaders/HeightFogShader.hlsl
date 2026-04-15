@@ -146,7 +146,9 @@ float4 PS_Main(FVSOutput Input) : SV_Target
     float FogFactor = ComputeExponentialHeightFog(WorldPos , Depth);
 
     // 5. SceneColor ↔ InscatteringColor 보간
-    float3 FoggedColor = lerp(SceneColor.rgb, InscatteringColor, FogFactor);
-
+    float3 Absorbed = SceneColor.rgb * (1.0f - FogFactor); // 소광: SceneColor 흡수
+    float3 Scattered = InscatteringColor * FogFactor * 0.01f; // 산란: 안개색 절반 밝기로 가산
+    float3 FoggedColor = Absorbed + Scattered;
+    
     return float4(FoggedColor, SceneColor.a);
 }
