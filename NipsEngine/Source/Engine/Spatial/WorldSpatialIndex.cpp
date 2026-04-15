@@ -451,6 +451,12 @@ bool FWorldSpatialIndex::ShouldInsertIntoBVH(const UPrimitiveComponent* Primitiv
         return false;
     }
 
+    // TODO: 무슨 일이 일어나는지 알아야 함..
+    if (Primitive->GetPrimitiveType() == EPrimitiveType::EPT_Decal)
+    {
+        return false;
+    }
+
     const AActor* Owner = Primitive->GetOwner();
     return Owner != nullptr && Owner->IsVisible() && Primitive->IsVisible();
 }
