@@ -215,6 +215,8 @@ void ASpotLightActor::InitDefaultComponents()
 void AFireBallActor::InitDefaultComponents()
 {
 	FireBallComponent = AddComponent<UFireBallComponent>();
+	BillBoardComponent = AddComponent<UBillboardComponent>();
+	BillBoardComponent->SetTextureName("Asset\\Texture\\calcipher.jpg");
 	SetRootComponent(FireBallComponent);
 	
 }
