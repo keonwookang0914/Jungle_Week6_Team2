@@ -2,7 +2,7 @@
 
 bool UHeightFogPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const
 {
-	return  ViewDesc.HeightFogInfo.GetFogDensity() > 0.0f and ViewDesc.HeightFogInfo.bIsFog;
+	return ViewDesc.ViewMode != EViewMode::DepthScene && ViewDesc.HeightFogInfo.GetFogDensity() > 0.0f and ViewDesc.HeightFogInfo.bIsFog;
 }
 
 void UHeightFogPostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Context, const FPostProcessViewDesc& ViewDesc, FRenderResources& Resources,

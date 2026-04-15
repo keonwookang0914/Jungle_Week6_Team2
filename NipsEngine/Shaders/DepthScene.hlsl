@@ -67,8 +67,8 @@ float LinearizeDepth(float ndcDepth)
 
     // [Near, Far] 범위를 [0, 1]로 정규화
     // Near에 가까울수록 1.0 (밝음), Far에 가까울수록 0.0 (어두움)
-    return 1.0f - saturate((linearDepth - NearPlane) / max(FarPlane - NearPlane, 1e-6f));
-}
+    return frac(( saturate((linearDepth - NearPlane) / max(FarPlane - NearPlane, 1e-6f))) * 50.0f);
+    }
 
 // ============================================================
 // Pixel Shader
