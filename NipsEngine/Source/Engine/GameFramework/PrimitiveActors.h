@@ -90,6 +90,7 @@ public:
 	AFireBallActor() = default;
 
 	UFireBallComponent* FireBallComponent;
+	UBillboardComponent* BillBoardComponent;
 
 	void InitDefaultComponents();
 };
@@ -102,6 +103,5 @@ public:
 
 	// 발제: DecalComponent를 맴버 변수로 갖는 ADecalActor를 구현한다.
 	UHeightFogComponent* HeightFogComponent;
-
 	void InitDefaultComponents();
 };

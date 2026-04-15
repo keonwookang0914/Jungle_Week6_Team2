@@ -135,7 +135,8 @@ float4 PS_Main(VSOutput Input) : SV_Target
         if (dist > radiusFalloff)
             continue;
 
-        float weight = 1.0f - smoothstep(0.0f, radiusFalloff, dist);
+        float weight = 1.0f - smoothstep(radius, radiusFalloff, dist);
+        weight = pow(weight, 2.0f);
         float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.25f); // 강도 조절
         float3 lightColor = FireBalls[i].LinearColor.rgb;
 
@@ -146,13 +147,15 @@ float4 PS_Main(VSOutput Input) : SV_Target
         float3 blendedHSV;
         blendedHSV.x = lerp(sceneHSV.x, lightHSV.x, blendWeight); // H: 색조
         blendedHSV.y = lerp(sceneHSV.y, lightHSV.y, blendWeight); // S: 채도
-        blendedHSV.z = sceneHSV.z + (lightHSV.z * blendWeight);; // V: 명도 원본 유지 이거 수정해야함
+        blendedHSV.z = sceneHSV.z + (lightHSV.z * blendWeight);; // 밝기 누산 (현재)
+       // blendedHSV.z = lerp(sceneHSV.z, lightHSV.z, weight); // 밝기 lerp
         float3 blendedRGB = HSVtoRGB(blendedHSV);
 
 
 //        sceneColor.rgb = lerp(sceneColor.rgb, lightColor, blendWeight);
         sceneColor.rgb = blendedRGB; // 또는 lerp(sceneColor.rgb, blendedRGB, blendWeight)
 
+        sceneColor.rgb = lerp(sceneColor.rgb, lightColor, blendWeight);
     }
 
     return sceneColor;

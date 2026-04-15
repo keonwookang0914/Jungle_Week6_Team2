@@ -381,7 +381,7 @@ struct alignas(16) FHeightFogCBuffer
 	FVector WorldPosition;      float FogDensity;
 	float   FogHeightFalloff;   float StartDistance;
 	float   FogCutoffDistance;  float FogMaxOpacity;
-	FVector InscatteringColor;  float _Pad0;
-	FVector CameraWorldPos;     float _Pad1;
+	FVector InscatteringColor;  float NearPlane;
+	FVector CameraWorldPos;     float FarPlane;
 	FMatrix InvViewProj;
 };

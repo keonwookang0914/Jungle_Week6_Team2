@@ -28,7 +28,7 @@ class UFireBallComponent : public UPrimitiveComponent
 private:
 
 	float    Intensity = {10.0f};
-	float    Radius = {5.0f}; 
-	float    RadiusFallOff = {4.0f};
+	float    Radius = {2.0f}; 
+	float    RadiusFallOff = {6.0f};
 	FColor Color = {0.8f, 0.2f, 0.1f, 1.0f}; 
 };
