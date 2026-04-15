@@ -28,9 +28,11 @@ void UHeightFogPostProcess::Execute(FD3DDevice* Device, ID3D11DeviceContext* Con
 	CBuffer.StartDistance = Info.GetStartDistance();
 	CBuffer.FogCutoffDistance = Info.GetFogCutoffDistance();
 	CBuffer.FogMaxOpacity = Info.GetFogMaxOpacity();
-	CBuffer.InscatteringColor = Info.GetInscatteringColor().ToVector4().ToVector3();
+	CBuffer.InscatteringColor = FVector(Info.GetInscatteringColor().r, Info.GetInscatteringColor().g, Info.GetInscatteringColor().b);
 	CBuffer.CameraWorldPos = CameraPos;
 	CBuffer.InvViewProj = InvViewProj;
+	CBuffer.NearPlane = ViewDesc.NearPlane;
+	CBuffer.FarPlane = ViewDesc.FarPlane;
 
 	Resources.HeightFogConstantBuffer.Update(Context, &CBuffer ,sizeof(FHeightFogCBuffer));
 	ID3D11Buffer* CB = Resources.HeightFogConstantBuffer.GetBuffer();

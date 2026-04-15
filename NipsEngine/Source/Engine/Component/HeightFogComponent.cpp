@@ -4,6 +4,7 @@
 #include <algorithm>
 
 DEFINE_CLASS(UHeightFogComponent, UPrimitiveComponent)
+REGISTER_FACTORY(UHeightFogComponent);
 
 // -----------------------------------------------------------------------
 //  생성자
@@ -35,6 +36,15 @@ UHeightFogComponent* UHeightFogComponent::Duplicate()
 	NewComp->SetRelativeScale(this->GetRelativeScale());
 
 	NewComp->SetVisibility(this->IsVisible());
+
+	// HeightFogComponent
+	NewComp->FogDensity = FogDensity;
+	NewComp->FogHeightFalloff = FogHeightFalloff;
+	NewComp->StartDistance = StartDistance;
+	NewComp->FogCutoffDistance = FogCutoffDistance;
+	NewComp->FogMaxOpacity = FogMaxOpacity;
+	NewComp->FogInscatteringColor = FogInscatteringColor;
+	NewComp->bIsFog = bIsFog;
 
 	//NewComp->OverrideMaterial = this->OverrideMaterial;
 	//NewComp->ScrollUV = this->ScrollUV;
@@ -90,7 +100,7 @@ void UHeightFogComponent::GetEditableProperties(TArray<FPropertyDescriptor>& Out
 	OutProps.push_back({ "StartDistance",         EPropertyType::Float, &StartDistance });
 	OutProps.push_back({ "FogCutoffDistance",     EPropertyType::Float, &FogCutoffDistance });
 	OutProps.push_back({ "FogMaxOpacity",         EPropertyType::Float, &FogMaxOpacity });
-	OutProps.push_back({ "FogInscatteringColor",  EPropertyType::Vec4, &FogInscatteringColor });
+	OutProps.push_back({ "FogInscatteringColor",  EPropertyType::Vec3, &FogInscatteringColor.r});
 	OutProps.push_back({ "On/OFF",  EPropertyType::Bool, &bIsFog });
 }
 

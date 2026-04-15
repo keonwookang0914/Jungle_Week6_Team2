@@ -185,8 +185,8 @@ void FRenderer::InitializePostProcesses()
 	
 	// TODO: 순서에 맞춰서 PostProcess Push_back 하기
 	PostProcesses.push_back(std::make_unique<FDepthScenePostProcess>());
-	PostProcesses.push_back(std::make_unique<UHeightFogPostProcess>());
 	PostProcesses.push_back(std::make_unique<UFireBallPostProcess>());
+	PostProcesses.push_back(std::make_unique<UHeightFogPostProcess>());
 	PostProcesses.push_back(std::make_unique<FOutlinePostProcess>());
 	PostProcesses.push_back(std::make_unique<FFXAAPostProcess>());
 }

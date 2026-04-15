@@ -480,6 +480,10 @@ void FEditorViewportClient::TickInput(float DeltaTime)
 			const float SpeedStep = (ScrollNotches > 0.f) ? 5.0f : -5.0f;
 			NavigationController.AdjustMoveSpeed(SpeedStep);
 		}
+		else if (Camera.IsOrthographic())
+		{
+			NavigationController.ModifyFOVorOrthoHeight(-ScrollNotches);
+		}
 		else
 		{
 			const float WheelMoveDistance = ScrollNotches * NavigationController.GetWheelMoveStep();

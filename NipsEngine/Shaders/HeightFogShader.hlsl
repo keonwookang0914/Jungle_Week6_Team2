@@ -32,10 +32,10 @@ cbuffer HeightFogBuffer : register(b11)
     float FogMaxOpacity;
 
     float3 InscatteringColor;
-    float _Pad0;
+    float NearPlane;
 
     float3 CameraWorldPos;
-    float _Pad1;
+    float FarPlane;
 
     row_major float4x4 InvViewProj;
 }
@@ -73,10 +73,13 @@ FVSOutput VS_Main(uint VertexID : SV_VertexID)
 // World Position 복원
 // NDC depth(0~1) + InvViewProj → World Space Position
 // ----------------------------------------------------------------
-float3 ReconstructWorldPos(float2 UV, float Depth)
+// HeightFog 도 world reconstruction 과정은 FireBall 과 동일합니다.
+// depth 는 전체 RT 에서 읽되, InvViewProj 에 넣는 UV 는 현재 서브 뷰포트 기준이어야
+// 멀티 뷰포트에서 올바른 월드 좌표가 복원됩니다.
+float3 ReconstructWorldPos(float2 ViewportUV, float Depth)
 {
     // UV → NDC
-    float2 NDC = UV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f);
+    float2 NDC = ViewportUV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f);
 
     float4 ClipPos = float4(NDC, Depth, 1.0f);
     float4 WorldPos = mul(ClipPos, InvViewProj);
@@ -92,22 +95,30 @@ float3 ReconstructWorldPos(float2 UV, float Depth)
 //   extinction   = 1 - exp( -localDensity * viewDist )
 //   fogFactor    = clamp( extinction, 0, FogMaxOpacity )
 // ----------------------------------------------------------------
-float ComputeExponentialHeightFog(float3 WorldPos)
+float ComputeExponentialHeightFog(float3 WorldPos ,float depth)
 {
     // 1. 높이 기반 로컬 밀도
     float HeightAbove = max(WorldPos.z - FogWorldPosition.z, 0.0f);
-    float LocalDensity = (FogDensity * 0.01f) * exp(-FogHeightFalloff * HeightAbove);
+    float LocalDensity = (FogDensity) * exp(-FogHeightFalloff * HeightAbove);
 
     // 2. 뷰 거리
-    float ViewDist = max(length(WorldPos - CameraWorldPos) - StartDistance, 0.0f);
+   // float ViewDist = max(length(WorldPos - CameraWorldPos) - StartDistance, 0.0f);
 
+    // Depth(0~1) → Linear Depth(NearPlane~FarPlane)
+    float LinearDepth = (NearPlane * FarPlane) / (FarPlane - depth * (FarPlane - NearPlane));
+
+    // LinearDepth를 ViewDist 대신 사용
+    float ViewDist = max(LinearDepth - StartDistance, 0.0f);
+    
+    
     if (FogCutoffDistance > 0.0f)
     {
         ViewDist = min(ViewDist, FogCutoffDistance);
     }
 
     // 3. Beer-Lambert 소광
-    float Extinction = 1.0f - exp(-LocalDensity * ViewDist);
+    float SoftDist = (ViewDist * 0.3);
+    float Extinction = 1.0f - exp(-LocalDensity * SoftDist);
     return clamp(Extinction, 0.0f, FogMaxOpacity);
 }
 
@@ -117,27 +128,34 @@ float ComputeExponentialHeightFog(float3 WorldPos)
 float4 PS_Main(FVSOutput Input) : SV_Target
 {
     // --- Common.hlsl 유틸로 UV 보정 (멀티 뷰포트 경계 clamp) ---
+    // SceneColor / Depth 샘플링은 전체 렌더 타겟 기준 UV 로 수행합니다.
     float2 UV = GetPostProcessFullUV(Input.Position.xy);
     UV = ClampPostProcessViewportUV(UV);
+
+    // 월드 좌표 복원용 UV 는 현재 서브 뷰포트 기준 로컬 UV 를 사용합니다.
+    float2 ViewportUV = saturate(GetPostProcessViewportUV(Input.Position.xy));
 
     // 1. SceneColor / Depth 샘플링
     float4 SceneColor = SceneColorTex.Sample(PointSampler, UV);
     float Depth = DepthTex.Sample(PointSampler, UV).r;
+    
 
     // 2. Depth == 1.0 이면 스카이박스(무한 원점) → 안개 미적용
-//    if (Depth >= 1.1f)
-  //  {
-    //    return SceneColor;
-    //}
+    if (Depth >= 1.0f)
+    {
+        return SceneColor;
+    }
 
     // 3. World Position 복원
-    float3 WorldPos = ReconstructWorldPos(UV, Depth);
+    float3 WorldPos = ReconstructWorldPos(ViewportUV, Depth);
 
     // 4. 안개 계산
-    float FogFactor = ComputeExponentialHeightFog(WorldPos);
+    float FogFactor = ComputeExponentialHeightFog(WorldPos , Depth);
 
     // 5. SceneColor ↔ InscatteringColor 보간
-    float3 FoggedColor = lerp(SceneColor.rgb, InscatteringColor, FogFactor);
-
+    float3 Absorbed = SceneColor.rgb * (1.0f - FogFactor); // 소광: SceneColor 흡수
+    float3 Scattered = InscatteringColor * FogFactor * 0.01f; // 산란: 안개색 절반 밝기로 가산
+    float3 FoggedColor = Absorbed + Scattered;
+    
     return float4(FoggedColor, SceneColor.a);
 }

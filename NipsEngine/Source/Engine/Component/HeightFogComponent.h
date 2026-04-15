@@ -112,13 +112,13 @@ private:
 	// ---------------------------------------------------------------
 
 	/** 전체 밀도 스케일. UE4 기본값: 0.02 */
-	float  FogDensity = 0.02f;
+	float FogDensity = 0.2;  // 0.02 → 0.0002 (셰이더 * 0.01 제거 시)
 
 	/** 높이 감쇠 계수. UE4 기본값: 0.2 */
-	float  FogHeightFalloff = 0.2f;
+	float FogHeightFalloff = 0.5f;   // 높이 감쇠를 더 강하게 → 낮은 곳만 안개
 
 	/** 안개 시작 거리 (월드 유닛). */
-	float  StartDistance = 0.0f;
+	float  StartDistance = 3.0f;
 
 	/** 안개 종료 거리 (0 이하 = 무제한). */
 	float  FogCutoffDistance = 0.0f;
