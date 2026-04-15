@@ -202,11 +202,9 @@ void ASpotLightActor::InitDefaultComponents()
 			: 0.0f;
 		const float HalfWidth = SpotLightNearHalfSize + ((SpotLightFarHalfSize - SpotLightNearHalfSize) * StepAlpha);
 		const float Distance = SpotLightDecalHalfDepth + (SpotLightDecalStepLength * static_cast<float>(StepIndex));
-		const float DecalAlpha = 1.0f - (0.5f * StepAlpha);
 
 		StepDecalComponent->SetRelativeScale(FVector(SpotLightDecalHalfDepth, HalfWidth, HalfWidth));
 		StepDecalComponent->SetRelativeLocation(FVector(Distance, 0.0f, 0.0f));
-		StepDecalComponent->FadeAlpha = DecalAlpha;
 	}
 
 	SetActorRotation(FVector(0.0f, 90.0f, 0.0f));
