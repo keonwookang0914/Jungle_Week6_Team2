@@ -4,6 +4,7 @@
 #include <algorithm>
 
 DEFINE_CLASS(UHeightFogComponent, UPrimitiveComponent)
+REGISTER_FACTORY(UHeightFogComponent);
 
 // -----------------------------------------------------------------------
 //  생성자
@@ -35,6 +36,15 @@ UHeightFogComponent* UHeightFogComponent::Duplicate()
 	NewComp->SetRelativeScale(this->GetRelativeScale());
 
 	NewComp->SetVisibility(this->IsVisible());
+
+	// HeightFogComponent
+	NewComp->FogDensity = FogDensity;
+	NewComp->FogHeightFalloff = FogHeightFalloff;
+	NewComp->StartDistance = StartDistance;
+	NewComp->FogCutoffDistance = FogCutoffDistance;
+	NewComp->FogMaxOpacity = FogMaxOpacity;
+	NewComp->FogInscatteringColor = FogInscatteringColor;
+	NewComp->bIsFog = bIsFog;
 
 	//NewComp->OverrideMaterial = this->OverrideMaterial;
 	//NewComp->ScrollUV = this->ScrollUV;
