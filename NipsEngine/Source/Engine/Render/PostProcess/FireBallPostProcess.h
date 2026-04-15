@@ -6,7 +6,7 @@ class UFireBallPostProcess : public IPostProcess
 {
 public:
 
-	 EBlendState GetBlendState() const override { return EBlendState::Opaque; }
+	 EBlendState GetBlendState() const override { return EBlendState::AlphaBlend; }
 
 	 bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const override;
 

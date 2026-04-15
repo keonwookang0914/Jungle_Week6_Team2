@@ -4,6 +4,8 @@
 
 class UHeightFogPostProcess : public IPostProcess
 {
+	EBlendState GetBlendState() const override { return EBlendState::Opaque; }
+
 	bool IsEnabled(const FPostProcessViewDesc& ViewDesc) const override;
 
 	void Execute(FD3DDevice* Device,
