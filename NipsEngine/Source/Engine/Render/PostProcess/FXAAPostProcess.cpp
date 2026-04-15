@@ -1,4 +1,4 @@
-#include "FXAAPostProcess.h"
+﻿#include "FXAAPostProcess.h"
 #include "Settings/EditorSettings.h"
 
 bool FFXAAPostProcess::IsEnabled(const FPostProcessViewDesc& ViewDesc) const

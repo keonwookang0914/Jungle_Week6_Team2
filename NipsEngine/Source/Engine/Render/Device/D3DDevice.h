@@ -25,7 +25,8 @@ enum class EBlendState
 {
 	Opaque,
 	AlphaBlend,
-	NoColor
+	NoColor,
+	Additive
 };
 
 enum class ERasterizerState
@@ -116,6 +117,7 @@ private:
 
 	TComPtr<ID3D11BlendState> BlendStateAlpha;
 	TComPtr<ID3D11BlendState> BlendStateNoColorWrite;
+	TComPtr<ID3D11BlendState> BlendStateAdditive;
 
 	TComPtr<ID3D11Debug> DebugDevice;
 
