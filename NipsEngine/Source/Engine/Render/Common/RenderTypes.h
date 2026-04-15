@@ -38,12 +38,12 @@ enum class ERenderPass : uint32
 {
 	Opaque,
 	Decal,
-	Billboard,
 	Font, // TextRenderComponent → FontBatcher 경유
 	SubUV, // SubUVComponent     → SubUVBatcher 경유
 	Translucent,
 	SelectionMask,
 	PostProcess,
+	Billboard,
 	Editor,
 	Grid,
 	DepthLess,

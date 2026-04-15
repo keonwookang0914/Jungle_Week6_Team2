@@ -46,12 +46,14 @@ float4 PS(PSInput input) : SV_TARGET
 
     if (any(abs(decalNDC.xyz) > 1.0f) || decalNDC.z < 0.0f)
     {
+        discard;
         return float4(0, 0, 0, 0); // 데칼 영역 밖
     }
 
     float normalDotDecalForward = dot(normalize(input.worldNormal), -DecalForward);
     if (normalDotDecalForward < 0.0f)
     {
+        discard;
         return float4(0, 0, 0, 0);
     }
 
@@ -62,6 +64,7 @@ float4 PS(PSInput input) : SV_TARGET
 
     if (decalColor.a <= 0.01f)
     {
+        discard;
         return float4(0, 0, 0, 0);
     }
 
