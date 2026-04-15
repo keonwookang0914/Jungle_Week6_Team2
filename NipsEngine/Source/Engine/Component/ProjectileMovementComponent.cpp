@@ -18,9 +18,11 @@ namespace
 UProjectileMovementComponent* UProjectileMovementComponent::Duplicate()
 {
 	UProjectileMovementComponent* NewComp = UObjectManager::Get().CreateObject<UProjectileMovementComponent>();
+	// 공통 Shallow Copy는 부모클래스에 있는 함수 사용
 	CopyMovementStateTo(NewComp);
 	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
+	// ProjectileComponent만의 특성을 여기에 기입
 	NewComp->InitialSpeed = InitialSpeed;
 	NewComp->MaxSpeed = MaxSpeed;
 	NewComp->ProjectileGravityScale = ProjectileGravityScale;

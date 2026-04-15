@@ -21,7 +21,7 @@ struct FShowFlags
 	bool bBillboardText = false;
 	bool bBoundingVolume = false;
 	bool bBVHBoundingVolume = false;
-	bool bEnableLOD = true;
+	bool bEnableLOD = false;
     bool bEnableFXAA = true;
 	bool bHeightFog = false;
 	bool bDecal = true;
