@@ -99,10 +99,10 @@ FString UBillboardComponent::GetTexturePath()
 }
 
 FMaterialResource* UBillboardComponent::GetCachedSprite()
-{	
+{
 	if (CachedSprite == nullptr)
 	{
-		CachedSprite = FResourceManager::Get().FindTexture(BillboardTexturePath);
+		CachedSprite = FResourceManager::Get().LoadTexture(BillboardTexturePath);
 	}
 	return CachedSprite;
 }

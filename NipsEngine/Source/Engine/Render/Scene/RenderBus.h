@@ -66,5 +66,7 @@ private:
 	EViewMode ViewMode;
 	FShowFlags ShowFlags;
 	FVector WireframeColor = FVector(1.0f, 1.0f, 1.0f);
+public:
+	bool bIsPIE = false;
 };
 

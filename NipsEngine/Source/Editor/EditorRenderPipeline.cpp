@@ -106,6 +106,7 @@ void FEditorRenderPipeline::RenderViewport(FRenderer& Renderer, int32 ViewportIn
 
 	Bus.SetViewProjection(Camera->GetViewMatrix(), Camera->GetProjectionMatrix(), Camera->GetNearPlane(), Camera->GetFarPlane());
 	Bus.SetRenderSettings(ViewMode, ShowFlags);
+    Bus.bIsPIE = Editor->GetWorld()->GetWorldType() == EWorldType::PIE;
 
     const FFrustum& ViewFrustum = Camera->GetFrustum();
     Collector.CollectWorld(World, ShowFlags, ViewMode, Bus, &ViewFrustum);

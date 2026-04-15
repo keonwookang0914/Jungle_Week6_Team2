@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -35,35 +35,34 @@ struct FEditorCameraState
 class FSceneSaveManager {
 public:
 	static constexpr const wchar_t* SceneExtension = L".Scene";
+	static constexpr int32          CurrentVersion  = 4;
 
 	static std::wstring GetSceneDirectory() { return FPaths::SceneDir(); }
+	static TArray<FString> GetSceneFileList();
 
-	// CameraState 는 nullable — nullptr 이면 카메라 섹션을 무시합니다 (게임/PIE 호환)
+	// CameraState == nullptr이면 카메라 섹션 생략 (게임/PIE 호환)
 	static void SaveSceneAsJSON(const string& SceneName, FWorldContext& WorldContext,
 	                            const FEditorCameraState* CameraState = nullptr);
 	static void LoadSceneFromJSON(const string& filepath, FWorldContext& OutWorldContext,
 	                              FEditorCameraState* OutCameraState = nullptr);
 
-	static TArray<FString> GetSceneFileList();
-
 private:
 	// ---- Serialization ----
-	
-	static json::JSON SerializeWorldToPrimitives(UWorld* World, const FWorldContext& Ctx);
-	static json::JSON SerializeComponentToPrimitive(USceneComponent* SceneComp);
-	static json::JSON SerializeWorld(UWorld* World, const FWorldContext& Ctx);
+	static json::JSON SerializeActors(UWorld* World);
 	static json::JSON SerializeActor(AActor* Actor);
 	static json::JSON SerializeSceneComponentTree(USceneComponent* Comp);
 	static json::JSON SerializeProperties(UActorComponent* Comp);
 	static json::JSON SerializePropertyValue(const FPropertyDescriptor& Prop);
-	static json::JSON SerializeCameraState(const FEditorCameraState* CameraState = nullptr);
+	static json::JSON SerializeCameraState(const FEditorCameraState* CameraState);
 
 	// ---- Deserialization ----
-	static void DeserializePrimitivesToWorld(json::JSON& PrimitivesNode, UWorld* World);
+	static void DeserializeActors(json::JSON& ActorsNode, UWorld* World);
+	static void DeserializeActor(json::JSON& ActorNode, UWorld* World);
 	static USceneComponent* DeserializeSceneComponentTree(json::JSON& Node, AActor* Owner);
-	static void DeserializeProperties(UActorComponent* Comp, json::JSON& PropsJSON);
-	static void DeserializePropertyValue(FPropertyDescriptor& Prop, json::JSON& Value);
-	static void DeserializeCameraState(json::JSON& root, FEditorCameraState* OutCameraState = nullptr);
+	static void DeserializeNonSceneComponents(json::JSON& Node, AActor* Owner);
+	static void ApplyProperties(UActorComponent* Comp, json::JSON& PropsJSON);
+	static void ApplyPropertyValue(FPropertyDescriptor& Prop, json::JSON& Value);
+	static void DeserializeCameraState(json::JSON& Root, FEditorCameraState* OutCameraState);
 
 	static string GetCurrentTimeStamp();
 };

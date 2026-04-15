@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "PrimitiveComponent.h"
 #include "Core/ResourceManager.h"
@@ -29,7 +29,7 @@ public:
 	void SetDecalTexturePath(const FString& NewPath)
 	{
 		DecalTexturePath = NewPath;
-		CachedDecalTexture = FResourceManager::Get().FindTexture(NewPath);
+		CachedDecalTexture = FResourceManager::Get().LoadTexture(NewPath);
 	}
 
 	const FString& GetDecalTexturePath() const { return DecalTexturePath; }
@@ -38,7 +38,7 @@ public:
 	{
 		if (CachedDecalTexture == nullptr)
 		{
-			CachedDecalTexture = FResourceManager::Get().FindTexture(DecalTexturePath);
+			CachedDecalTexture = FResourceManager::Get().LoadTexture(DecalTexturePath);
 		}
 		return CachedDecalTexture;
 	}
