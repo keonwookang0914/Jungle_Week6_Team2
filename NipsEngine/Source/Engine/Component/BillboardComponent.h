@@ -11,6 +11,7 @@ class UBillboardComponent : public UPrimitiveComponent
 {
 protected:
 	bool bIsBillboard = true;
+	bool bIsCylindrical = false; // true면 카메라의 Up 벡터는 무시하고 월드 Up 벡터를 사용합니다.
 	bool TryGetActiveCamera(const FViewportCamera*& OutCamera) const;
 	
 	// UpdateWorldAABB 등의 함수를 오버라이드하지 않았기 때문에 UBillboradComponent도 추상 클래스가 됩니다.

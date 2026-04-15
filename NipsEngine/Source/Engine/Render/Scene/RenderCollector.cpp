@@ -673,7 +673,6 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 		}
 
 		{
-			FScopedMsAccumulator SATTimer(PerfFrequency, LastDecalStats.SATTimeMs);
 			FScopedMsAccumulator CollectTimer(PerfFrequency, LastDecalStats.CollectTimeMs);
 
 			for (UPrimitiveComponent* Candidate : DecalCandidateScratch)
@@ -682,10 +681,26 @@ void FRenderCollector::CollectFromComponent(UPrimitiveComponent* Primitive, cons
 				if (Candidate->GetPrimitiveType() != EPrimitiveType::EPT_StaticMesh) { continue; }
 
 				LastDecalStats.StaticMeshCandidates++;
-				if (!DecalOBB.IntersectAABBWithSAT(Candidate->GetWorldAABB(), false, false, true))
+				const FAABB& CandidateAABB = Candidate->GetWorldAABB();
+
+				// SAT 축 4~6: AABB 면 법선 (월드 X, Y, Z)
 				{
-					LastDecalStats.CulledCandidates++;
-					continue;
+					FScopedMsAccumulator SATAABBTimer(PerfFrequency, LastDecalStats.SATAABBAxesTimeMs);
+					if (!DecalOBB.IntersectAABBWithSAT(CandidateAABB, true, false, false))
+					{
+						LastDecalStats.CulledByAABBAxes++;
+						continue;
+					}
+				}
+
+				// SAT 축 7~15: 외적 9개
+				{
+					FScopedMsAccumulator SATCrossTimer(PerfFrequency, LastDecalStats.SATCrossAxesTimeMs);
+					if (!DecalOBB.IntersectAABBWithSAT(CandidateAABB, false, false, true))
+					{
+						LastDecalStats.CulledByCrossAxes++;
+						continue;
+					}
 				}
 
 				UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(Candidate);

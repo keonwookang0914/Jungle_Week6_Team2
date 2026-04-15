@@ -283,14 +283,16 @@ void FEditorViewportOverlayWidget::RenderDebugStats(float DeltaTime)
 
 				constexpr ImVec4 DecalColor = ImVec4(1.f, 0.6f, 0.1f, 1.f);
 				ImGui::TextColored(DecalColor, "Decal Stat");
-				ImGui::TextColored(DecalColor, "- Active Decals: %d",       DecalStats->ActiveDecals);
-				ImGui::TextColored(DecalColor, "- Query Candidates: %d", DecalStats->QueryCandidates);
-				ImGui::TextColored(DecalColor, "- StaticMesh Candidates: %d", DecalStats->StaticMeshCandidates);
-				ImGui::TextColored(DecalColor, "- Culled By SAT: %d",   DecalStats->CulledCandidates);
-				ImGui::TextColored(DecalColor, "- Affected Primitives: %d", DecalStats->AffectedPrimitives);
-				ImGui::TextColored(DecalColor, "- Query Time: %.4f ms", DecalStats->QueryTimeMs);
-				ImGui::TextColored(DecalColor, "- SAT Time: %.4f ms", DecalStats->SATTimeMs);
-				ImGui::TextColored(DecalColor, "- Collect Time: %.4f ms",   DecalStats->CollectTimeMs);
+				ImGui::TextColored(DecalColor, "- Active Decals: %d",            DecalStats->ActiveDecals);
+				ImGui::TextColored(DecalColor, "- Query Candidates: %d",         DecalStats->QueryCandidates);
+				ImGui::TextColored(DecalColor, "- StaticMesh Candidates: %d",    DecalStats->StaticMeshCandidates);
+				ImGui::TextColored(DecalColor, "- Culled By AABB Axes (4~6): %d",  DecalStats->CulledByAABBAxes);
+				ImGui::TextColored(DecalColor, "- Culled By Cross Axes (7~15): %d", DecalStats->CulledByCrossAxes);
+				ImGui::TextColored(DecalColor, "- Affected Primitives: %d",      DecalStats->AffectedPrimitives);
+				ImGui::TextColored(DecalColor, "- Query Time: %.4f ms",          DecalStats->QueryTimeMs);
+				ImGui::TextColored(DecalColor, "- SAT AABB Axes Time: %.4f ms",  DecalStats->SATAABBAxesTimeMs);
+				ImGui::TextColored(DecalColor, "- SAT Cross Axes Time: %.4f ms", DecalStats->SATCrossAxesTimeMs);
+				ImGui::TextColored(DecalColor, "- Collect Time: %.4f ms",        DecalStats->CollectTimeMs);
 			}
 		}
 		ImGui::End();

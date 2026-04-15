@@ -27,14 +27,16 @@ public:
 
 	struct FDecalStats
 	{
-		int32  ActiveDecals       = 0; // 이번 프레임에 처리된 UDecalComponent 수
-		int32  QueryCandidates    = 0; // Decal frustum query가 반환한 전체 primitive 수
-		int32  StaticMeshCandidates = 0; // Query 후보 중 StaticMesh primitive 수
-		int32  CulledCandidates   = 0; // OBB 교차 실패로 제외된 StaticMesh 수
-		int32  AffectedPrimitives = 0; // Draw Call 수 (OBB 교차 통과한 StaticMesh 수)
-		double QueryTimeMs        = 0.0; // Decal BVH frustum query CPU 소요 시간 (ms)
-		double SATTimeMs          = 0.0; // Decal SAT 필터링 CPU 소요 시간 (ms)
-		double CollectTimeMs      = 0.0; // Decal 충돌 판정(BVH query + SAT) CPU 소요 시간 (ms)
+		int32  ActiveDecals         = 0;   // 이번 프레임에 처리된 UDecalComponent 수
+		int32  QueryCandidates      = 0;   // Decal frustum query가 반환한 전체 primitive 수
+		int32  StaticMeshCandidates = 0;   // Query 후보 중 StaticMesh primitive 수
+		int32  CulledByAABBAxes     = 0;   // SAT 축 4~6 (AABB 면 법선) 에서 제외된 수
+		int32  CulledByCrossAxes    = 0;   // SAT 축 7~15 (외적) 에서 제외된 수
+		int32  AffectedPrimitives   = 0;   // Draw Call 수 (SAT 전체 통과한 StaticMesh 수)
+		double QueryTimeMs          = 0.0; // Decal BVH frustum query CPU 소요 시간 (ms)
+		double SATAABBAxesTimeMs    = 0.0; // SAT 축 4~6 필터링 CPU 소요 시간 (ms)
+		double SATCrossAxesTimeMs   = 0.0; // SAT 축 7~15 필터링 CPU 소요 시간 (ms)
+		double CollectTimeMs        = 0.0; // Decal 충돌 판정(BVH query + SAT) CPU 소요 시간 (ms)
 	};
 
 private:

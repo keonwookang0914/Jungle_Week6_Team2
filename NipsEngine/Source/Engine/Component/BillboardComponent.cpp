@@ -29,6 +29,7 @@ UBillboardComponent* UBillboardComponent::Duplicate()
 	NewComp->bCreatedInEditorInstance = bCreatedInEditorInstance;
 
     NewComp->bIsBillboard = this->bIsBillboard;
+    NewComp->bIsCylindrical = this->bIsCylindrical;
     NewComp->SetTextureName(this->GetTexturePath());
     NewComp->SetSpriteSize(this->GetWidth(), this->GetHeight());
 
@@ -113,6 +114,7 @@ void UBillboardComponent::GetEditableProperties(TArray<FPropertyDescriptor>& Out
 	OutProps.push_back({ "Billboard Texture Path", EPropertyType::String, &BillboardTexturePath });
 	OutProps.push_back({ "Width", EPropertyType::Float, &Width, 0.1f, 100.0f, 0.1f });
 	OutProps.push_back({ "Height", EPropertyType::Float, &Height, 0.1f, 100.0f, 0.1f });
+	OutProps.push_back({ "Is Cylindrical", EPropertyType::Bool, &bIsCylindrical });
 }
 
 void UBillboardComponent::PostEditProperty(const char* PropertyName)
@@ -134,11 +136,27 @@ void UBillboardComponent::UpdateWorldAABB() const
 
 	if (TryGetActiveCamera(Camera) && Camera != nullptr)
 	{
-		CachedWorldMatrix = MakeBillboardWorldMatrix(GetWorldLocation(),
-			GetWorldScale(),
-			Camera->GetEffectiveForward(),
-			Camera->GetEffectiveRight(),
-			Camera->GetEffectiveUp());
+		if (bIsCylindrical)
+		{
+			// Cylindrical billboard: Y축 회전만, Up은 월드 Up 고정
+			FVector WorldUp = FVector::UpVector;
+			FVector ToCam = (Camera->GetLocation() - GetWorldLocation()).GetSafeNormal();
+			FVector Right = FVector::CrossProduct(WorldUp, ToCam).GetSafeNormal();
+			FVector Forward = FVector::CrossProduct(Right, WorldUp).GetSafeNormal();
+			CachedWorldMatrix = MakeBillboardWorldMatrix(GetWorldLocation(),
+				GetWorldScale(),
+				Forward,
+				Right,
+				WorldUp);
+		}
+		else
+		{
+			CachedWorldMatrix = MakeBillboardWorldMatrix(GetWorldLocation(),
+				GetWorldScale(),
+				Camera->GetEffectiveForward(),
+				Camera->GetEffectiveRight(),
+				Camera->GetEffectiveUp());
+		}
 	}
 	else
 	{
@@ -180,12 +198,28 @@ bool UBillboardComponent::RaycastMesh(const FRay& Ray, FHitResult& OutHitResult)
 	const FViewportCamera* ActiveCamera = nullptr;
 	if (TryGetActiveCamera(ActiveCamera))
 	{
-		BillboardWorldMatrix = MakeBillboardWorldMatrix(
-			GetWorldLocation(),
-			GetWorldScale(),
-			ActiveCamera->GetEffectiveForward(),
-			ActiveCamera->GetEffectiveRight(),
-			ActiveCamera->GetEffectiveUp());
+		if (bIsCylindrical)
+		{
+			FVector WorldUp = FVector::UpVector;
+			FVector ToCam = (ActiveCamera->GetLocation() - GetWorldLocation()).GetSafeNormal();
+			FVector Right = FVector::CrossProduct(WorldUp, ToCam).GetSafeNormal();
+			FVector Forward = FVector::CrossProduct(Right, WorldUp).GetSafeNormal();
+			BillboardWorldMatrix = MakeBillboardWorldMatrix(
+				GetWorldLocation(),
+				GetWorldScale(),
+				Forward,
+				Right,
+				WorldUp);
+		}
+		else
+		{
+			BillboardWorldMatrix = MakeBillboardWorldMatrix(
+				GetWorldLocation(),
+				GetWorldScale(),
+				ActiveCamera->GetEffectiveForward(),
+				ActiveCamera->GetEffectiveRight(),
+				ActiveCamera->GetEffectiveUp());
+		}
 	}
 
 	const FMatrix InvWorld = BillboardWorldMatrix.GetInverse();
