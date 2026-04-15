@@ -140,6 +140,7 @@ void FEditorSceneWidget::LoadSceneFromFilePath(const FString& FilePath)
 			Cam->SetFOV(LoadedCam.FOV * (3.14159265358979f / 180.f));
 			Cam->SetNearPlane(LoadedCam.NearClip);
 			Cam->SetFarPlane(LoadedCam.FarClip);
+			EditorEngine->GetViewportLayout().GetViewportClient(0).SyncNavigationStateFromCamera();
 		}
 	}
 

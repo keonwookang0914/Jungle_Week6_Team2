@@ -411,7 +411,6 @@ void USceneComponent::Rotate(float DeltaYaw, float DeltaPitch)
 
 bool USceneComponent::MoveComponent(const FVector& Delta, const FQuat& NewRotation)
 {
-	// Quaternion 정규화
 	FQuat NormalizedRotation = NewRotation;
 	NormalizedRotation.Normalize();
 

@@ -755,6 +755,11 @@ FMaterialResource* FResourceManager::FindTexture(const FString& Path) const
 	return (It != MaterialTextureResources.end()) ? const_cast<FMaterialResource*>(&It->second) : nullptr;
 }
 
+FMaterialResource* FResourceManager::LoadTexture(const FString& Path)
+{
+	return LoadTexture(Path, CachedDevice.Get());
+}
+
 FMaterialResource* FResourceManager::LoadTexture(const FString& Path, ID3D11Device* Device)
 {
 	if (FMaterialResource* Cached = FindTexture(Path))
