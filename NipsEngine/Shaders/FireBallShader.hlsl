@@ -57,11 +57,14 @@ float3 HSVtoRGB(float3 c)
 // ─────────────────────────────────────────────
 // World Position 복원 함수 (Standard-Z)
 // ─────────────────────────────────────────────
-float3 ReconstructWorldPosition(float2 uv, float depth)
+// viewportUV 는 현재 서브 뷰포트 기준 로컬 UV 입니다.
+// 멀티 뷰포트에서는 전체 RT UV 로 NDC 를 만들면 다른 뷰포트의 오프셋이 섞이므로
+// 월드 좌표 복원은 반드시 로컬 UV 를 기준으로 해야 합니다.
+float3 ReconstructWorldPosition(float2 viewportUV, float depth)
 {
     float4 ndcPos;
-    ndcPos.x = uv.x * 2.0f - 1.0f;
-    ndcPos.y = uv.y * -2.0f + 1.0f;
+    ndcPos.x = viewportUV.x * 2.0f - 1.0f;
+    ndcPos.y = viewportUV.y * -2.0f + 1.0f;
     ndcPos.z = depth;
     ndcPos.w = 1.0f;
 
@@ -98,7 +101,13 @@ float4 PS_Main(VSOutput Input) : SV_Target
 {
     
     // 멀티 뷰포트에서는 반드시 전체 render target 기준 UV로 depth/scene을 읽어야 한다.
+    // scene/depth 텍스처는 전체 렌더 타겟 기준으로 저장되어 있으므로
+    // 실제 샘플링은 full UV 로 해야 합니다.
     float2 uv = ClampPostProcessViewportUV(GetPostProcessFullUV(Input.Position.xy));
+
+    // 반대로 InvViewProj 로 world position 을 복원할 때는
+    // 현재 서브 뷰포트 내부의 로컬 UV 를 사용해야 좌표계가 맞습니다.
+    float2 viewportUV = saturate(GetPostProcessViewportUV(Input.Position.xy));
 
     // 1. Depth 샘플링
     float depth = DepthTexture.Sample(PointSampler, uv).r;
@@ -110,7 +119,7 @@ float4 PS_Main(VSOutput Input) : SV_Target
     }
 
     // 2. World Position 복원
-    float3 worldPos = ReconstructWorldPosition(uv, depth);
+    float3 worldPos = ReconstructWorldPosition(viewportUV, depth);
 
     // 3. SceneColor 샘플링
     float4 sceneColor = SceneColorTexture.Sample(PointSampler, uv);
@@ -128,7 +137,7 @@ float4 PS_Main(VSOutput Input) : SV_Target
 
         float weight = 1.0f - smoothstep(0.0f, radiusFalloff, dist);
         float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.25f); // 강도 조절
-        float3 lightColor = FireBalls[i].LinearColor.rgb ;
+        float3 lightColor = FireBalls[i].LinearColor.rgb;
 
         // HSV 공간에서 H, S만 FireBall 색으로 이동, V는 원본 유지
         float3 sceneHSV = RGBtoHSV(sceneColor.rgb);
@@ -137,9 +146,13 @@ float4 PS_Main(VSOutput Input) : SV_Target
         float3 blendedHSV;
         blendedHSV.x = lerp(sceneHSV.x, lightHSV.x, blendWeight); // H: 색조
         blendedHSV.y = lerp(sceneHSV.y, lightHSV.y, blendWeight); // S: 채도
-        blendedHSV.z = 0.2; // V: 명도 원본 유지 이거 수정해야함
+        blendedHSV.z = sceneHSV.z + (lightHSV.z * blendWeight);; // V: 명도 원본 유지 이거 수정해야함
+        float3 blendedRGB = HSVtoRGB(blendedHSV);
 
-        sceneColor.rgb = lerp(sceneColor.rgb, lightColor, blendWeight);
+
+//        sceneColor.rgb = lerp(sceneColor.rgb, lightColor, blendWeight);
+        sceneColor.rgb = blendedRGB; // 또는 lerp(sceneColor.rgb, blendedRGB, blendWeight)
+
     }
 
     return sceneColor;

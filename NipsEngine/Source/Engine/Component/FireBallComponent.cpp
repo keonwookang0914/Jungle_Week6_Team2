@@ -3,6 +3,7 @@
 #include <cmath>
 
 DEFINE_CLASS(UFireBallComponent, UPrimitiveComponent)
+REGISTER_FACTORY(UFireBallComponent)
 
 UFireBallComponent::UFireBallComponent()
 {

@@ -73,10 +73,13 @@ FVSOutput VS_Main(uint VertexID : SV_VertexID)
 // World Position 복원
 // NDC depth(0~1) + InvViewProj → World Space Position
 // ----------------------------------------------------------------
-float3 ReconstructWorldPos(float2 UV, float Depth)
+// HeightFog 도 world reconstruction 과정은 FireBall 과 동일합니다.
+// depth 는 전체 RT 에서 읽되, InvViewProj 에 넣는 UV 는 현재 서브 뷰포트 기준이어야
+// 멀티 뷰포트에서 올바른 월드 좌표가 복원됩니다.
+float3 ReconstructWorldPos(float2 ViewportUV, float Depth)
 {
     // UV → NDC
-    float2 NDC = UV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f);
+    float2 NDC = ViewportUV * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f);
 
     float4 ClipPos = float4(NDC, Depth, 1.0f);
     float4 WorldPos = mul(ClipPos, InvViewProj);
@@ -117,8 +120,12 @@ float ComputeExponentialHeightFog(float3 WorldPos)
 float4 PS_Main(FVSOutput Input) : SV_Target
 {
     // --- Common.hlsl 유틸로 UV 보정 (멀티 뷰포트 경계 clamp) ---
+    // SceneColor / Depth 샘플링은 전체 렌더 타겟 기준 UV 로 수행합니다.
     float2 UV = GetPostProcessFullUV(Input.Position.xy);
     UV = ClampPostProcessViewportUV(UV);
+
+    // 월드 좌표 복원용 UV 는 현재 서브 뷰포트 기준 로컬 UV 를 사용합니다.
+    float2 ViewportUV = saturate(GetPostProcessViewportUV(Input.Position.xy));
 
     // 1. SceneColor / Depth 샘플링
     float4 SceneColor = SceneColorTex.Sample(PointSampler, UV);
@@ -131,7 +138,7 @@ float4 PS_Main(FVSOutput Input) : SV_Target
     //}
 
     // 3. World Position 복원
-    float3 WorldPos = ReconstructWorldPos(UV, Depth);
+    float3 WorldPos = ReconstructWorldPos(ViewportUV, Depth);
 
     // 4. 안개 계산
     float FogFactor = ComputeExponentialHeightFog(WorldPos);

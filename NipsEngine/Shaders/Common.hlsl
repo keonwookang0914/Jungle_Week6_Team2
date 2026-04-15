@@ -94,15 +94,35 @@ float3x3 Inverse3x3(float3x3 m)
     return result;
 }
 
-float2 GetPostProcessFullPixelCoord(float2 svPosition)
-{
-    // 현재 post process 경로에서는 SV_Position이 이미 full render target pixel 기준이다.
-    return svPosition;
-}
-
 float2 GetPostProcessFullUV(float2 svPosition)
 {
-    return GetPostProcessFullPixelCoord(svPosition) * InvFullRenderTargetSize;
+    return svPosition * InvFullRenderTargetSize;
+}
+
+// 현재 픽셀이 "전체 렌더 타겟" 안에서 어디에 있는지가 아니라,
+// "현재 서브 뷰포트 안에서" 몇 픽셀 위치인지 구합니다.
+// 멀티 뷰포트에서는 SV_Position 이 항상 전체 RT 기준으로 들어오므로
+// 월드 복원용 좌표를 만들 때는 뷰포트 원점을 먼저 빼줘야 합니다.
+float2 GetPostProcessViewportPixelCoord(float2 svPosition)
+{
+    return svPosition - ViewportOriginPixels;
+}
+
+// 현재 서브 뷰포트 기준의 로컬 UV [0,1] 입니다.
+// depth/scene 샘플링은 여전히 전체 RT UV 를 써야 하지만,
+// InvViewProj 로 월드 좌표를 복원할 때는 이 로컬 UV 를 써야 합니다.
+float2 GetPostProcessViewportUV(float2 svPosition)
+{
+    float2 safeViewportSize = max(ViewportSizePixels, float2(1.0f, 1.0f));
+    return GetPostProcessViewportPixelCoord(svPosition) / safeViewportSize;
+}
+
+// 뷰포트 로컬 UV 를 바로 NDC 로 바꾸는 헬퍼입니다.
+// post process 에서 depth 기반 world reconstruction 할 때 사용합니다.
+float2 GetPostProcessViewportNDC(float2 svPosition)
+{
+    float2 viewportUV = GetPostProcessViewportUV(svPosition);
+    return float2(viewportUV.x * 2.0f - 1.0f, viewportUV.y * -2.0f + 1.0f);
 }
 
 float2 GetPostProcessViewportMinUV()
