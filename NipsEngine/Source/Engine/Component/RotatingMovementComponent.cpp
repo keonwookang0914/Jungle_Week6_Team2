@@ -38,7 +38,7 @@ void URotatingMovementComponent::TickComponent(float DeltaTime)
 	const FQuat OldRotation = UpdatedComponent->GetWorldTransform().GetRotation();
 	// DeltaTime 동안 회전량 계산
 	const FQuat DeltaQuat = FQuat::MakeFromEuler(RotationRate * DeltaTime);
-	// Local Space 여부에 따라 곱셈 순서 부여 (Unreal Engine하고 반대인 이유: 우리는 행벡터 연산이라서)
+	// Local Space 여부에 따라 곱셈 순서 부여 (Unreal Engine하고 반대인 이유: 쿼터니언 * 연산자 정의가 달라서)
 	const FQuat NewRotation = bRotationInLocalSpace ? (DeltaQuat * OldRotation) : (OldRotation * DeltaQuat);
 
 	// Compute New Location

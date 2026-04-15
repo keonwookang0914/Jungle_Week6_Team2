@@ -76,6 +76,8 @@ protected:
 
 	void SetRelativeRotationRotator(const FRotator& NewRotation);
 	void SetRelativeRotationQuat(const FQuat& NewRotationQuat);
+	void SyncRelativeRotationShadowFromQuat();
+	void SyncRelativeRotationQuatFromShadow();
 
 	// yaw는 world-up, pitch는 local-right 기준으로 적용
 	void AddRelativeYaw(float DeltaYawDegrees);
@@ -98,5 +100,6 @@ protected:
 	FVector RelativeLocation{};
 	FVector RelativeRotation{};
 	FVector RelativeScale3D{ 1.0f, 1.0f, 1.0f };
-
+	// TODO: 오류 방지 목적 임시 추가
+	FQuat RelativeRotationQuat = FQuat::Identity;
 };

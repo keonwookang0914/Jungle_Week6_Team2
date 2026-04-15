@@ -87,38 +87,73 @@ float3 ReconstructWorldPos(float2 ViewportUV, float Depth)
 }
 
 // ----------------------------------------------------------------
-// Exponential Height Fog
+// Exponential Height Fog — 해석적 경로 적분 (Analytic Path Integral)
 //
-//   localDensity = FogDensity * exp( -FogHeightFalloff * max(WorldZ - FogZ, 0) )
-//   viewDist     = max( dist(WorldPos, Camera) - StartDistance, 0 )
-//                  [FogCutoffDistance > 0 이면 min(viewDist, CutoffDist)]
-//   extinction   = 1 - exp( -localDensity * viewDist )
-//   fogFactor    = clamp( extinction, 0, FogMaxOpacity )
+// 밀도 함수:
+//   density(h) = FogDensity * exp( -FogHeightFalloff * max(h - FogZ, 0) )
+//
+// 카메라(C)에서 픽셀(P)까지 광선 경로를 따라 밀도를 적분:
+//   Integral = ∫₀ᴸ density( CamZ + DeltaZ * t/L ) dt
+//
+//   CamDensity = FogDensity * exp( -FogHeightFalloff * max(CamZ - FogZ, 0) )
+//
+//   ① DeltaHeight ≠ 0  (비수평 광선):
+//      Integral = CamDensity * NormalizedLength
+//                 * (1 - exp(-FogHeightFalloff * DeltaHeight))
+//                 / (FogHeightFalloff * DeltaHeight)
+//
+//   ② DeltaHeight ≈ 0  (수평 광선, 극한 lim→1):
+//      Integral = CamDensity * NormalizedLength
+//
+//   NormalizedLength = EffectiveLength / FarPlane
+//   → 씬 스케일에 독립적으로 FogDensity 가 동작합니다.
+//   → FogDensity 0.2 = "FarPlane 거리의 20% 수준에서 안개 체감"
+//
+//   FogFactor = clamp( 1 - exp(-Integral), 0, FogMaxOpacity )
 // ----------------------------------------------------------------
-float ComputeExponentialHeightFog(float3 WorldPos ,float depth)
+float ComputeExponentialHeightFog(float3 WorldPos)
 {
-    // 1. 높이 기반 로컬 밀도
-    float HeightAbove = max(WorldPos.z - FogWorldPosition.z, 0.0f);
-    float LocalDensity = (FogDensity) * exp(-FogHeightFalloff * HeightAbove);
+    float3 RayVec = WorldPos - CameraWorldPos;
+    float RayLength = length(RayVec);
 
-    // 2. 뷰 거리
-   // float ViewDist = max(length(WorldPos - CameraWorldPos) - StartDistance, 0.0f);
+    // StartDistance 이전 구간 제거
+    float EffectiveLength = max(RayLength - StartDistance, 0.0f);
+    if (EffectiveLength <= 0.0f)
+        return 0.0f;
 
-    // Depth(0~1) → Linear Depth(NearPlane~FarPlane)
-    float LinearDepth = (NearPlane * FarPlane) / (FarPlane - depth * (FarPlane - NearPlane));
-
-    // LinearDepth를 ViewDist 대신 사용
-    float ViewDist = max(LinearDepth - StartDistance, 0.0f);
-    
-    
+    // FogCutoffDistance 적용
     if (FogCutoffDistance > 0.0f)
+        EffectiveLength = min(EffectiveLength, FogCutoffDistance);
+
+    // [수정 1] 로그 정규화 제거
+    // 이제 씬 스케일(World Units)에 비례하여 거리가 그대로 누적됩니다.
+    // (FarPlane 정규화 코드를 삭제하고 EffectiveLength를 직접 사용)
+
+    // 카메라 위치에서의 시작 밀도
+    //float CamHeightAbove = max(CameraWorldPos.z - FogWorldPosition.z, 0.0f);
+    float CamHeightAbove = (CameraWorldPos.z - FogWorldPosition.z);
+    float CamDensity = FogDensity * exp(-FogHeightFalloff * CamHeightAbove);
+
+    // [수정 2] abs() 제거하여 시선 방향(위/아래)에 따른 안개 누적 부호 유지
+    float LengthRatio = EffectiveLength / max(RayLength, 0.0001f);
+    float DeltaHeight = RayVec.z * LengthRatio; // abs() 제거됨
+
+    float Integral;
+    // 분모 0 회피를 위한 체크는 여전히 절대값으로 확인
+    if (abs(DeltaHeight) < 0.0001f)
     {
-        ViewDist = min(ViewDist, FogCutoffDistance);
+        // 수평 광선
+        Integral = CamDensity * EffectiveLength;
+    }
+    else
+    {
+        // 비수평 광선 (위치 에너지가 델타 H에 따라 지수적으로 변화)
+        Integral = CamDensity * EffectiveLength
+                 * (1.0f - exp(-FogHeightFalloff * DeltaHeight))
+                 / (FogHeightFalloff * DeltaHeight);
     }
 
-    // 3. Beer-Lambert 소광
-    float SoftDist = (ViewDist * 0.3);
-    float Extinction = 1.0f - exp(-LocalDensity * SoftDist);
+    float Extinction = 1.0f - exp(-Integral);
     return clamp(Extinction, 0.0f, FogMaxOpacity);
 }
 
@@ -127,35 +162,27 @@ float ComputeExponentialHeightFog(float3 WorldPos ,float depth)
 // ----------------------------------------------------------------
 float4 PS_Main(FVSOutput Input) : SV_Target
 {
-    // --- Common.hlsl 유틸로 UV 보정 (멀티 뷰포트 경계 clamp) ---
-    // SceneColor / Depth 샘플링은 전체 렌더 타겟 기준 UV 로 수행합니다.
     float2 UV = GetPostProcessFullUV(Input.Position.xy);
     UV = ClampPostProcessViewportUV(UV);
-
-    // 월드 좌표 복원용 UV 는 현재 서브 뷰포트 기준 로컬 UV 를 사용합니다.
     float2 ViewportUV = saturate(GetPostProcessViewportUV(Input.Position.xy));
 
-    // 1. SceneColor / Depth 샘플링
     float4 SceneColor = SceneColorTex.Sample(PointSampler, UV);
     float Depth = DepthTex.Sample(PointSampler, UV).r;
-    
 
-    // 2. Depth == 1.0 이면 스카이박스(무한 원점) → 안개 미적용
-    if (Depth >= 1.0f)
-    {
-        return SceneColor;
-    }
+    // 스카이박스(Depth == 1.0) → 안개 미적용
+    if (Depth >= 1.1f)
+       return SceneColor;
 
-    // 3. World Position 복원
     float3 WorldPos = ReconstructWorldPos(ViewportUV, Depth);
+    float FogFactor = ComputeExponentialHeightFog(WorldPos);
 
-    // 4. 안개 계산
-    float FogFactor = ComputeExponentialHeightFog(WorldPos , Depth);
+    // 밝기 기반 Scattered 억제 — 밝은 픽셀이 더 밝아지는 현상 방지
+    float Luminance = dot(SceneColor.rgb, float3(0.2126f, 0.7152f, 0.0722f));
+    float BrightnessSuppression = 1.0f - saturate(Luminance);
 
-    // 5. SceneColor ↔ InscatteringColor 보간
-    float3 Absorbed = SceneColor.rgb * (1.0f - FogFactor); // 소광: SceneColor 흡수
-    float3 Scattered = InscatteringColor * FogFactor * 0.01f; // 산란: 안개색 절반 밝기로 가산
+    float3 Absorbed = SceneColor.rgb * (1.0f - FogFactor);
+    float3 Scattered = InscatteringColor * FogFactor * BrightnessSuppression;
     float3 FoggedColor = Absorbed + Scattered;
-    
+
     return float4(FoggedColor, SceneColor.a);
 }

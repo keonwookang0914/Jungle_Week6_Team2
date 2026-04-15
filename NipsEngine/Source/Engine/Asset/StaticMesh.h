@@ -45,6 +45,6 @@ private:
 	
 	// 최대 LOD 레벨을 양쪽에서 저장하고 있습니다... 
 	// MAX_LOD를 수정하실 필요가 있다면 MeshBufferManager를 찾아 함께 수정해주세요.
-	static constexpr int32 MAX_LOD = 5;
+	static constexpr int32 MAX_LOD = 1;
 	FStaticMesh* LODMeshData[MAX_LOD] = { nullptr };
 };

@@ -136,7 +136,7 @@ float4 PS_Main(VSOutput Input) : SV_Target
             continue;
 
         float weight = 1.0f - smoothstep(radius, radiusFalloff, dist);
-        weight = pow(weight, 2.0f);
+        weight = pow(weight, 1.5f);
         float blendWeight = saturate(weight * FireBalls[i].Intensity * 0.25f); // 강도 조절
         float3 lightColor = FireBalls[i].LinearColor.rgb;
 

@@ -18,10 +18,11 @@ void FViewportNavigationController::Tick(float DeltaTime)
 
 	EnsureTargetLocationInitialized();
 
-	const FVector CurrentLocation = ViewportCamera->GetLocation();
+	/*const FVector CurrentLocation = ViewportCamera->GetLocation();
 	const float LerpAlpha = MathUtil::Clamp(DeltaTime * LocationLerpSpeed, 0.0f, 1.0f);
 	const FVector NewLocation = CurrentLocation + (TargetLocation - CurrentLocation) * LerpAlpha;
-	ViewportCamera->SetLocation(NewLocation);
+	ViewportCamera->SetLocation(NewLocation);*/
+	ViewportCamera->SetLocation(TargetLocation);
 }
 
 void FViewportNavigationController::SetRotating(bool bInRotating)

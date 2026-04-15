@@ -90,7 +90,6 @@ public:
 	AFireBallActor() = default;
 
 	UFireBallComponent* FireBallComponent;
-	UBillboardComponent* BillBoardComponent;
 
 	void InitDefaultComponents();
 };
