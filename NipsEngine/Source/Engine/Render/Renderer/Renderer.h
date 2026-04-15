@@ -33,7 +33,7 @@ struct FPassBatcherBinding
 	explicit operator bool() const { return Flush != nullptr; }
 };
 
-// 패스별 기본 렌더 상태 — Single Source of Truth
+// 패스별 기본 렌더 상태
 struct FPassRenderState
 {
 	EDepthStencilState       DepthStencil   = EDepthStencilState::Default;
@@ -52,7 +52,7 @@ public:
 
 	void PrepareBatchers(const FRenderBus& InRenderBus);
 	void BeginFrame();
-	void Render(const FRenderBus& InRenderBus);
+	void Render(const FRenderBus& InRenderBus, const FPostProcessViewDesc* InPostProcessViewDesc = nullptr);
 	void RenderOverlay(const FPostProcessViewDesc& ViewDesc, const FRenderBus& InOverlayBus);
 	void EndFrame();
 	void UseBackBufferRenderTargets();
